@@ -1,10 +1,16 @@
 # PYNQ wrapper for Flute processor
-This repository contains source file and documentation for a PYNQ design that collects metrics from RISC-V processor implemented in programmable logic (PL) of ZC706 board.
+This repository contains source files and documentation for a PYNQ design that collects metrics from RISC-V processor implemented in programmable logic (PL) of the ZC706 board.
+
+# Documentation
+Documentation files are in the [docs](./docs) directory and include:
+* [setup_guide.md](./docs/setup_guide.md) 
+* [data_extraction.md](./docs/data_extraction.md)
+* [console_io.md](./docs/console_io.md)
+* [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md)
+* [loading_and_running_programs.md](./docs/loading_and_running_programs.md) - TODO: running the program
 
 # Purpose
-The purpose of this wrapper is to help with development and testing of a continuous monitoring system that will compare program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors).
-
-In similar way to previously published work like:  
+The main purpose of this wrapper is to help with development and testing of a continuous monitoring system that will compare program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors). In similar way to previously published work like:  
 
 | Year | Title |  
 | ---- | ----- |
@@ -21,10 +27,4 @@ In similar way to previously published work like:
 | 2019 | “Anomaly detection in real-time multi-threaded processes using hardware performance counters” by P. Krishnamurthy  |  
 | 2020 | “An m-cache-based security monitoring and fault recovery architecture for embedded processor” by X. Wang et al.  |  
 
-# Documentation
-Documentation files are in the [docs](./docs) directory and include:
-* [setup_guide.md](./docs/setup_guide.md) 
-* [data_extraction.md](./docs/data_extraction.md)
-* [console_io.md](./docs/console_io.md)
-* [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md)
-* [loading_and_running_programs.md](./docs/loading_and_running_programs.md) - TODO: running the program
+Furthermore, the documentation may serve as a reference for anyone who would like to create similar custom interface/modifications to an open source processor.
