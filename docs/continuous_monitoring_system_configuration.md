@@ -1,9 +1,14 @@
 # Table of contents
+- [Overview](#overview)
 - [What can be configured](#what-can-be-configured)
 - [Hardware interface used for configuration](#hardware-interface-used-for-configuration)
 - [Software used for configuration (PYNQ API)](#software-used-for-configuration-pynq-api)
 - [Verilog implementation details](#verilog-implementation-details)
 
+
+# Overview
+
+<img src="../images/cms_configuration_high_level.png" />
 
 # What can be configured
 The [continuous_monitoring_system](https://github.com/michalmonday/continuous_monitoring_system) (cms) module can be configured to:  

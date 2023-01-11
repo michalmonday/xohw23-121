@@ -1,8 +1,13 @@
 # Table of contents
+- [Overview](#overview)
 - [What is provided by the Flute itself for controlling console I/O](#what-is-provided-by-the-flute-itself-for-controlling-console-io)
 - [How PYNQ wrapper is using what Flute provides](#how-pynq-wrapper-is-using-what-flute-provides)
 - [Python code for controlling console I/O using PYNQ wrapper hardware](#python-code-for-controlling-console-io-using-pynq-wrapper-hardware)
 
+# Overview
+The diagram is simplified to show high level overview.  
+
+<img src='../images/console_io_high_level.png' />
 
 # What is provided by the Flute itself for controlling console I/O
 

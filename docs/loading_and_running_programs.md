@@ -1,4 +1,5 @@
 # Table of contents
+- [Overview](#overview)
 - [What is provided by the Flute itself for interacting with memory](#what-is-provided-by-the-flute-itself-for-interacting-with-memory)
 - [How PYNQ wrapper is using what Flute provides](#how-pynq-wrapper-is-using-what-flute-provides)
     - [bram\_loader](#bram_loader)
@@ -7,6 +8,10 @@
 - [Compilation and file transfer to PYNQ board processing system](#compilation-and-file-transfer-to-pynq-board-processing-system)
 - [Running the program](#running-the-program)
 
+# Overview
+Simplified high level overview diagram: 
+
+<img src="../images/bram_high_level.png" />
 
 # What is provided by the Flute itself for interacting with memory
 The SoC_Top.v module (generated from the [SoC_Top.bsv](https://github.com/bluespec/Flute/blob/master/src_Testbench/SoC/SoC_Top.bsv)) provided in the open source Flute processor contains the following signals to interact with memory:
