@@ -1,5 +1,4 @@
 # Table of contents
-- [Table of contents](#table-of-contents)
 - [What can be configured](#what-can-be-configured)
 - [Hardware interface used for configuration](#hardware-interface-used-for-configuration)
 - [Software used for configuration (PYNQ API)](#software-used-for-configuration-pynq-api)

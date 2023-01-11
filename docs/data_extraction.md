@@ -1,9 +1,10 @@
 # Table of contents
-- [Table of contents](#table-of-contents)
 - [From where to where data is transferred](#from-where-to-where-data-is-transferred)
     - [Data transfer path](#data-transfer-path)
 - [How data is extracted](#how-data-is-extracted)
 - [What data is collected](#what-data-is-collected)
+    - [Example collected data (performance counters not shown)](#example-collected-data-performance-counters-not-shown)
+    - [Example collected data (performance counters)](#example-collected-data-performance-counters)
 - [How much data can be collected](#how-much-data-can-be-collected)
     - [Possible way to handle low speed/low memory](#possible-way-to-handle-low-speedlow-memory)
 - [Data filtering](#data-filtering)
@@ -69,6 +70,15 @@ Each collected data item received by the python script contains:
 * clock ticks count since last extracted item (64 bits)
 * 39 performance counters (7 bits each) indicating how many of each events occured since last extracted item
 * performance counters overflow map (39 bits), indicating which counters have to be treated as modulo of 128 values (due to going over their maximum value limited by 7 bits)
+
+### Example collected data (performance counters not shown)
+
+<img src="../images/collected_data_1.png" />  
+
+### Example collected data (performance counters)
+Each row corresponds to each row from table above. It's shown in 2 separate tables because of the image width.
+
+<img src="../images/collected_data_2.png" />  
 
 # How much data can be collected
 Currently the AXI-4 Stream Data FIFO depth is set to 4096 items. A single run of the [stack-mission](https://github.com/michalmonday/riscv-baremetal-minimal-example-c/blob/flute_design/stack-mission.c) program results in around 1300 items being collected (under assumption that it immediately receives data through standard input instead of waiting for it). If we tried running longer program that would result in more than 4096 items being collected, items would be lost because currently there is no mechanism implemented by the pynq wrapper which would halt the processor until FIFO becomes not full. 
