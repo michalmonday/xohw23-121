@@ -34,7 +34,7 @@ Image below presents how that interface is defined in the [CPU.bsv](https://gith
 
 <img src="../images/ContinuousMonitoringSystem_IFC_definition.bsv.png" />
 
-Continuous monitoring system module (`cms_ip_wrapper` on image below) receives these signals as inputs, it then decides whether or not to collect them (that is elaborated in [Data filtering](#data-filtering) section). The continuous monitoring is responsible for counting each performance event, and counting clock cycles since last collected item. If the data item is to be collected, it turns all values into a single 512 bit vector and transfers it to AXI4-Stream Data FIFO using AXI protocol. Contents of that 512 bit vector are described in the [What data is collected](#what-data-is-collected) section.
+Continuous monitoring system module (`cms_ip_wrapper` on image below) receives these signals as inputs, it then decides whether or not to collect them (that is elaborated in [Data filtering](#data-filtering) section). The continuous monitoring module is responsible for counting each performance event, and counting clock cycles since last collected item. If the data item is to be collected, it turns all values into a single 512 bit vector and transfers it to AXI4-Stream Data FIFO using AXI protocol. Contents of that 512 bit vector are described in the [What data is collected](#what-data-is-collected) section.
 <!-- <img src="../images/cms_ifc.png" width=300/> -->
 <img src="../images/data_transfer_path_block_design.png" width=500/>
 
