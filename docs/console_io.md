@@ -2,6 +2,7 @@
 - [Overview](#overview)
 - [What is provided by the Flute itself for controlling console I/O](#what-is-provided-by-the-flute-itself-for-controlling-console-io)
 - [How PYNQ wrapper is using what Flute provides](#how-pynq-wrapper-is-using-what-flute-provides)
+    - [Independent reset signals for FIFO buffers](#independent-reset-signals-for-fifo-buffers)
 - [Python code for controlling console I/O using PYNQ wrapper hardware](#python-code-for-controlling-console-io-using-pynq-wrapper-hardware)
 
 # Overview
@@ -62,6 +63,21 @@ def console_read():
         console_read_enable.on()
         console_read_enable.off()
     return s
+```
+
+### Independent reset signals for FIFO buffers
+Both FIFO buffers have their dedicated reset signals. This is especially useful for input buffer, because it allows to fill it before starting/resetting the processor. This way any input characters will wait for it and be delivered immediately when they're expected. Otherwise the processor would have to wait until python line sending user input is executed, which would result in long repetitive program trace (due to waiting for user input). Sample code below resets both buffers.
+
+```python
+def reset_console_input(delay=0.001):
+    gpio_rst_n_console_input.write(0)
+    time.sleep(delay)
+    gpio_rst_n_console_input.write(1)
+
+def reset_console_output(delay=0.001):
+    gpio_rst_n_console_output.write(0)
+    time.sleep(delay)
+    gpio_rst_n_console_output.write(1)
 ```
 
 

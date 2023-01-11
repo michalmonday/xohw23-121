@@ -62,6 +62,25 @@ I encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multi
 
 The compilation takes a lot of time (few hours), but eventually it should output the image file into `PYNQ/sdcard/output/ZC706/` directory. Then we can flash the SD card with the image file using a program like [Etcher](https://www.balena.io/etcher/) or [Rufus](https://rufus.ie).
 
+
+## Copy files to PYNQ
+Copy [design_files](../design_files/) and [jupyter_notebooks](../jupyter_notebooks/) directories to the board.
+[PYNQ getting started guide](https://pynq.readthedocs.io/en/latest/getting_started/pynq_sdcard_getting_started.html#accessing-files-on-the-board) describes how to access and upload files to the board. 
+
+## Install additional python libraries on PYNQ
+As of 11/01/2023, the only additional library used by the [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code is called `riscv-model`.
+Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):  
+
+```bash
+# riscv-model library is used by the pynq_wrapper_for_flute.ipynb to decode instructions
+python3 -m pip download riscv-model -d .
+```
+Then we copy it to the board and install it with:
+```bash
+# we can run this command from COM port console, or by opening new terminal in the jupyter notebook
+python3 -m pip install <file>.whl -f ./ --no-index
+```
+
 ## Create Vivado project
 For the PYNQ wrapper design itself (not for building SD card) we used 2020.1 Vivado (instead of 2020.2) because initially we started with 2.6 version of PYNQ.
 
