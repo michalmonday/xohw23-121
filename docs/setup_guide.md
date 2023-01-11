@@ -1,8 +1,12 @@
 # Table of contents
+- [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Setup steps](#setup-steps)
   - [Build and flash PYNQ image SD card](#build-and-flash-pynq-image-sd-card)
     - [Potential issues with compilation](#potential-issues-with-compilation)
+  - [Insert SD card into ZC706 board and adjust switches](#insert-sd-card-into-zc706-board-and-adjust-switches)
+  - [Copy files to PYNQ](#copy-files-to-pynq)
+  - [Install additional python libraries on PYNQ](#install-additional-python-libraries-on-pynq)
   - [Create Vivado project](#create-vivado-project)
   - [Modifying and recompiling the Flute processor](#modifying-and-recompiling-the-flute-processor)
   - [Simulating our program binary running on the modified processor](#simulating-our-program-binary-running-on-the-modified-processor)
@@ -10,6 +14,12 @@
     - [Simulation length](#simulation-length)
     - [Side note](#side-note)
 
+# Overview
+This guide describes how to prepare and/or compile all components involved in the whole PYNQ wrapper project, like:
+* **PYNQ image** that has to be compiled and flashed into SD card.
+* Modified **Flute RISC-V** processor, that propagates relevant signals, allowing them to be collected by external modules.
+* **Vivado block design** that includes RISC-V processor, PYNQ wrapper modules, and processing system configuration.
+* **Python files** that interacts with and controls the programmable logic modules (including RISC-V processor) and must be placed on the PYNQ filesystem.
 
 # Prerequisites
 * PYNQ board (e.g. ZC706) with at least 100k logic cells in programmable logic (e.g. Ultra96-V2 is not suitable)
@@ -62,6 +72,13 @@ I encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multi
 
 The compilation takes a lot of time (few hours), but eventually it should output the image file into `PYNQ/sdcard/output/ZC706/` directory. Then we can flash the SD card with the image file using a program like [Etcher](https://www.balena.io/etcher/) or [Rufus](https://rufus.ie).
 
+## Insert SD card into ZC706 board and adjust switches
+
+Set the SW11 - "boot mode select" DIP switch into the `00110` position (boot from SD card).
+
+<img src="../images/sw11.jpg" /> 
+
+More details about this switch can be found in the [ZC706 User Guide](https://docs.xilinx.com/v/u/en-US/ug954-zc706-eval-board-xc7z045-ap-soc) page.
 
 ## Copy files to PYNQ
 Copy [design_files](../design_files/) and [jupyter_notebooks](../jupyter_notebooks/) directories to the board.
@@ -99,6 +116,8 @@ The [README.md]() of the Flute repository (including CHERI fork and my fork) con
 
 
 ## Simulating our program binary running on the modified processor
+
+Following the next steps will simulate the processor running our program but without being connected to any external circuitry of PYNQ wrapper. Using this simulation can be helpful when trying to test/debug processor modifications, before attempting to connect them to any external modules like `continuous_monitoring_system`.
 
 ### Specifying program path
 We can hardcode program full path in the `builds/Resources/Include_Common.mk` file (by setting EXAMPLE variable):
