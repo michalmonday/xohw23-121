@@ -38,7 +38,7 @@ mkdir -p my_boards/ZC706
 * **ZC706 BSP** image file (dated Nov 24 2020, MD5 sum value: b85bd68aed4146fce03e746eac89e0ab) from the [Petalinux tab](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/archive.html) (2020.2 version from archive), ([direct downlad link](https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zc706-v2020.2-final.bsp))
 * [PYNQ rootfs arm v2.7](http://www.pynq.io/board.html) ([direct downlad link](https://bit.ly/pynq_arm_2_7))
 
-In my case these are the contents of that directory are as follows: 
+In my case the contents of the `PYNQ/sdcard/my_boards/ZC706` directory are as follows: 
 
 <img src="../images/setup_my_boards.png" />
 
