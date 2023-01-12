@@ -3,6 +3,8 @@
 - [Prerequisites](#prerequisites)
 - [Setup steps](#setup-steps)
   - [Build and flash PYNQ image SD card](#build-and-flash-pynq-image-sd-card)
+    - [Note about official guide](#note-about-official-guide)
+    - [Steps to build PYNQ image for ZC706](#steps-to-build-pynq-image-for-zc706)
     - [Potential issues with compilation](#potential-issues-with-compilation)
   - [Insert SD card into ZC706 board and adjust switches](#insert-sd-card-into-zc706-board-and-adjust-switches)
   - [Copy files to PYNQ](#copy-files-to-pynq)
@@ -13,6 +15,7 @@
     - [Specifying program path](#specifying-program-path)
     - [Simulation length](#simulation-length)
     - [Side note](#side-note)
+  - [Connecting to the Jypyter Notebook server from the host PC](#connecting-to-the-jypyter-notebook-server-from-the-host-pc)
 
 # Overview
 This guide describes how to prepare and/or compile all components involved in the whole PYNQ wrapper project, like:
