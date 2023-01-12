@@ -158,3 +158,5 @@ Note that the simulation lasts 1500 clock cycles thanks to the [sim_main.cpp](ht
 Instead of hardcoding program path as `EXAMPLE` value in the `Resources/Include_Common.mk` and running `./run_example.sh` script, we could execute `make run_example EXAMPLE=<path>` which would probably be a more elegant way to do the same thing.
 
 
+## Connecting to the Jypyter Notebook server from host PC
+TODO: mention setting Ethernet fixed IP
