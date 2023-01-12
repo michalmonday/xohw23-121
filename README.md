@@ -3,7 +3,7 @@ This repository contains source files and documentation for a PYNQ design that c
 
 # Documentation
 Documentation files are in the [docs](./docs) directory and include:
-* [setup_guide.md](./docs/setup_guide.md) 
+* [setup_guide.md](./docs/setup_guide.md) - TODO: correct SD card image generation (mention the need to `git rm -r <all boards>` and add ZC706 + commit + make clean + make, otherwise all boards will be compiled and will fail after few hours due to lack of special license)
 * [data_extraction.md](./docs/data_extraction.md)
 * [console_io.md](./docs/console_io.md)
 * [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md)
