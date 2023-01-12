@@ -124,6 +124,11 @@ Create a new project targetting ZC706 board. Import all source files from [vivad
 
 Then it should be able to select "Generate Bitstream" to generate the bistream file (which can be transferred to processing system and used by python script to load our hardware desingn into programmable logic).
 
+We can put [copy_to_pynq.py](../vivado_files/copy_to_pynq.py) in the root directory of the Vivado project to ease copying `.bit` and `.hwh` files into `design_files` on the PYNQ. We can run it like:
+```bash
+py -3 copy_to_pynq.py imported_design
+```
+Where `imported_design` stands for the name of the block design.
 
 ## Modifying and recompiling the Flute processor
 We used [CTSRD-CHERI](https://github.com/CTSRD-CHERI/Flute) version of Flute which we forked and modified (to propagate signals using ContinuousMonitoringSystem_IFC). The forked version is available a [this link](https://github.com/michalmonday/Flute/tree/continuous_monitoring/), modifications were done in the `continous_monitoring` branch (`git checkout continuous_monitoring`).
