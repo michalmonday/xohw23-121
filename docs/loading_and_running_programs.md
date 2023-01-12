@@ -7,6 +7,7 @@
     - [Potential memory capacity improvement](#potential-memory-capacity-improvement)
 - [Compilation and file transfer to PYNQ board processing system](#compilation-and-file-transfer-to-pynq-board-processing-system)
 - [Running the program](#running-the-program)
+    - [What `run_and_collect` function is doing](#what-run_and_collect-function-is-doing)
 
 # Overview
 Simplified high level overview diagram: 
@@ -67,6 +68,67 @@ make -f Makefile_gcc_stack_mission
 The riscv-stack-mission.bin should appear in the directory. That file should be transferred to PYNQ board `design_files` directory (it is shown how to do it in the [PYNQ getting started guide](https://pynq.readthedocs.io/en/latest/getting_started/pynq_sdcard_getting_started.html#accessing-files-on-the-board)). After transferring the file to the board processing system, the python script will be able to access it and transfer it into programmable logic (into the Block Memory Generator through `bram_loader`)
 
 # Running the program
+To run the program, we first neet to load it into block ram memory and then use `run_and_collect` function. Code below is a part of [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code that runs the same program multiple times with different inputs and saves collected data in csv files.
+```python
+bram_loader.load(PATH / 'riscv-stack-mission.bin')
 
-TODO: explain how to run test program using pynq_wrapper_for_flute.ipynb  
-TODO: modify the pynq_wrapper_for_flute.ipynb, add a single high-level function to run program and collect data without the need to restart notebook kernel and run all cells again    
+program_inputs = [
+    "==AA==AA==-=-AA====-",
+    "=",
+    "AA=-==-AAAA-=AA",
+    "=-=----AA=AA==AAAAAAAA",
+    "--=AA==-AA-==AA-=",
+    "AA-=AA=--",
+    "AA=",
+    "AAAAAA=",
+    "-=-=",
+    "AA--"
+]
+
+for i, stdin in enumerate(program_inputs):
+    print(f'Running program with input: "{stdin}"')
+    df, stdout = run_and_collect(stdin)
+    csv_f_name = f'normal_{i}.csv'
+    print(f'Collected {df.shape[0]} items. Saving as "{csv_f_name}"')
+    df.to_csv(str(OUTPUT_DIR / csv_f_name), index=False)
+    print()
+```
+
+### What `run_and_collect` function is doing
+First it sets CPU into inactive state, then it reactivates `continuous_monitoring_system` (in case if it was stopped by previously encountered WFI instruction). Then it sends console input into a buffer just, this way it's ready immediately when program starts running. Then it resets CPU and starts the program. Finally it transfers all collected data from the buffer into a dataframe, which is returned with console output.
+
+```python
+def run_and_collect(stdin):
+    # set CPU into inactive state (active-low reset is set LOW)
+    gpio_rst_n_out.write(0)
+    
+    # activate continous_monitoring_system in case if it's stopped by previously 
+    # encountered "wait for interrupt" (WFI) instruction
+    cms_ctrl.reset_wfi_wait()
+    
+    # send standard input into a buffer, this way it will be ready
+    # immediately after CPU starts running the program
+    reset_console_input()
+    console_send(stdin, end_byte=ord('\n')) # '\n' is hardcoded here specifically for "stack-mission.c" program
+    
+    #print(f'Fifo items count before {gpio_fifo_wr_count.read()}')
+    reset_cpu()
+    #print(f'Fifo items count after {gpio_fifo_wr_count.read()}')
+    
+    # transfer all collected data
+    items_transferred = get_dma_transfer(input_buffer, dma_rec)#, dont_wait=True)
+    
+    # parse received data and turn it into pandas DataFrame
+    events, events_overflows, pcs, clk_counters, instrs, instr_names, instr_strings = parse_last_dma_transfer(input_buffer, items_transferred)
+    df = pd.DataFrame(zip(pcs,clk_counters,instrs,instr_names,instr_strings), columns=['pc','clk_counter','instr', 'instr_names', 'instr_strings'])    
+    df['pc'] = df['pc'].apply(lambda x: f'{x:8X}')
+    df['instr'] = df['instr'].apply(lambda x: f'{x:08X}')
+    df_events = pd.DataFrame(events, columns=event_names)
+    df = pd.concat([df, df_events], axis=1)
+    stdout = console_read()
+    return df, stdout
+```
+
+The returned DataFrame contains data like:
+
+<img src="../images/df.png" />

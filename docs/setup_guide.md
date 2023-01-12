@@ -28,7 +28,11 @@ This guide describes how to prepare and/or compile all components involved in th
 
 # Setup steps
 
+
 ## Build and flash PYNQ image SD card
+
+:warning: SOME STEPS ARE NOT MENTIONED (the need to make local commit to PYNQ repository with ZC706 files + potentially `git rm -r` existing board files + possibly modifying `build.sh`) TODO
+
 We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this project.
 
 Follow the steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os). This isn't very straightforward at first look, you may have to:
