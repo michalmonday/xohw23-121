@@ -18,7 +18,10 @@ The data is collected from a modified version of RISC-V (Flute) processor (runni
 The transfer is initiated on PS by using PYNQ API (python `pynq` module), after receiving the data transfer the data is available for further processing in the python script that initiated the transfer.
 
 ### Data transfer path
+
+<p>
 <img src="../images/data_transfer_path.png" />
+</p>
 
 
 # How data is extracted 
