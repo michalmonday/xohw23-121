@@ -16,7 +16,7 @@
 
 # Overview
 This guide describes how to prepare and/or compile all components involved in the whole PYNQ wrapper project, like:
-* **PYNQ image** that has to be compiled and flashed into SD card.
+* **PYNQ image** for ZC706 board that has to be compiled and flashed into SD card.
 * Modified **Flute RISC-V** processor, that propagates relevant signals, allowing them to be collected by external modules.
 * **Vivado block design** that includes RISC-V processor, PYNQ wrapper modules, and processing system configuration.
 * **Python files** that interacts with and controls the programmable logic modules (including RISC-V processor) and must be placed on the PYNQ filesystem.
@@ -31,50 +31,62 @@ This guide describes how to prepare and/or compile all components involved in th
 
 ## Build and flash PYNQ image SD card
 
-:warning: SOME STEPS ARE NOT MENTIONED (the need to make local commit to PYNQ repository with ZC706 files + potentially `git rm -r` existing board files + possibly modifying `build.sh`) TODO
+We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this project. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
 
-We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this project.
+### Note about official guide
+Steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) are not very straightforward from my experience and lead me to encounter many issues, so below I describe the steps that worked for me.  
 
-Follow the steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os). This isn't very straightforward at first look, you may have to:
-
-Download v2.7.0 tag of the PYNQ repository, install packages and prepare new boards directory (to avoid compiling all default ones)
+### Steps to build PYNQ image for ZC706
+Download v2.7.0 tag of the PYNQ repository, install packages and prepare the boards directory (to avoid compiling all default ones).
 ```bash
 git clone --depth 1 --branch v2.7.0 git@github.com:Xilinx/PYNQ.git
 ./PYNQ/sdbuild/scripts/setup_host.sh # this will install required packages
-cd PYNQ/sdcard
-mkdir -p my_boards/ZC706
+
+# setup_host.sh suggests to logout/login after it completes
+
+cd PYNQ/boards
+# delete all boards to avoid compiling them ("git rm" must be used instead of "rm")
+git rm -r ZCU104/ Pynq-Z1/ Pynq-Z2/
+mkdir ZC706
+cd ZC706
+# download ZC706.spec file from this repository 
+wget https://raw.githubusercontent.com/michalmonday/pynq_wrapper/master/setup_files/ZC706.spec
 ```
 
+Now manually download the ZC706 BSP image file into `PYNQ/boards/ZC706/` (the BSP file is dated Nov 24 2020 and has MD5 sum value: b85bd68aed4146fce03e746eac89e0ab) from the [Petalinux tab](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/archive.html) on Xilinx website (choose Petalinux 2020.2 version from archive).
 
+Now commit changes locally, this step is necessary because PYNQ weirdly clones the repository again before compilation, ignoring our changes unless a fresh commit is made (not sure why is that but that is very problematic, because otherwise we'd compile multiple boards for hours just to find out compilation fails due to lack of license to compile a board we're not even interested in compiling).
 
-3 files will have to be put in the my_boards/ZC706/ directory:  
-* [ZC706.spec](../setup_files/ZC706.spec) 
-* **ZC706 BSP** image file (dated Nov 24 2020, MD5 sum value: b85bd68aed4146fce03e746eac89e0ab) from the [Petalinux tab](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/embedded-design-tools/archive.html) (2020.2 version from archive), ([direct downlad link](https://www.xilinx.com/member/forms/download/xef.html?filename=xilinx-zc706-v2020.2-final.bsp))
-* [PYNQ rootfs arm v2.7](http://www.pynq.io/board.html) ([direct downlad link](https://bit.ly/pynq_arm_2_7))
-
-In my case the contents of the `PYNQ/sdcard/my_boards/ZC706` directory are as follows: 
-
-<img src="../images/setup_my_boards.png" />
-
-Prepare environment (requires Vivado, Vitis and petalinux 2020.2 versions to be installed):
 ```bash
-# I have them installed in home/michal/ directory so "~" is used
+# navigate back to PYNQ
+cd ../../
+git add .
+git commit -m "Removed all boards + added ZC706"
+```
+
+Prepare environment (requires Vivado, Vitis and petalinux to be installed, all being 2020.2 versions):
+```bash
+cd sdbuild
+# I have them installed in home/michal/ directory so "~" is used in my case
 source ~/Xilinx/Vitis/2020.2/settings64.sh
 source ~/petalinux/settings.sh
 ```
 
-Then to create the image we could run make like:
-```bash
-make BOARDDIR=/home/michal/PYNQ/sdcard/my_boards
-```
-I'm not sure why I didn't do that and modified Makefile instead (possibly it was compiling all boards from `PYNQ/boards`, can't remember) and ran `make` without BOARDDIR argument. I commented out the first line and added a modified line underneath (specifying `my_boards` directory).
+Download the following 2 files into any path (e.g. `/home/michal/Downloads/pynq_zc706_sd_image_files`)
+* [PYNQ rootfs arm v2.7](http://www.pynq.io/board.html) ([direct downlad link](https://bit.ly/pynq_arm_2_7)) - after downloading, it will be called `focal.arm.2.7.0_2021_11_17.tar.gz`  
+* [Prebuilt PYNQ source distribution binary v2.7](http://www.pynq.io/board.html) ([direct download link](https://bit.ly/pynq_binary_v2_7)) - after downloading, it will be called `pynq-2.7.0.tar.gz`  
 
-<img src="../images/setup_makefile.png" />
+Then run the following command (with absolute paths to previously downloaded files, make sure to change `michal` into your username) to finally generate the sd card image:
+```bash
+# this is a single long command (in case if it appears to be few lines)
+make BOARDDIR=/home/michal/PYNQ/boards BOARDS=ZC706 PREBUILT=/home/michal/Downloads/pynq_zc706_sd_image_files/focal.arm.2.7.0_2021_11_17.tar.gz PYNQ_SDIST=/home/michal/Downloads/pynq_zc706_sd_image_files/pynq-2.7.0.tar.gz 
+```
+
+The compilation takes some time, but eventually it should output the image file into `PYNQ/sdbuild/output/ZC706/` directory (the image file is quite large, around 7GB size). Then we can flash the SD card with the image file using a program like [Etcher](https://www.balena.io/etcher/) or [Rufus](https://rufus.ie).
 
 ### Potential issues with compilation
-I encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multilib-vs-gcc-arm-linux-gnueabihf/2791/2) and [this issue](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112). What helped was removing all files/folders from `PYNQ/sdcard/build/gcc-mb` except `.build` directory (hidden because it starts with a dot), note that these folders/files may only exist after the error happens (so don't try to delete them before encountering the same error). Then downloading [expat.2.4.1.tar.bz2](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112) and [isl-0.20.tar.gz](http://mirror.sobukus.de/files/src/isl/) and placing them in `PYNQ/sdcard/build/gcc-mb/.build/tarballs/` directory. After that running make worked well.
+It probably shouldn't happen if you follow steps above, but while trying to figure out how to compile the sd card image (using slightly different commands) I encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multilib-vs-gcc-arm-linux-gnueabihf/2791/2) and [this issue](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112). What helped was removing all files/folders from `PYNQ/sdbuild/build/gcc-mb` except `.build` directory (hidden because it starts with a dot), note that these folders/files may only exist after the error happens (so don't try to delete them before encountering the same error). Then downloading [expat.2.4.1.tar.bz2](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112) and [isl-0.20.tar.gz](http://mirror.sobukus.de/files/src/isl/) and placing them in `PYNQ/sdbuild/build/gcc-mb/.build/tarballs/` directory. After that running `make` should fix these problems.
 
-The compilation takes a lot of time (few hours), but eventually it should output the image file into `PYNQ/sdcard/output/ZC706/` directory. Then we can flash the SD card with the image file using a program like [Etcher](https://www.balena.io/etcher/) or [Rufus](https://rufus.ie).
 
 ## Insert SD card into ZC706 board and adjust switches
 
