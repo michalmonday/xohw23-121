@@ -31,10 +31,10 @@ This guide describes how to prepare and/or compile all components involved in th
 
 ## Build and flash PYNQ image SD card
 
-We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this project. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
+We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this guide. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
 
 ### Note about official guide
-Steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) are not very straightforward from my experience and lead me to encounter many issues, so below I describe the steps that worked for me.  
+I found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and I encountered many issues trying to compile the image, so below I describe the steps that worked for me.  
 
 ### Steps to build PYNQ image for ZC706
 Download v2.7.0 tag of the PYNQ repository, install packages and prepare the boards directory (to avoid compiling all default ones).
@@ -125,7 +125,7 @@ Then it should be able to select "Generate Bitstream" to generate the bistream f
 ## Modifying and recompiling the Flute processor
 We used [CTSRD-CHERI](https://github.com/CTSRD-CHERI/Flute) version of Flute which we forked and modified (to propagate signals using ContinuousMonitoringSystem_IFC). The forked version is available a [this link](https://github.com/michalmonday/Flute/tree/continuous_monitoring/), modifications were done in the `continous_monitoring` branch (`git checkout continuous_monitoring`).
 
-The [README.md]() of the Flute repository (including CHERI fork and my fork) contains instructions on how to build the processor. The main steps are as follows:
+The [README.adoc](https://github.com/bluespec/Flute/blob/master/README.adoc) of the Flute repository (including CHERI fork and my fork) contains instructions on how to build the processor. The main steps are as follows:
 * Install [bsc](https://github.com/B-Lang-org/bsc) compiler.
 * Install libraries for bsc compiler from [bsc-contrib](https://github.com/B-Lang-org/bsc-contrib) as described in bsc-contrib README.md file. Make sure to use PREFIX that will lead to bsc compiler. In my case, after installing libraries, the `bsc/bsc-2022.01-ubuntu-18.04/lib/Libraries/` directory contains all folders from [bsc-contrib/Libraries/](https://github.com/B-Lang-org/bsc-contrib/tree/main/Libraries) (e.g. Bus, COBS, FPGA).
 * Navigate to `builds/RV64ACDFIMSUxCHERI_Flute_verilator` directory and run `make compile` to produce Verilog files (stored in `Verilog_RTL` directory) from Bluespec files.
@@ -158,5 +158,16 @@ Note that the simulation lasts 1500 clock cycles thanks to the [sim_main.cpp](ht
 Instead of hardcoding program path as `EXAMPLE` value in the `Resources/Include_Common.mk` and running `./run_example.sh` script, we could execute `make run_example EXAMPLE=<path>` which would probably be a more elegant way to do the same thing.
 
 
-## Connecting to the Jypyter Notebook server from host PC
-TODO: mention setting Ethernet fixed IP
+## Connecting to the Jypyter Notebook server from the host PC
+
+To run and control the python script we may (but don't have to) use a separate "host" PC that can access the Jupyter Notebook server created by the PYNQ system running on the PS of the ZC706 board.
+
+<img src="../images/pynq_overview.png">
+
+To access the Jupyter Notebook server on the board from the host PC, we need to connect the Ethernet cable to both ends and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
+
+<img src="../images/static_ip.png" width="600"/>
+
+Where 192.168.2.98 is the IP of the host PC (Windows) and the 192.168.2.99 is the IP of the PYNQ system running on PS of the ZC706 board. After powering on the board it should take a minute or two before the Jupyter Notebook can be accessed by going into browser and navigating to: `192.168.2.99:9090/`. The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
+
+<img src="../images/jupyter_notebook.png" width="600"/>

@@ -28,3 +28,10 @@ The main purpose of this wrapper is to help with development and testing of a [c
 | 2020 | “An m-cache-based security monitoring and fault recovery architecture for embedded processor” by X. Wang et al.  |  
 
 Furthermore, the documentation may serve as a reference for anyone who would like to create similar custom interface/modifications to an open source processor.
+
+
+# Block design
+
+Click to view a high resolution PDF.
+
+[<img src="./images/block_design.png" />](./images/block_design.pdf)
