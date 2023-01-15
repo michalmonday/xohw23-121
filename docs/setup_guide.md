@@ -117,6 +117,16 @@ Then we copy it to the board and install it with:
 python3 -m pip install <file>.whl -f ./ --no-index
 ```
 
+### Accessing console port (using putty)
+
+We can check in device manager the com port number (in my case it was COM5), and use it in putty to access the serial port (baud rate is set to 115200).
+
+<img src="../images/com_port.png" />  
+
+Then we can use the console port to install python libraries (as described above).
+
+<img src="../images/com_port_2.png" />
+
 ## Create Vivado project
 For the PYNQ wrapper design itself (not for building SD card) we used 2020.1 Vivado (instead of 2020.2) because initially we started with 2.6 version of PYNQ.
 
