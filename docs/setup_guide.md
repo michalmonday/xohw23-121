@@ -104,8 +104,11 @@ Copy [design_files](../design_files/) and [jupyter_notebooks](../jupyter_noteboo
 [PYNQ getting started guide](https://pynq.readthedocs.io/en/latest/getting_started/pynq_sdcard_getting_started.html#accessing-files-on-the-board) describes how to access and upload files to the board. 
 
 ## Install additional python libraries on PYNQ
+
+> TODO: Update this section (connect directly to router + use `pip install` directly instead of downloading + install all libraries from `requirements.txt`, including those needed by the currently not implemented benchmark tool that will run on the processing system and requires scikit-learn and other libraries)
+
 As of 11/01/2023, the only additional library used by the [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code is called `riscv-model`.
-Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):  
+Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):
 
 ```bash
 # riscv-model library is used by the pynq_wrapper_for_flute.ipynb to decode instructions
