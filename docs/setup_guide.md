@@ -117,8 +117,9 @@ The [pynq_wrapper_for_flute.ipynb]() uses only 1 additional python library calle
 python3 -m pip install riscv-model
 ``` -->
 
-Simply using pip didn't work, I had to install different packages through apt:
+Simply using pip didn't work, I had to install some packages through apt:
 ```bash
+# (not sure if ninja-build, python-sklearn-doc and python3-sklearn-pandas are needed)
 sudo apt install ninja-build python3-scipy python3-sklearn python3-sklearn-lib python-sklearn-doc python3-sklearn-pandas
 ```
 
@@ -127,7 +128,7 @@ Then we can copy the [requirements_pynq_2_7_0.txt](../requirements_pynq_2_7_0.tx
 python3 -m pip install -r requirements_pynq_2_7_0.txt
 ```
 
-Installing packages takes long time, often without receiving any verbose messages, so we may want to run `htop` from a separate terminal to reassure that it didn't hang (or use -v, -vv or -vvv arguments to pip install command that enable increasing levels of verbosity).
+Installing packages may take long time, sometimes without receiving any verbose messages, so we may want to run `htop` from a separate terminal to reassure that it didn't hang (or use -v, -vv or -vvv arguments to `pip install` command that enable increasing levels of verbosity).
 
 <!-- 
 
