@@ -105,20 +105,44 @@ Copy [design_files](../design_files/) and [jupyter_notebooks](../jupyter_noteboo
 
 ## Install additional python libraries on PYNQ
 
-> TODO: Update this section (connect directly to router + use `pip install` directly instead of downloading + install all libraries from `requirements.txt`, including those needed by the currently not implemented benchmark tool that will run on the processing system and requires scikit-learn and other libraries)
+Access PYNQ terminal (either through [COM port](#accessing-console-port-using-putty) or [Jupyter notebook](#connecting-to-the-jypyter-notebook-server-from-the-host-pc)). Use `sudo su -` if the terminal is accessed through COM port to become root user (otherwise python packages can't be installed, by default the COM port is interacting as `xilinx` user). 
 
-As of 11/01/2023, the only additional library used by the [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code is called `riscv-model`.
-Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):
+<!-- First we may update the pip:
+```bash
+python3 -m pip install pip --upgrade
+```
+
+The [pynq_wrapper_for_flute.ipynb]() uses only 1 additional python library called `riscv-model`. We can install it with:
+```bash
+python3 -m pip install riscv-model
+``` -->
+
+Simply using pip didn't work, I had to install different packages through apt:
+```bash
+sudo apt install ninja-build python3-scipy python3-sklearn python3-sklearn-lib python-sklearn-doc python3-sklearn-pandas
+```
+
+Then we can copy the [requirements_pynq_2_7_0.txt](../requirements_pynq_2_7_0.txt) file to the board and install all the libraries with:
+```bash
+python3 -m pip install -r requirements_pynq_2_7_0.txt
+```
+
+Installing packages takes long time, often without receiving any verbose messages, so we may want to run `htop` from a separate terminal to reassure that it didn't hang (or use -v, -vv or -vvv arguments to pip install command that enable increasing levels of verbosity).
+
+<!-- 
+
+~~As of 11/01/2023, the only additional library used by the [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code is called `riscv-model`.
+Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):~~
 
 ```bash
 # riscv-model library is used by the pynq_wrapper_for_flute.ipynb to decode instructions
 python3 -m pip download riscv-model -d .
 ```
-Then we copy it to the board and install it with:
+~~Then we copy it to the board and install it with: ~~
 ```bash
 # we can run this command from COM port console, or by opening new terminal in the jupyter notebook
 python3 -m pip install <file>.whl -f ./ --no-index
-```
+``` -->
 
 ### Accessing console port (using putty)
 
