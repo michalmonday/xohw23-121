@@ -222,7 +222,7 @@ Initially I had problems accessing ZC706 board that is connected to the router, 
 ### Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)
 <img src="../images/pynq_overview.png">
 
-To access the Jupyter Notebook server on the board from the host PC, we need to connect the Ethernet cable to both ends and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
+For direct connection we can connect the Ethernet cable to both ends (host PC, ZC706 board) and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
 
 <img src="../images/static_ip.png" width="600"/>
 
