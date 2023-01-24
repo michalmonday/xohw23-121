@@ -212,7 +212,7 @@ Instead of hardcoding program path as `EXAMPLE` value in the `Resources/Include_
 To run and control the python script we may (but don't have to) use a separate "host" PC that can access the Jupyter Notebook server created by the PYNQ system running on the PS of the ZC706 board.
 
 ### Connecting through router (allows ZC706 PS to use internet)
-We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on my network it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103` on my network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
+We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on my network it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103:9090` on my network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
 
 <img src="../images/jupyter_notebook.png" width="600"/>
 
