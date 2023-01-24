@@ -9,6 +9,7 @@
   - [Insert SD card into ZC706 board and adjust switches](#insert-sd-card-into-zc706-board-and-adjust-switches)
   - [Copy files to PYNQ](#copy-files-to-pynq)
   - [Install additional python libraries on PYNQ](#install-additional-python-libraries-on-pynq)
+    - [Accessing console port (using putty)](#accessing-console-port-using-putty)
   - [Create Vivado project](#create-vivado-project)
   - [Modifying and recompiling the Flute processor](#modifying-and-recompiling-the-flute-processor)
   - [Simulating our program binary running on the modified processor](#simulating-our-program-binary-running-on-the-modified-processor)
@@ -16,6 +17,8 @@
     - [Simulation length](#simulation-length)
     - [Side note](#side-note)
   - [Connecting to the Jypyter Notebook server from the host PC](#connecting-to-the-jypyter-notebook-server-from-the-host-pc)
+    - [Connecting through router (allows ZC706 PS to use internet)](#connecting-through-router-allows-zc706-ps-to-use-internet)
+    - [Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)
 
 # Overview
 This guide describes how to prepare and/or compile all components involved in the whole PYNQ wrapper project, like:
@@ -208,12 +211,19 @@ Instead of hardcoding program path as `EXAMPLE` value in the `Resources/Include_
 
 To run and control the python script we may (but don't have to) use a separate "host" PC that can access the Jupyter Notebook server created by the PYNQ system running on the PS of the ZC706 board.
 
+### Connecting through router (allows ZC706 PS to use internet)
+We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on my network it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103` on my network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
+
+<img src="../images/jupyter_notebook.png" width="600"/>
+
+Initially I had problems accessing ZC706 board that is connected to the router, for that reason there's a separate section for this case ([Direct connection](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)), but using it won't allow to install required python libraries. Recently I tried connecting through router again and it just worked well (allowing to mitigate the problematic offline package installation).
+
+
+### Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)
 <img src="../images/pynq_overview.png">
 
 To access the Jupyter Notebook server on the board from the host PC, we need to connect the Ethernet cable to both ends and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
 
 <img src="../images/static_ip.png" width="600"/>
 
-Where 192.168.2.98 is the IP of the host PC (Windows) and the 192.168.2.99 is the IP of the PYNQ system running on PS of the ZC706 board. After powering on the board it should take a minute or two before the Jupyter Notebook can be accessed by going into browser and navigating to: `192.168.2.99:9090/`. The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
-
-<img src="../images/jupyter_notebook.png" width="600"/>
+Where 192.168.2.98 is the IP of the host PC (Windows) and the 192.168.2.99 is the IP of the PYNQ system running on PS of the ZC706 board. After powering on the board it should take a minute or two before the Jupyter Notebook can be accessed by going into browser and navigating to: `192.168.2.99:9090/`. 
