@@ -27,6 +27,8 @@ This guide describes how to prepare and/or compile all components involved in th
 * **Vivado block design** that includes RISC-V processor, PYNQ wrapper modules, and processing system configuration.
 * **Python files** that interacts with and controls the programmable logic modules (including RISC-V processor) and must be placed on the PYNQ filesystem.
 
+Please note that this project is constantly under development, so files and documentation are most likely not updated. If you are planning to follow this guide, please contact me and I will update it with the most recent files (email: mb19424@essex.ac.uk, discord:michalmonday#3687).
+
 # Prerequisites
 * PYNQ board (e.g. ZC706) with at least 100k logic cells in programmable logic (e.g. Ultra96-V2 is not suitable)
 * SD card to hold PYNQ image
@@ -34,15 +36,19 @@ This guide describes how to prepare and/or compile all components involved in th
 
 # Setup steps
 
-
-## Build and flash PYNQ image SD card
+## Download precompiled 2.7.0 PYNQ image for ZC706 board or build one
 
 We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this guide. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
 
-### Note about official guide
-I found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and I encountered many issues trying to compile the image, so below I describe the steps that worked for me.  
+### Precompiled image
+I compiled the 2.7.0 version for the ZC706 board and uploaded it to Google Drive. You can download it from the link below:
+https://drive.google.com/file/d/1ieKwj0o5VDYzU0CycIzul4IUF5pB3oO5/view?usp=share_link
+
+It takes a lot of space, there is no guarantee it will be available in the future, below I describe how to build it yourself.
 
 ### Steps to build PYNQ image for ZC706
+I found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and I encountered many issues trying to compile the image, so below I describe the steps that worked for me. The steps are as follows:  
+
 Download v2.7.0 tag of the PYNQ repository, install packages and prepare the boards directory (to avoid compiling all default ones).
 ```bash
 git clone --depth 1 --branch v2.7.0 git@github.com:Xilinx/PYNQ.git
