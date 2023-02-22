@@ -1,0 +1,3 @@
+
+#define RESOLUTION_X 480
+#define RESOLUTION_Y 320
