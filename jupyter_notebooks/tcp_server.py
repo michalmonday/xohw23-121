@@ -2,6 +2,7 @@ import socket
 import threading
 import time
 import queue
+import random
 
 SEND_TO_ALL = -1
 
@@ -135,11 +136,19 @@ class TCP_Server:
     def end(self):
         self.end_queue.put(True)
 
-tcp_server = TCP_Server(host_ip='192.168.0.105', port=9092)
+if __name__ == '__main__':
+    tcp_server = TCP_Server(host_ip='192.168.0.105', port=9092)
 
-while True:
-    if tcp_server.data_available():
-        for client_id, data_str in tcp_server.read_data():
-            print(f'client_id={client_id}, data_str={data_str}')
-            tcp_server.send_to_client(client_id, 'test\n')
-    time.sleep(0.01)
+    while True:
+        # if tcp_server.data_available():
+        #     for client_id, data_str in tcp_server.read_data():
+        #         print(f'client_id={client_id}, data_str={data_str}')
+        #         # random float between 0 and 1
+        #         tcp_server.send_to_client(client_id, f'add_point:test,{random.uniform(0,1)}\n')
+        # time.sleep(0.01)
+
+        tcp_server.send_to_all(f'add_point:test,{random.uniform(0.7,0.9)}\n' + f'add_point:test2,{random.uniform(0.2,0.4)}\n')
+        # tcp_server.send_to_all(f'add_point:test2,{random.uniform(0.2,0.4)}\n')
+        time.sleep(0.3)
+
+    
