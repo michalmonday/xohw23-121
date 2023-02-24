@@ -1,6 +1,8 @@
 # PYNQ wrapper for Flute processor
 This repository contains source files and documentation for a PYNQ design that collects metrics from RISC-V processor implemented in programmable logic (PL) of the ZC706 board.
 
+![](./images/overview_detailed.png)
+
 # Documentation
 Documentation files are in the [docs](./docs) directory and include:
 * [setup_guide.md](./docs/setup_guide.md)
