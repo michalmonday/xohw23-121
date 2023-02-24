@@ -6,6 +6,13 @@ import random
 
 SEND_TO_ALL = -1
 
+def get_my_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+    s.close()
+    return ip
+
 #Client class, new instance created for each connected client
 #Each instance has the socket and address that is associated with items
 #Along with an assigned ID and a name chosen by the client
@@ -55,7 +62,7 @@ class Client(threading.Thread):
                 #         print("Sent to " + str(client))
 
 class TCP_Server:
-    def __init__(self, host_ip='192.168.0.105', port=9092):
+    def __init__(self, host_ip='0.0.0.0', port=9092):
         self.host_ip = host_ip
         self.port = port
         self.connections = {} # key=client_id, value=Client object
