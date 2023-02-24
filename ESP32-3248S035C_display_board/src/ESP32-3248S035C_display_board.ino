@@ -26,9 +26,9 @@
 TaskHandle_t drawing_thread;
 QueueHandle_t queue = NULL;
 
-const IPAddress server_ip(192, 168, 0, 105);
+const IPAddress server_ip(192, 168, 0, 104);
 const uint16_t server_port = 9092;
-const String server_ip_str = "192.168.0.105:" + String(server_port); // just for displaying status
+const String server_ip_str = "192.168.0.104:" + String(server_port); // just for displaying status
 WiFiClient client;
 
 // display object
@@ -158,37 +158,7 @@ void setup() {
         BLACK             // background color
         );
 
-    // Graph_func(tft,
-    //       0,                               // x data point
-    //       0,                               // y data point
-    //       2,                               // decimal point precision for axis tick labels
-    //       graph_x,                         // gx graph location (left)
-    //       graph_y,                         // gy graph location (bottom)
-    //       graph_w,                         // width
-    //       graph_h,                         // height
-    //       xlo,                             // lower bound of axis x
-    //       xhi,                             // upper bound of axis x
-    //       x_inc,                           // x axis increment (grid split like)
-    //       ylo,                             // lower bound of axis y
-    //       yhi,                             // upper bound of axis y
-    //       y_inc,                           // y axis increment (grid split like)
-    //       "",                              // title
-    //       "x label",                       // x label
-    //       "y label",                       // y label
-    //       redraw_on_first_call_only_graph, // flag to redraw graph on first call only
-    //       YELLOW);                         // plotted trace colour
-
-    // LinePlot* line_plot = create_new_line_plot();
-    // line_plots.add_plot("Test plot", line_plot);
-    // for (double x = 1.0; x <= 10.0; x += 10.0 / graph_w / 2.0) {
-    //     // instead of repainting the whole screen black together with the new graph we can redraw the line with the colour of the background (BLACK in this case)
-    //     line_plot->draw(BLACK);
-    //     redraw_on_first_call_only_graph = true;
-    //     double y = log10(x);
-    //     line_plot->add_point((double)y);
-    //     line_plot->draw();
-    // }
-
+    // producer (loop) allocates the string, consumer (drawing_thread_func) dealocates it
     queue = xQueueCreate(1000, sizeof(String*));
 	xTaskCreatePinnedToCore(
 			drawing_thread_func, /* Function to implement the task */
@@ -197,7 +167,7 @@ void setup() {
 			NULL, /* Task input parameter */
 			0, /* Priority of the task */
 			&drawing_thread, /* Task handle. */
-			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run */
+			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
 }
 
 void loop(void) {
@@ -206,10 +176,12 @@ void loop(void) {
     Serial.println("Attempt to access server...");
     status_display.set_status("tcp_connection_status", "Connecting to ZC706 TCP server (" + server_ip_str + ")");
     if (!client.connect(server_ip, server_port)) {
-        status_display.set_status("tcp_connection_status", "Failed to connect to ZC706 TCP server (" + server_ip_str + "). Retrying in 5 seconds...");
         Serial.println("Access failed.");
         client.stop();
-        delay(5000);
+        for (int i=5; i>0; i--) {
+            status_display.set_status("tcp_connection_status", "Retrying ZC706 TCP server (" + server_ip_str + ") connection in " + String(i) + " seconds...");
+            delay(1000);
+        }
         return;
     }
     status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
@@ -218,22 +190,15 @@ void loop(void) {
     client.print("Hello world!");
     while (client.connected() || client.available()) {
         if (client.available()) {
-            // Serial.println("Attempting to read received string.");
             String *line = new String(client.readStringUntil('\n'));
-            // String line = client.readString();
+            // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')
             Serial.print("Received: '");
             Serial.print(*line);
             Serial.println("'");
-
-            // check_protocol(line);
             while (xQueueSend(queue, &line, 0) == errQUEUE_FULL) {
                 Serial.println("Queue is full, waiting...");
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
             }
-
-
-
-            //Trace(tft, random(60) / 10.0, (10 - random(20)) / 10.0, 1, 60, 290, 390, 260, 0, 6.5, 1, -1, 1, .25, "Sin(x) + Cos(x) + Tan(x) + new", " x", "fn(x)", redraw_on_first_call_only_trace4, GREEN);
         }
     }
     Serial.println("Closing connection.");
