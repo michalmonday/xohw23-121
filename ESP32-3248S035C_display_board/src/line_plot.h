@@ -20,6 +20,7 @@ public:
     int get_max_number_of_items();
     int get_min_value();
     int get_max_value();
+    unsigned int get_color();
     void set_graph(Graph *graph);
 private:
     TFT_eSPI &tft;

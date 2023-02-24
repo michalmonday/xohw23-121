@@ -1,15 +1,3 @@
-/*
-
-  This program provides cartesian type graph function
-
-  Revisions
-  rev     date        author      description
-  1       12-24-2015  kasprzak    initial creation
-
-  Updated by Bodmer to be an example for the library here:
-  https://github.com/Bodmer/TFT_eSPI
-
-*/
 
 #include <TFT_eSPI.h> // Hardware-specific library (requires "User_Setup.h" to be replaced with the one for specific display)
 #include <SPI.h>
@@ -39,33 +27,29 @@ TaskHandle_t drawing_thread;
 QueueHandle_t queue = NULL;
 
 const IPAddress server_ip(192, 168, 0, 105);
-uint16_t server_port = 9092;
+const uint16_t server_port = 9092;
 const String server_ip_str = "192.168.0.105:" + String(server_port); // just for displaying status
-
 WiFiClient client;
 
-TFT_eSPI tft = TFT_eSPI(); // Invoke custom library with default width and height
+// display object
+TFT_eSPI tft = TFT_eSPI(); 
 
+// status display is a GUI component that covers bottom of the screen and can display status messages like "Connecting to WiFi"
 StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
 
 int current_colour_id = 0;
 
-// Plot defaults
-// int margin_y = 0.1 * tft.height();
-int grid_x_segments = 5;
-int grid_y_segments = 4;
-int graph_x = (int)(RESOLUTION_X * 0.1);
-int graph_y = (int)(RESOLUTION_Y * 0.8); // it should be inverted, but it's not (it specifies bottom of the graph, not the top)
-int graph_w = (int)(RESOLUTION_X * 0.65); 
-int graph_h = (int)(RESOLUTION_Y * 0.65); // 260
-double xlo = 0;
-// double xhi = 60; // this is pretty much setting how many values we want to display in the graph at once
-double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
-double ylo = 0; //-1;
-double yhi = 1;
-int max_number_of_items = min((int)(xhi - xlo), (int)graph_w);
+// graph without parameters will have default values (to cover most of the screen with space for status display)
+// see graph.cpp to see or change default values
+Graph graph(tft); 
+// Graph graph(graph_x, graph_y, graph_w, graph_h);
 
-Graph graph(graph_x, graph_y, graph_w, graph_h);
+double xlo = 0;
+double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
+
+double ylo = 0; // line plot lower value bound
+double yhi = 1; // line plot upper value bound
+int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
 
 void init_wifi() {
     tft.setTextColor(WHITE);
@@ -74,9 +58,6 @@ void init_wifi() {
     sprintf(buf, "Connecting to '%s' WiFi access point...", ACCESS_POINT_SSID);
     status_display.set_status("ap_connection_status", buf);
     status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
-    // tft.drawString(buf, (int)(RESOLUTION_X * 0.1), (int)(RESOLUTION_Y * 0.9));
-
-
 
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
@@ -84,10 +65,8 @@ void init_wifi() {
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
-        // tft.drawString("Retrying...", (int)(RESOLUTION_X * 0.1), (int)(RESOLUTION_Y * 0.9));
         status_display.set_status("ap_connection_status", "Retrying connection...");
     }
-    // tft.drawString(buf, (int)(RESOLUTION_X * 0.1), (int)(RESOLUTION_Y * 0.9));
 
     Serial.println("Connected");
     Serial.print("IP Address:");
@@ -164,14 +143,12 @@ void setup() {
     static bool redraw_on_first_call_only_graph = true;
     delay(1000);
 
-    graph.draw(tft, 
+    graph.draw(
         2,                // decimal point precision for axis tick labels
         xlo,              // lower bound of axis x  (used to set x axis tick labels)
         xhi,              // upper bound of axis x  (used to set x axis tick labels)
-        grid_x_segments,  // number of grid segments in x direction
         ylo,              // lower bound of axis y  (used to set y axis tick labels)
         yhi,              // upper bound of axis y  (used to set y axis tick labels)
-        grid_y_segments,  // number of grid segments in y direction
         "title",          // title
         "x label",        // x label
         "y label",        // y label
