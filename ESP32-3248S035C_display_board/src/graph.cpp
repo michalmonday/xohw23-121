@@ -22,7 +22,7 @@
 
 const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
-const int default_graph_w = (int)(RESOLUTION_X * 0.75); 
+const int default_graph_w = (int)(RESOLUTION_X * 0.7); 
 const int default_graph_h = (int)(RESOLUTION_Y * 0.7); 
 int default_grid_x_segments = 5;
 int default_grid_y_segments = 4;
