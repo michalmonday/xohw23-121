@@ -31,12 +31,8 @@ void StatusDisplay::draw() {
     tft.setTextSize(1);
     tft.setTextDatum(TL_DATUM);
 
-    // draw background
-    // tft.drawRect(x, y, size_x, size_y, background_color);
     int y_pos = y + 5;
-
     // draw text
-
     for (auto it = status.begin(); it != status.end(); ++it) {
         tft.setTextColor(text_color);
         tft.drawString(it->second, x + 5, y_pos);

@@ -54,7 +54,8 @@ void LinePlot::update_min_max_values() {
 }
 
 int LinePlot::calculate_screen_ypos(double value) {
-    return (int)( (value - ylo) * (-graph->get_height()) / (yhi - ylo) + graph->get_y() );
+    // return (int)( (value - ylo) * (-graph->get_height()) / (yhi - ylo) + graph->get_y() );
+    return (int)( graph->get_y() + graph->get_height() * (yhi - value) / (yhi - ylo));
 }
 
 int LinePlot::calculate_screen_xpos(int index) {
@@ -100,14 +101,7 @@ void LinePlot::print_all_values() {
     Serial.println();
 }
 
-int LinePlot::get_current_number_of_items() {
-    return current_number_of_items;
-}
-
-int LinePlot::get_max_number_of_items() {
-    return max_number_of_items;
-}
-
-void LinePlot::set_graph(Graph *graph) {
-    this->graph = graph;
-}
+int LinePlot::get_current_number_of_items() { return current_number_of_items; }
+int LinePlot::get_max_number_of_items() { return max_number_of_items; }
+void LinePlot::set_graph(Graph *graph) { this->graph = graph; }
+unsigned int LinePlot::get_color() { return color; }
