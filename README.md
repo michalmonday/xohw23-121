@@ -10,6 +10,8 @@ Documentation files are in the [docs](./docs) directory and include:
 * [console_io.md](./docs/console_io.md)
 * [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md)
 * [loading_and_running_programs.md](./docs/loading_and_running_programs.md)
+* [sensors_extension.md](./docs/sensors_extension.md)
+* [display.md](./docs/display.md) (TODO)
 
 # Purpose
 The main purpose of this wrapper is to help with development and testing of a [continuous monitoring system](https://github.com/michalmonday/continuous_monitoring_system) that will compare program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors). In similar way to previously published work like:  
