@@ -8,7 +8,7 @@ package continuous_monitoring_system_pkg;
 parameter XLEN = 64;
 parameter RISC_V_INSTRUCTION_WIDTH = 32;
 
-parameter AXI_DATA_WIDTH = 512;
+parameter AXI_DATA_WIDTH = 1024;
 
 // Instruction opcodes
 parameter BRANCH_OPCODE = 7'b1100011;
@@ -32,6 +32,8 @@ parameter WFI_INSTRUCTION = 32'h10500073;
 parameter CTRL_ADDR_WIDTH = 8; // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 parameter CTRL_DATA_WIDTH = 64; // control data width, the functionality of the module is controlled by writing to address+data ports
 
+parameter GENERAL_PURPOSE_REGISTERS_WIDTH = 4096;
+
 typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     TRIGGER_TRACE_START_ADDRESS_ENABLED,
     TRIGGER_TRACE_END_ADDRESS_ENABLED,
@@ -43,7 +45,11 @@ typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     MONITORED_ADDRESS_RANGE_UPPER_BOUND,
     WFI_STOPPED,
     CLK_COUNTER,
-    LAST_WRITE_TIMESTAMP
+    LAST_WRITE_TIMESTAMP,
+    TLAST_INTERVAL,
+    HALTING_ON_FULL_FIFO_ENABLED
+    // PROGRAM_START_ADDRESS, // this allows to reset CLK_COUNTER to 0 when the program starts
+    // RESET_CLK_COUNT_ON_PROGRAM_START_ENABLED
     } ctrl_addr_t;
 
 parameter CLK_COUNTER_WIDTH = 64;

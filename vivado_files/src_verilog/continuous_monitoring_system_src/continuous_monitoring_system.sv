@@ -14,6 +14,7 @@ module continuous_monitoring_system #(
 ) (
     input   logic   clk,
     input   logic   rst_n,
+    input   logic   cpu_rst_n,
 
     // data pkt signals (to be stored in FIFO)
     input   logic   [RISC_V_INSTRUCTION_WIDTH - 1 : 0]  instr,
@@ -25,7 +26,7 @@ module continuous_monitoring_system #(
     input   logic                               M_AXIS_tready,
     output  logic   [AXI_DATA_WIDTH - 1 : 0]    M_AXIS_tdata,
     output  logic                               M_AXIS_tlast,
-    input   logic   [31 : 0]                    tlast_interval, // number of items in FIFO after which tlast is asserted
+    // input   logic   [31 : 0]                    tlast_interval, // number of items in FIFO after which tlast is asserted
 
     // control signals (determining operational mode of the continuous_monitoring_system)
     input   ctrl_addr_t                         ctrl_addr,
@@ -37,6 +38,12 @@ module continuous_monitoring_system #(
     
     input   logic                                       en,
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
+    // CPU is halted when fifo is full, we can use this to count ticks while halted and later calculate performance penalty due to CMS usage
+    input fifo_full, 
+    input   logic   [GENERAL_PURPOSE_REGISTERS_WIDTH - 1 : 0] general_purpose_registers,
+
+    output logic halt_cpu,
+
     output logic pc_valid_new_probe,
 
     output wire branch_event_probe1,
@@ -52,7 +59,8 @@ module continuous_monitoring_system #(
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_jal_counter_probe,
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
 
-    output wire performance_counters_rst_n_probe
+    output wire performance_counters_rst_n_probe,
+    output wire [63:0] item_counter_probe
 );
     logic drop_instr;
 
@@ -62,7 +70,7 @@ module continuous_monitoring_system #(
     reg [7 : 0] wfi_stop = 0; // it is 2 bits to use it as a counter and control write enable only based on MSB (to delay disabling write by 1 cycle)
     localparam WFI_STOP_THRESHOLD = 255;
 
-    wire pc_valid_new = ((last_pc[0] != last_pc[1]) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
+    wire pc_valid_new = ((last_pc[0] != last_pc[1] & (last_instr[1] != WFI_INSTRUCTION)) || (wfi_stop == WFI_STOP_THRESHOLD - 1)) 
                         & (last_pc[1] != 0) 
                         & rst_n;
 
@@ -96,6 +104,15 @@ module continuous_monitoring_system #(
     reg [RISC_V_INSTRUCTION_WIDTH - 1: 0] last_instr [1:0];
     reg [XLEN - 1 : 0] last_pc [1:0];
 
+    reg [63:0] fifo_full_ticks_count = 0;
+
+    reg [63:0] tlast_interval = 0;
+    reg halting_on_full_fifo_enabled = 1; // enabled by default
+    assign halt_cpu = halting_on_full_fifo_enabled & fifo_full;
+
+    // reg [63:0] program_start_address = 'h1000;
+    // reg reset_clk_count_on_program_start_enabled = 0;
+
     // edge detector allows to detect pos/neg edges of a write enable signal
     // this is useful when this module is controlled by AXI GPIO from Python
     // it can be disabled by setting CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED to 0
@@ -122,13 +139,33 @@ module continuous_monitoring_system #(
         .drop_instr(drop_instr)
     );
 
+    // locations in data_pkt
     localparam PERFORMANCE_COUNTERS_LOCATION = 0;
     localparam PERFORMANCE_COUNTERS_OVERFLOW_MAP_LOCATION = NO_OF_PERFORMANCE_EVENTS * PERFORMANCE_EVENT_MOD_COUNTER_WIDTH;
     localparam PC_LOCATION = PERFORMANCE_COUNTERS_OVERFLOW_MAP_LOCATION + NO_OF_PERFORMANCE_EVENTS;
     localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
     localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
 
+    // locations in general_purpose_registers input
+    localparam A0_IN_GPR_LOCATION = 10 * 128; // value is the first 64 bits, CHERI meta data is the second 64 bits
+    localparam A1_IN_GPR_LOCATION = 11 * 128;
+    localparam A2_IN_GPR_LOCATION = 12 * 128;
+    localparam A3_IN_GPR_LOCATION = 13 * 128;
+    localparam A4_IN_GPR_LOCATION = 14 * 128;
+    localparam A5_IN_GPR_LOCATION = 15 * 128;
+    localparam A6_IN_GPR_LOCATION = 16 * 128;
+    localparam A7_IN_GPR_LOCATION = 17 * 128;
+
     wire [AXI_DATA_WIDTH - 1 : 0]data_pkt = {
+        // general_purpose_registers[A7_IN_GPR_LOCATION + 63 : A7_IN_GPR_LOCATION],
+        // general_purpose_registers[A6_IN_GPR_LOCATION + 63 : A6_IN_GPR_LOCATION],
+        // general_purpose_registers[A5_IN_GPR_LOCATION + 63 : A5_IN_GPR_LOCATION],
+        // general_purpose_registers[A4_IN_GPR_LOCATION + 63 : A4_IN_GPR_LOCATION],
+        general_purpose_registers[A3_IN_GPR_LOCATION + 63 : A3_IN_GPR_LOCATION],
+        general_purpose_registers[A2_IN_GPR_LOCATION + 63 : A2_IN_GPR_LOCATION],
+        general_purpose_registers[A1_IN_GPR_LOCATION + 63 : A1_IN_GPR_LOCATION],
+        general_purpose_registers[A0_IN_GPR_LOCATION + 63 : A0_IN_GPR_LOCATION],
+        fifo_full_ticks_count,
         last_instr[1],
         // data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
         clk_counter - last_write_timestamp,  
@@ -195,7 +232,9 @@ module continuous_monitoring_system #(
         .M_AXIS_tvalid(M_AXIS_tvalid),
         .M_AXIS_tready(M_AXIS_tready),
         .M_AXIS_tdata(M_AXIS_tdata),
-        .M_AXIS_tlast(M_AXIS_tlast)
+        .M_AXIS_tlast(M_AXIS_tlast),
+
+        .item_counter_probe(item_counter_probe)
     );
 
     // control registers setting
@@ -223,9 +262,19 @@ module continuous_monitoring_system #(
                 last_pc[i] <= 0;
                 last_instr[i] <= 0;
             end
+
+            fifo_full_ticks_count <= 0;
+            // program_start_address <= 0;
+            // reset_clk_count_on_program_start_enabled <= 0;
         end
         else begin
-            clk_counter <= clk_counter + 1;
+            if (data_to_axi_write_enable || ~rst_n) begin
+                fifo_full_ticks_count <= fifo_full ? 1 : 0; 
+            end
+            else if (fifo_full && en) begin
+                fifo_full_ticks_count <= fifo_full_ticks_count + 1;
+            end
+
 
             if (data_to_axi_write_enable) begin
                 last_write_timestamp <= clk_counter;
@@ -237,13 +286,6 @@ module continuous_monitoring_system #(
             last_pc[0] <= pc;
             last_instr[0] <= instr;
 
-
-            if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
-                wfi_stop <= wfi_stop + 1;
-            end 
-            else if (last_instr[1] != WFI_INSTRUCTION) begin
-                wfi_stop <= 0;
-            end
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin
@@ -286,6 +328,18 @@ module continuous_monitoring_system #(
                     LAST_WRITE_TIMESTAMP: begin
                         last_write_timestamp <= ctrl_wdata;
                     end
+                    TLAST_INTERVAL: begin
+                        tlast_interval <= ctrl_wdata;
+                    end
+                    HALTING_ON_FULL_FIFO_ENABLED: begin
+                        halting_on_full_fifo_enabled <= ctrl_wdata;
+                    end 
+                    // PROGRAM_START_ADDRESS: begin
+                    //     program_start_address <= ctrl_wdata;
+                    // end
+                    // RESET_CLK_COUNT_ON_PROGRAM_START_ENABLED: begin
+                    //     reset_clk_count_on_program_start_enabled <= ctrl_wdata;
+                    // end
 
                     default: begin
                         // do nothing
@@ -293,6 +347,23 @@ module continuous_monitoring_system #(
                 endcase
             end
             else begin
+                // signals that are also set by CMS control interface must be set here
+                // to avoid setting them twice 
+
+                if (~cpu_rst_n) begin 
+                    clk_counter <= 0;
+                end 
+                else begin
+                    clk_counter <= clk_counter + 1;
+                end
+
+                if (last_instr[1] == WFI_INSTRUCTION && wfi_stop < WFI_STOP_THRESHOLD && en) begin
+                    wfi_stop <= wfi_stop + 1;
+                end 
+                else if (last_instr[1] != WFI_INSTRUCTION) begin
+                    wfi_stop <= 0;
+                end
+
                 if (trigger_trace_start_address_enabled && (pc == trigger_trace_start_address)) begin
                     trigger_trace_start_reached <= 1;
                     trigger_trace_end_reached <= 0;
