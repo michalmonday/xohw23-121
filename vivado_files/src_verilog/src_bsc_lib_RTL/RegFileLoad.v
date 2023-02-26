@@ -40,7 +40,11 @@ module RegFileLoad(CLK,
                    ADDR_2, D_OUT_2,
                    ADDR_3, D_OUT_3,
                    ADDR_4, D_OUT_4,
-                   ADDR_5, D_OUT_5
+                   ADDR_5, D_OUT_5,
+                ADDR_6, D_OUT_6,
+                ADDR_7, D_OUT_7,
+                ADDR_8, D_OUT_8,
+                ADDR_9, D_OUT_9
                    );
    parameter                   file = "";
    parameter                   addr_width = 1;
@@ -69,6 +73,18 @@ module RegFileLoad(CLK,
    input [addr_width - 1 : 0]  ADDR_5;
    output [data_width - 1 : 0] D_OUT_5;
 
+  input [addr_width - 1 : 0]  ADDR_6;
+   output [data_width - 1 : 0] D_OUT_6;
+
+   input [addr_width - 1 : 0]  ADDR_7;
+   output [data_width - 1 : 0] D_OUT_7;
+
+   input [addr_width - 1 : 0]  ADDR_8;
+   output [data_width - 1 : 0] D_OUT_8;
+
+   input [addr_width - 1 : 0]  ADDR_9;
+   output [data_width - 1 : 0] D_OUT_9;
+
    reg [data_width - 1 : 0]    arr[lo:hi];
 
 
@@ -92,6 +108,10 @@ module RegFileLoad(CLK,
    assign D_OUT_3 = arr[ADDR_3];
    assign D_OUT_4 = arr[ADDR_4];
    assign D_OUT_5 = arr[ADDR_5];
+   assign D_OUT_6 = arr[ADDR_6];
+   assign D_OUT_7 = arr[ADDR_7];
+   assign D_OUT_8 = arr[ADDR_8];
+   assign D_OUT_9 = arr[ADDR_9];
 
    // synopsys translate_off
    always@(posedge CLK)
@@ -110,6 +130,14 @@ module RegFileLoad(CLK,
                 $display( "Warning: RegFile: %m -- Address port 4 is out of bounds: %h", ADDR_4 ) ;
               if (( ADDR_5 < lo ) || (ADDR_5 > hi) )
                 $display( "Warning: RegFile: %m -- Address port 5 is out of bounds: %h", ADDR_5 ) ;
+              if (( ADDR_6 < lo ) || (ADDR_6 > hi) )
+                $display( "Warning: RegFile: %m -- Address port 6 is out of bounds: %h", ADDR_6 ) ;
+              if (( ADDR_7 < lo ) || (ADDR_7 > hi) )
+                $display( "Warning: RegFile: %m -- Address port 7 is out of bounds: %h", ADDR_7 ) ;
+              if (( ADDR_8 < lo ) || (ADDR_8 > hi) )
+                $display( "Warning: RegFile: %m -- Address port 8 is out of bounds: %h", ADDR_8 ) ;
+              if (( ADDR_9 < lo ) || (ADDR_9 > hi) )
+                $display( "Warning: RegFile: %m -- Address port 9 is out of bounds: %h", ADDR_9 ) ;
               if ( WE && ( ADDR_IN < lo ) || (ADDR_IN > hi) )
                 $display( "Warning: RegFile: %m -- Write Address port is out of bounds: %h", ADDR_IN ) ;
            end

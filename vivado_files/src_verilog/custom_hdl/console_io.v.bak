@@ -91,7 +91,7 @@ module console_io(
         .sig(AXI_GPIO_input[9]),
         .pos_edge(output_fifo_rd_en)
     );
-    sync_fifo  #(
+    sync_fifo4  #(
         .DATA_DEPTH(1000),
         .DATA_WIDTH(8)
     ) output_fifo (
