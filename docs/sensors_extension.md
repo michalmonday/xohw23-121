@@ -39,6 +39,7 @@ Embedded systems often interact with the outside world through sensors and actua
 
 Notice that multiplexer EN is pulled down, while the OE pin of the level shifter is pulled up. Wiring of sensors is not shown in the diagram, their analog output pins go to the mutiplexer pins C0-C15. The J63 on the diagram signifies the header pins for the ribbon cable connector but correspond directly to the XADC_GPIO pins on the ZC706 board.
 
+
 # Flute modification
 Soc_Top.bsv is the top level synthesizable module of the Flute (there is also a higher-level `Top_HW_Side.bsv` module but it is for simulation only). It instantiates UART, memory controller and boot rom modules, all connected through the same fabric (interconnect) using AXI protocol. 
 
@@ -64,10 +65,22 @@ int main() {
 }
 ```
 
-# Vivado implementation
+# Working principle and Vivado implementation
+
+In the pynq wrapper design the XADC wizard has the "external multiplexer" setting enabled. This means that the XADC wizard will output "muxaddr_out" signal, letting know the physically connected external multiplexer which input channel (which sensor) to select. The "muxaddr_out" is a 4-bit signal, so the multiplexer can select up to 16 different sensors. 
+
+The currently selected input travels to the FPGA through XADC_VAUX0P pin (while XADC_VAUX0N is connected to ground, for the purpose of reducing noise by subtracting the ground voltage from the XADC_VAUX0P signal). XADC_GPIO pins 0-3 are connected to the multiplexers address pins (through the level shifter to raise their voltage from 1.5V to 3.3V). The image below shows their state during operation:
+
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/sensors_input_extension_select_pins_waveform.png" width="600" />
+
+It can be noticed that the address never goes above 6, that is because in the XADC wizard I selected only 7 inputs to be used in the channel sequencer (because the extension board only has 7 sensors as of 26/02/2023).  
+
+![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_input_extension_channel_sequencer.png)
+
+The lowest possible conversion rate was selected (39 KSPS, while using 50MHz clock), because initially with the highest one the mutliplexer didn't work well.
 
 ### Intermediate sensor data storage 
-Sensors data is input directly from XADC_VAUX0P pin into the XADC wizard block, set to work in external multiplexer mode with 39 KSPS conversion rate. The output of the XADC wizard is connected to the small block memory generator dedicated for storing sensor values. That memory has 2 ports, 1 of them is constantly updating the memory with the latest sensor values, while the other one is controlled by the RISC-V processor. Using this approach most sensor values are overwritten before they're read, but it is not a problem for our use case.
+The output of the XADC wizard (do_out pin) is connected to the small block memory generator dedicated for storing sensor values. That memory has 2 ports, PORTB is constantly updating the memory with the latest sensor values, while the PORTA is controlled by the RISC-V processor. Using this approach most sensor values are overwritten before they're read, but it is not a problem for our use case.
 
 ### Block diagram (interconnect)
 Diagram below shows the newly created output (of the internal Soc_Top fabric) connected to BRAM controller (through smartconnect block used for the sake of address translation, it is set to start at address `0xC0003000` in address editor to match with Soc_Map.bsv definition).
