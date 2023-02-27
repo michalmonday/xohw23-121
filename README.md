@@ -38,6 +38,8 @@ Furthermore, the documentation may serve as a reference for anyone who would lik
 
 # Block design
 
+TODO: describe organization of the block design somewhere, mention how hierarchy was used to separate different parts of the design into higher level blocks.
+
 Click to view a high resolution PDF.
 
 [<img src="./images/block_design.png" />](./images/block_design.pdf)
