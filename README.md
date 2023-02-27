@@ -5,12 +5,12 @@ This repository contains source files and documentation for a PYNQ design that c
 
 # Documentation
 Documentation files are in the [docs](./docs) directory and include:
-* [setup_guide.md](./docs/setup_guide.md)
-* [data_extraction.md](./docs/data_extraction.md)
-* [console_io.md](./docs/console_io.md)
-* [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md)
-* [loading_and_running_programs.md](./docs/loading_and_running_programs.md)
-* [sensors_extension.md](./docs/sensors_extension.md)
+* [setup_guide.md](./docs/setup_guide.md) - step by step guide to get the design up and running
+* [data_extraction.md](./docs/data_extraction.md) - what is traced and how
+* [console_io.md](./docs/console_io.md) - how to interact with the Flute console input and output
+* [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md) - how to customize operation of the CMS module (responsible for filtering/preprocessing of the data)
+* [loading_and_running_programs.md](./docs/loading_and_running_programs.md) - how to load a program into memory and run it on the RISC-V processor
+* [sensors_extension.md](./docs/sensors_extension.md) - reading analog sensor inputs inside a RISC-V program
 * [display.md](./docs/display.md) (TODO)
 
 # Purpose
