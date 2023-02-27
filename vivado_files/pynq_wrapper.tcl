@@ -40,7 +40,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# mkSoC_Top, console_io, mux_select_to_gpio, shift_register, delayer, cms_ip_wrapper, shift_register_generic
+# mkSoC_Top, axi_dma_receive_transfer_tap, console_io_dma, console_io, mux_select_to_gpio, shift_register, delayer, cms_ip_wrapper, shift_register_generic
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -117,12 +117,6 @@ if { ${design_name} eq "" } {
 
 }
 
-  # Add USER_COMMENTS on $design_name
-  set_property USER_COMMENTS.comment_1 "LOW" [get_bd_designs $design_name]
-  set_property USER_COMMENTS.comment_10 "GPIO bit index=3
-Select FIFO (to avoid FIFO being filled during transfer to PS which results in pynq error)" [get_bd_designs $design_name]
-  set_property USER_COMMENTS.comment_3 "program memory" [get_bd_designs $design_name]
-
 common::send_gid_msg -ssname BD::TCL -id 2005 -severity "INFO" "Currently the variable <design_name> is equal to \"$design_name\"."
 
 if { $nRet != 0 } {
@@ -138,9 +132,11 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:processing_system7:5.5\
+xilinx.com:ip:axi_dma:7.1\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:system_ila:1.1\
+xilinx.com:ip:xlconcat:2.1\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:xlslice:1.0\
@@ -149,7 +145,6 @@ xilinx.com:ip:blk_mem_gen:8.4\
 xilinx.com:ip:c_addsub:12.0\
 xilinx.com:ip:xadc_wiz:3.3\
 xilinx.com:ip:util_vector_logic:2.0\
-xilinx.com:ip:axi_dma:7.1\
 xilinx.com:ip:axis_data_fifo:2.0\
 "
 
@@ -177,6 +172,8 @@ set bCheckModules 1
 if { $bCheckModules == 1 } {
    set list_check_mods "\ 
 mkSoC_Top\
+axi_dma_receive_transfer_tap\
+console_io_dma\
 console_io\
 mux_select_to_gpio\
 shift_register\
@@ -365,6 +362,10 @@ proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier 
 
   create_bd_intf_pin -mode Monitor -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
 
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S01_AXI
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S02_AXI
+
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
 
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI_LITE
@@ -375,7 +376,7 @@ proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier 
   create_bd_pin -dir I -type rst aresetn
   create_bd_pin -dir O -from 31 -to 0 axis_wr_data_count
   create_bd_pin -dir I en
-  create_bd_pin -dir I -from 4095 -to 0 general_purpose_registers
+  create_bd_pin -dir I -from 511 -to 0 general_purpose_registers
   create_bd_pin -dir O halt_cpu
   create_bd_pin -dir I -from 31 -to 0 instr
   create_bd_pin -dir O -from 63 -to 0 item_counter_probe1
@@ -423,11 +424,13 @@ proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier 
   # Create instance: smartconnect_1, and set properties
   set smartconnect_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_1 ]
   set_property -dict [ list \
-   CONFIG.NUM_SI {1} \
+   CONFIG.NUM_SI {3} \
  ] $smartconnect_1
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_gpio_to_cms_ctrl_interface/S_AXI]
+  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins S02_AXI] [get_bd_intf_pins smartconnect_1/S02_AXI]
+  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins S01_AXI] [get_bd_intf_pins smartconnect_1/S01_AXI]
   connect_bd_intf_net -intf_net axi_dma_0_M_AXI_S2MM [get_bd_intf_pins axi_dma_0/M_AXI_S2MM] [get_bd_intf_pins smartconnect_1/S00_AXI]
   connect_bd_intf_net -intf_net axi_smc_M04_AXI [get_bd_intf_pins S_AXI_LITE] [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
   connect_bd_intf_net -intf_net axis_data_fifo_0_M_AXIS [get_bd_intf_pins axi_dma_0/S_AXIS_S2MM] [get_bd_intf_pins axis_data_fifo_0/M_AXIS]
@@ -979,13 +982,23 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   # Create interface pins
   create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M00_AXI
 
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 M03_AXI
+
   create_bd_intf_pin -mode Monitor -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS
 
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S00_AXI
 
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S01_AXI
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S02_AXI
+
 
   # Create pins
   create_bd_pin -dir O -from 31 -to 0 AXI_GPIO_output
+  create_bd_pin -dir O -from 9 -to 0 M03_AXI_awaddr1
+  create_bd_pin -dir O -from 31 -to 0 M03_AXI_wdata1
+  create_bd_pin -dir I M03_AXI_wready1
+  create_bd_pin -dir O M03_AXI_wvalid1
   create_bd_pin -dir I -from 0 -to 0 RDY_put_from_console_put
   create_bd_pin -dir I -from 0 -to 0 RDY_to_raw_mem_request_get
   create_bd_pin -dir I -type rst aresetn
@@ -995,7 +1008,7 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   create_bd_pin -dir I -from 7 -to 0 console_out_data
   create_bd_pin -dir I console_out_we
   create_bd_pin -dir I -from 0 -to 0 cpu_reset_completed
-  create_bd_pin -dir I -from 4095 -to 0 general_purpose_registers
+  create_bd_pin -dir I -from 511 -to 0 general_purpose_registers
   create_bd_pin -dir O halt_cpu
   create_bd_pin -dir O -from 10 -to 0 input_fifo_counter1
   create_bd_pin -dir I -from 31 -to 0 instr
@@ -1074,6 +1087,9 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins M_AXIS] [get_bd_intf_pins continuous_monitoring_system_blocks/M_AXIS]
+  connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins M03_AXI] [get_bd_intf_pins axi_smc/M03_AXI]
+  connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins S02_AXI] [get_bd_intf_pins continuous_monitoring_system_blocks/S02_AXI]
+  connect_bd_intf_net -intf_net Conn5 [get_bd_intf_pins S01_AXI] [get_bd_intf_pins continuous_monitoring_system_blocks/S01_AXI]
   connect_bd_intf_net -intf_net axi_smc_M01_AXI [get_bd_intf_pins axi_smc/M01_AXI] [get_bd_intf_pins bram_loader/S_AXI]
   connect_bd_intf_net -intf_net axi_smc_M02_AXI [get_bd_intf_pins axi_gpio_0/S_AXI] [get_bd_intf_pins axi_smc/M02_AXI]
   connect_bd_intf_net -intf_net axi_smc_M04_AXI [get_bd_intf_pins axi_smc/M04_AXI] [get_bd_intf_pins continuous_monitoring_system_blocks/S_AXI_LITE]
@@ -1085,9 +1101,13 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net Din_1 [get_bd_pins to_raw_mem_request_get] [get_bd_pins bram_logic/Din]
   connect_bd_net -net In4_1 [get_bd_pins cpu_reset_completed] [get_bd_pins console_io_0/cpu_reset_completed]
+  connect_bd_net -net M03_AXI_wready1_1 [get_bd_pins M03_AXI_wready1] [get_bd_pins axi_smc/M03_AXI_wready]
   connect_bd_net -net RDY_get_to_console_get [get_bd_pins console_out_we] [get_bd_pins console_io_0/RDY_get_to_console_get]
   connect_bd_net -net axi_gpio_0_gpio_io_o [get_bd_pins axi_gpio_0/gpio_io_o] [get_bd_pins gpio_0/Din] [get_bd_pins gpio_1_rst_console_input/Din] [get_bd_pins gpio_2_rst_console_output/Din]
   connect_bd_net -net axi_gpio_3_gpio_io_o [get_bd_pins axi_gpio_3/gpio_io_o] [get_bd_pins console_io_0/AXI_GPIO_input]
+  connect_bd_net -net axi_smc_M03_AXI_awaddr [get_bd_pins M03_AXI_awaddr1] [get_bd_pins axi_smc/M03_AXI_awaddr]
+  connect_bd_net -net axi_smc_M03_AXI_wdata [get_bd_pins M03_AXI_wdata1] [get_bd_pins axi_smc/M03_AXI_wdata]
+  connect_bd_net -net axi_smc_M03_AXI_wvalid [get_bd_pins M03_AXI_wvalid1] [get_bd_pins axi_smc/M03_AXI_wvalid]
   connect_bd_net -net axis_data_fifo_0_axis_wr_data_count [get_bd_pins axi_gpio_0/gpio2_io_i] [get_bd_pins continuous_monitoring_system_blocks/axis_wr_data_count]
   connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins memory_data] [get_bd_pins bram_logic/douta]
   connect_bd_net -net console_io_0_AXI_GPIO_output [get_bd_pins AXI_GPIO_output] [get_bd_pins axi_gpio_3/gpio2_io_i] [get_bd_pins console_io_0/AXI_GPIO_output]
@@ -1280,6 +1300,7 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_I2C_RESET_SELECT {Share reset pin} \
    CONFIG.PCW_IOPLL_CTRL_FBDIV {30} \
    CONFIG.PCW_IO_IO_PLL_FREQMHZ {1000.000} \
+   CONFIG.PCW_IRQ_F2P_INTR {1} \
    CONFIG.PCW_MIO_0_DIRECTION {out} \
    CONFIG.PCW_MIO_0_IOTYPE {LVCMOS 1.8V} \
    CONFIG.PCW_MIO_0_PULLUP {enabled} \
@@ -1587,12 +1608,45 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_USB1_RESET_ENABLE {0} \
    CONFIG.PCW_USB_RESET_ENABLE {1} \
    CONFIG.PCW_USB_RESET_SELECT {Share reset pin} \
+   CONFIG.PCW_USE_FABRIC_INTERRUPT {1} \
    CONFIG.PCW_USE_S_AXI_HP0 {1} \
+   CONFIG.PCW_USE_S_AXI_HP1 {0} \
    CONFIG.PCW_WDT_PERIPHERAL_ENABLE {0} \
    CONFIG.PCW_WDT_PERIPHERAL_FREQMHZ {133.333333} \
    CONFIG.preset {ZC706} \
  ] $ZYNQ_ARM_processing_system
 
+  # Create instance: axi_dma_console_io, and set properties
+  set axi_dma_console_io [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_dma:7.1 axi_dma_console_io ]
+  set_property -dict [ list \
+   CONFIG.c_include_sg {0} \
+   CONFIG.c_m_axis_mm2s_tdata_width {8} \
+   CONFIG.c_s_axis_s2mm_tdata_width {8} \
+   CONFIG.c_sg_include_stscntrl_strm {0} \
+ ] $axi_dma_console_io
+
+  # Create instance: axi_dma_receive_tran_0, and set properties
+  set block_name axi_dma_receive_transfer_tap
+  set block_cell_name axi_dma_receive_tran_0
+  if { [catch {set axi_dma_receive_tran_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $axi_dma_receive_tran_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: console_io_dma_0, and set properties
+  set block_name console_io_dma
+  set block_cell_name console_io_dma_0
+  if { [catch {set console_io_dma_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $console_io_dma_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
 
@@ -1609,8 +1663,8 @@ proc create_root_design { parentCell } {
   set system_ila_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0 ]
   set_property -dict [ list \
    CONFIG.C_MON_TYPE {MIX} \
-   CONFIG.C_NUM_MONITOR_SLOTS {5} \
-   CONFIG.C_NUM_OF_PROBES {24} \
+   CONFIG.C_NUM_MONITOR_SLOTS {7} \
+   CONFIG.C_NUM_OF_PROBES {42} \
    CONFIG.C_PROBE0_TYPE {0} \
    CONFIG.C_PROBE10_TYPE {0} \
    CONFIG.C_PROBE11_TYPE {0} \
@@ -1627,8 +1681,26 @@ proc create_root_design { parentCell } {
    CONFIG.C_PROBE21_TYPE {0} \
    CONFIG.C_PROBE22_TYPE {0} \
    CONFIG.C_PROBE23_TYPE {0} \
+   CONFIG.C_PROBE24_TYPE {0} \
+   CONFIG.C_PROBE25_TYPE {0} \
+   CONFIG.C_PROBE26_TYPE {0} \
+   CONFIG.C_PROBE27_TYPE {0} \
+   CONFIG.C_PROBE28_TYPE {0} \
+   CONFIG.C_PROBE29_TYPE {0} \
    CONFIG.C_PROBE2_TYPE {0} \
+   CONFIG.C_PROBE30_TYPE {0} \
+   CONFIG.C_PROBE31_TYPE {0} \
+   CONFIG.C_PROBE32_TYPE {0} \
+   CONFIG.C_PROBE33_TYPE {0} \
+   CONFIG.C_PROBE34_TYPE {0} \
+   CONFIG.C_PROBE35_TYPE {0} \
+   CONFIG.C_PROBE36_TYPE {0} \
+   CONFIG.C_PROBE37_TYPE {0} \
+   CONFIG.C_PROBE38_TYPE {0} \
+   CONFIG.C_PROBE39_TYPE {0} \
    CONFIG.C_PROBE3_TYPE {0} \
+   CONFIG.C_PROBE40_TYPE {0} \
+   CONFIG.C_PROBE41_TYPE {0} \
    CONFIG.C_PROBE4_TYPE {0} \
    CONFIG.C_PROBE5_TYPE {0} \
    CONFIG.C_PROBE6_TYPE {0} \
@@ -1677,7 +1749,34 @@ proc create_root_design { parentCell } {
    CONFIG.C_SLOT_4_AXI_W_SEL_DATA {1} \
    CONFIG.C_SLOT_4_AXI_W_SEL_TRIG {1} \
    CONFIG.C_SLOT_4_INTF_TYPE {xilinx.com:interface:aximm_rtl:1.0} \
+   CONFIG.C_SLOT_5_APC_EN {0} \
+   CONFIG.C_SLOT_5_AXI_AR_SEL_DATA {1} \
+   CONFIG.C_SLOT_5_AXI_AR_SEL_TRIG {1} \
+   CONFIG.C_SLOT_5_AXI_AW_SEL_DATA {1} \
+   CONFIG.C_SLOT_5_AXI_AW_SEL_TRIG {1} \
+   CONFIG.C_SLOT_5_AXI_B_SEL_DATA {1} \
+   CONFIG.C_SLOT_5_AXI_B_SEL_TRIG {1} \
+   CONFIG.C_SLOT_5_AXI_R_SEL_DATA {1} \
+   CONFIG.C_SLOT_5_AXI_R_SEL_TRIG {1} \
+   CONFIG.C_SLOT_5_AXI_W_SEL_DATA {1} \
+   CONFIG.C_SLOT_5_AXI_W_SEL_TRIG {1} \
+   CONFIG.C_SLOT_5_INTF_TYPE {xilinx.com:interface:aximm_rtl:1.0} \
+   CONFIG.C_SLOT_6_APC_EN {0} \
+   CONFIG.C_SLOT_6_AXI_AR_SEL_DATA {1} \
+   CONFIG.C_SLOT_6_AXI_AR_SEL_TRIG {1} \
+   CONFIG.C_SLOT_6_AXI_AW_SEL_DATA {1} \
+   CONFIG.C_SLOT_6_AXI_AW_SEL_TRIG {1} \
+   CONFIG.C_SLOT_6_AXI_B_SEL_DATA {1} \
+   CONFIG.C_SLOT_6_AXI_B_SEL_TRIG {1} \
+   CONFIG.C_SLOT_6_AXI_R_SEL_DATA {1} \
+   CONFIG.C_SLOT_6_AXI_R_SEL_TRIG {1} \
+   CONFIG.C_SLOT_6_AXI_W_SEL_DATA {1} \
+   CONFIG.C_SLOT_6_AXI_W_SEL_TRIG {1} \
+   CONFIG.C_SLOT_6_INTF_TYPE {xilinx.com:interface:aximm_rtl:1.0} \
  ] $system_ila_0
+
+  # Create instance: xlconcat_0, and set properties
+  set xlconcat_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0 ]
 
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
@@ -1690,6 +1789,13 @@ connect_bd_intf_net -intf_net CHERI_RISCV_Flute_mkSoC_Top_core_dmem_pre_fabric [
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets CHERI_RISCV_Flute_mkSoC_Top_core_dmem_pre_fabric]
 connect_bd_intf_net -intf_net Conn [get_bd_intf_pins PYNQ_wrapper_blocks/M_AXIS] [get_bd_intf_pins system_ila_0/SLOT_2_AXIS]
 connect_bd_intf_net -intf_net Conn1 [get_bd_intf_pins sensors_blocks/BRAM_PORTA] [get_bd_intf_pins system_ila_0/SLOT_3_BRAM]
+  connect_bd_intf_net -intf_net PYNQ_wrapper_blocks_M03_AXI [get_bd_intf_pins PYNQ_wrapper_blocks/M03_AXI] [get_bd_intf_pins axi_dma_console_io/S_AXI_LITE]
+connect_bd_intf_net -intf_net [get_bd_intf_nets PYNQ_wrapper_blocks_M03_AXI] [get_bd_intf_pins PYNQ_wrapper_blocks/M03_AXI] [get_bd_intf_pins system_ila_0/SLOT_5_AXI]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets PYNQ_wrapper_blocks_M03_AXI]
+  connect_bd_intf_net -intf_net axi_dma_0_M_AXI_MM2S [get_bd_intf_pins PYNQ_wrapper_blocks/S02_AXI] [get_bd_intf_pins axi_dma_console_io/M_AXI_MM2S]
+  connect_bd_intf_net -intf_net axi_dma_0_M_AXI_S2MM [get_bd_intf_pins PYNQ_wrapper_blocks/S01_AXI] [get_bd_intf_pins axi_dma_console_io/M_AXI_S2MM]
+connect_bd_intf_net -intf_net [get_bd_intf_nets axi_dma_0_M_AXI_S2MM] [get_bd_intf_pins axi_dma_console_io/M_AXI_S2MM] [get_bd_intf_pins system_ila_0/SLOT_6_AXI]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets axi_dma_0_M_AXI_S2MM]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins ZYNQ_ARM_processing_system/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins ZYNQ_ARM_processing_system/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins PYNQ_wrapper_blocks/S00_AXI] [get_bd_intf_pins ZYNQ_ARM_processing_system/M_AXI_GP0]
@@ -1700,7 +1806,7 @@ connect_bd_intf_net -intf_net [get_bd_intf_nets smartconnect_0_M00_AXI] [get_bd_
 
   # Create port connections
   connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_registers [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_registers] [get_bd_pins PYNQ_wrapper_blocks/general_purpose_registers]
-  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cpu_reset_completed] [get_bd_pins PYNQ_wrapper_blocks/cpu_reset_completed] [get_bd_pins system_ila_0/probe10]
+  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cpu_reset_completed] [get_bd_pins PYNQ_wrapper_blocks/cpu_reset_completed] [get_bd_pins console_io_dma_0/cpu_reset_completed] [get_bd_pins system_ila_0/probe10]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed]
   connect_bd_net -net Din_1 [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/to_raw_mem_request_get] [get_bd_pins PYNQ_wrapper_blocks/to_raw_mem_request_get]
   connect_bd_net -net PYNQ_wrapper_blocks_AXI_GPIO_output [get_bd_pins PYNQ_wrapper_blocks/AXI_GPIO_output] [get_bd_pins system_ila_0/probe14]
@@ -1708,31 +1814,68 @@ connect_bd_intf_net -intf_net [get_bd_intf_nets smartconnect_0_M00_AXI] [get_bd_
   connect_bd_net -net PYNQ_wrapper_blocks_input_fifo_counter1 [get_bd_pins PYNQ_wrapper_blocks/input_fifo_counter1] [get_bd_pins system_ila_0/probe12]
   connect_bd_net -net PYNQ_wrapper_blocks_item_counter_probe [get_bd_pins PYNQ_wrapper_blocks/item_counter_probe] [get_bd_pins system_ila_0/probe11]
   connect_bd_net -net PYNQ_wrapper_blocks_output_fifo_counter1 [get_bd_pins PYNQ_wrapper_blocks/output_fifo_counter1] [get_bd_pins system_ila_0/probe13]
-  connect_bd_net -net RDY_get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_get_to_console_get] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/console_out_we] [get_bd_pins system_ila_0/probe7]
+  connect_bd_net -net RDY_get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_get_to_console_get] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/console_out_we] [get_bd_pins console_io_dma_0/RDY_get_to_console_get] [get_bd_pins system_ila_0/probe7]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets RDY_get_to_console_get]
   connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_ports XADC_VAUX0N_R] [get_bd_pins sensors_blocks/XADC_VAUX0N_R]
   connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_ports XADC_VAUX0P_R] [get_bd_pins sensors_blocks/XADC_VAUX0P_R]
+  connect_bd_net -net axi_dma_console_io_m_axis_mm2s_tdata [get_bd_pins axi_dma_console_io/m_axis_mm2s_tdata] [get_bd_pins console_io_dma_0/input_data] [get_bd_pins system_ila_0/probe24]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axi_dma_console_io_m_axis_mm2s_tdata]
+  connect_bd_net -net axi_dma_console_io_m_axis_mm2s_tvalid [get_bd_pins axi_dma_console_io/m_axis_mm2s_tvalid] [get_bd_pins console_io_dma_0/input_write_en] [get_bd_pins system_ila_0/probe25]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axi_dma_console_io_m_axis_mm2s_tvalid]
+  connect_bd_net -net axi_dma_console_io_mm2s_introut [get_bd_pins axi_dma_console_io/mm2s_introut] [get_bd_pins xlconcat_0/In0]
+  connect_bd_net -net axi_dma_console_io_s2mm_introut [get_bd_pins axi_dma_console_io/s2mm_introut] [get_bd_pins xlconcat_0/In1]
+  connect_bd_net -net axi_dma_console_io_s_axis_s2mm_tready [get_bd_pins axi_dma_console_io/s_axis_s2mm_tready] [get_bd_pins console_io_dma_0/output_tready] [get_bd_pins system_ila_0/probe26]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axi_dma_console_io_s_axis_s2mm_tready]
+  connect_bd_net -net axilite_tap_awaddr_net [get_bd_pins PYNQ_wrapper_blocks/M03_AXI_awaddr1] [get_bd_pins axi_dma_console_io/s_axi_lite_awaddr] [get_bd_pins axi_dma_receive_tran_0/axilite_tap_awaddr] [get_bd_pins system_ila_0/probe37]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axilite_tap_awaddr_net]
+  connect_bd_net -net axilite_tap_wdata_net [get_bd_pins PYNQ_wrapper_blocks/M03_AXI_wdata1] [get_bd_pins axi_dma_console_io/s_axi_lite_wdata] [get_bd_pins axi_dma_receive_tran_0/axilite_tap_wdata] [get_bd_pins system_ila_0/probe38]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axilite_tap_wdata_net]
+  connect_bd_net -net axilite_tap_wready_net [get_bd_pins PYNQ_wrapper_blocks/M03_AXI_wready1] [get_bd_pins axi_dma_console_io/s_axi_lite_wready] [get_bd_pins axi_dma_receive_tran_0/axilite_tap_wready] [get_bd_pins system_ila_0/probe39]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axilite_tap_wready_net]
+  connect_bd_net -net axilite_tap_wvalid_net [get_bd_pins PYNQ_wrapper_blocks/M03_AXI_wvalid1] [get_bd_pins axi_dma_console_io/s_axi_lite_wvalid] [get_bd_pins axi_dma_receive_tran_0/axilite_tap_wvalid] [get_bd_pins system_ila_0/probe40]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axilite_tap_wvalid_net]
   connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/to_raw_mem_response_put] [get_bd_pins PYNQ_wrapper_blocks/memory_data] [get_bd_pins system_ila_0/probe0]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets blk_mem_gen_0_douta]
+  connect_bd_net -net console_io_dma_0_EN_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_put_from_console_put] [get_bd_pins console_io_dma_0/EN_put_from_console_put] [get_bd_pins system_ila_0/probe30]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_EN_put_from_console_put]
+  connect_bd_net -net console_io_dma_0_input_not_full [get_bd_pins axi_dma_console_io/m_axis_mm2s_tready] [get_bd_pins console_io_dma_0/input_not_full] [get_bd_pins system_ila_0/probe31]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_input_not_full]
+  connect_bd_net -net console_io_dma_0_output_available [get_bd_pins console_io_dma_0/output_available] [get_bd_pins system_ila_0/probe32]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_output_available]
+  connect_bd_net -net console_io_dma_0_output_available_delayed [get_bd_pins axi_dma_console_io/s_axis_s2mm_tvalid] [get_bd_pins console_io_dma_0/output_available_delayed] [get_bd_pins system_ila_0/probe41]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_output_available_delayed]
+  connect_bd_net -net console_io_dma_0_output_data [get_bd_pins axi_dma_console_io/s_axis_s2mm_tdata] [get_bd_pins console_io_dma_0/output_data_reg] [get_bd_pins system_ila_0/probe33]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_output_data]
+  connect_bd_net -net console_io_dma_0_output_tlast_reg [get_bd_pins axi_dma_console_io/s_axis_s2mm_tlast] [get_bd_pins console_io_dma_0/output_tlast_reg] [get_bd_pins system_ila_0/probe35]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_output_tlast_reg]
+  connect_bd_net -net console_io_dma_0_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/put_from_console_put] [get_bd_pins console_io_dma_0/put_from_console_put] [get_bd_pins system_ila_0/probe34]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets console_io_dma_0_put_from_console_put]
   connect_bd_net -net delayer_0_delayed_sig [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_to_raw_mem_response_put] [get_bd_pins PYNQ_wrapper_blocks/memory_we] [get_bd_pins system_ila_0/probe1]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets delayer_0_delayed_sig]
   connect_bd_net -net doutb [get_bd_pins sensors_blocks/doutb] [get_bd_pins system_ila_0/probe15]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets doutb]
-  connect_bd_net -net get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/console_out_data] [get_bd_pins system_ila_0/probe2]
+  connect_bd_net -net get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/console_out_data] [get_bd_pins console_io_dma_0/get_to_console_get] [get_bd_pins system_ila_0/probe2]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets get_to_console_get]
   connect_bd_net -net gpio_0_Dout [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_cms_ifc_halt_cpu] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RST_N] [get_bd_pins PYNQ_wrapper_blocks/rst_n] [get_bd_pins sensors_blocks/s_axi_aresetn] [get_bd_pins smartconnect_other_peripherals/aresetn]
+  connect_bd_net -net input_fifo_counter [get_bd_pins console_io_dma_0/input_fifo_counter] [get_bd_pins system_ila_0/probe27]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets input_fifo_counter]
   connect_bd_net -net mkCore_Synth_0_instr [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_instr] [get_bd_pins PYNQ_wrapper_blocks/instr] [get_bd_pins system_ila_0/probe3]
   connect_bd_net -net mkCore_Synth_0_pc [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_pc] [get_bd_pins PYNQ_wrapper_blocks/pc] [get_bd_pins system_ila_0/probe4]
-  connect_bd_net -net mkSoC_Top_0_RDY_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/RDY_put_from_console_put] [get_bd_pins system_ila_0/probe5]
+  connect_bd_net -net mkSoC_Top_0_RDY_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/RDY_put_from_console_put] [get_bd_pins console_io_dma_0/RDY_put_from_console_put] [get_bd_pins system_ila_0/probe5]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkSoC_Top_0_RDY_put_from_console_put]
   connect_bd_net -net mkSoC_Top_0_RDY_to_raw_mem_request_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_to_raw_mem_request_get] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_to_raw_mem_request_get] [get_bd_pins PYNQ_wrapper_blocks/RDY_to_raw_mem_request_get] [get_bd_pins system_ila_0/probe6]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkSoC_Top_0_RDY_to_raw_mem_request_get]
   connect_bd_net -net mkSoC_Top_1_cms_ifc_performance_events [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_performance_events] [get_bd_pins PYNQ_wrapper_blocks/performance_events]
   connect_bd_net -net muxaddr_out [get_bd_pins sensors_blocks/muxaddr_out] [get_bd_pins system_ila_0/probe16]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets muxaddr_out]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins PYNQ_wrapper_blocks/aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins system_ila_0/resetn]
+  connect_bd_net -net output_fifo_counter [get_bd_pins console_io_dma_0/output_fifo_counter] [get_bd_pins system_ila_0/probe28]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets output_fifo_counter]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins PYNQ_wrapper_blocks/aresetn] [get_bd_pins axi_dma_console_io/axi_resetn] [get_bd_pins console_io_dma_0/rst_n] [get_bd_pins console_io_dma_0/rst_n_input_fifo] [get_bd_pins console_io_dma_0/rst_n_output_fifo] [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins system_ila_0/probe29] [get_bd_pins system_ila_0/resetn]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets proc_sys_reset_0_peripheral_aresetn]
   connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins sensors_blocks/reset_in]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins ZYNQ_ARM_processing_system/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
+  connect_bd_net -net receive_transfer_request [get_bd_pins axi_dma_receive_tran_0/receive_transfer_request] [get_bd_pins console_io_dma_0/receive_transfer_request] [get_bd_pins system_ila_0/probe36]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets receive_transfer_request]
   connect_bd_net -net sensors_blocks_S [get_bd_pins sensors_blocks/S] [get_bd_pins system_ila_0/probe17]
   connect_bd_net -net sensors_blocks_XADC_GPIO_0 [get_bd_ports PMOD1_0_LS] [get_bd_ports XADC_GPIO_0] [get_bd_pins sensors_blocks/XADC_GPIO_0]
   connect_bd_net -net sensors_blocks_XADC_GPIO_1 [get_bd_ports PMOD1_1_LS] [get_bd_ports XADC_GPIO_1] [get_bd_pins sensors_blocks/XADC_GPIO_1]
@@ -1744,20 +1887,24 @@ connect_bd_intf_net -intf_net [get_bd_intf_nets smartconnect_0_M00_AXI] [get_bd_
   connect_bd_net -net sensors_blocks_do_out1 [get_bd_pins sensors_blocks/do_out1] [get_bd_pins system_ila_0/probe19]
   connect_bd_net -net sensors_blocks_drdy_out1 [get_bd_pins sensors_blocks/drdy_out1] [get_bd_pins system_ila_0/probe20]
   connect_bd_net -net sensors_blocks_eoc_out [get_bd_pins sensors_blocks/eoc_out] [get_bd_pins system_ila_0/probe21]
-  connect_bd_net -net sync_fifo_0_rd_data [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/console_input_data] [get_bd_pins system_ila_0/probe8]
+  connect_bd_net -net sync_fifo_0_rd_data [get_bd_pins PYNQ_wrapper_blocks/console_input_data] [get_bd_pins system_ila_0/probe8]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets sync_fifo_0_rd_data]
-  connect_bd_net -net util_vector_logic_1_Res [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/console_input_en] [get_bd_pins system_ila_0/probe9]
+  connect_bd_net -net util_vector_logic_1_Res [get_bd_pins PYNQ_wrapper_blocks/console_input_en] [get_bd_pins system_ila_0/probe9]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets util_vector_logic_1_Res]
+  connect_bd_net -net xlconcat_0_dout [get_bd_pins ZYNQ_ARM_processing_system/IRQ_F2P] [get_bd_pins xlconcat_0/dout]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_ma_ddr4_ready] [get_bd_pins xlconstant_0/dout]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/CLK] [get_bd_pins PYNQ_wrapper_blocks/clk] [get_bd_pins ZYNQ_ARM_processing_system/FCLK_CLK0] [get_bd_pins ZYNQ_ARM_processing_system/M_AXI_GP0_ACLK] [get_bd_pins ZYNQ_ARM_processing_system/S_AXI_HP0_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins sensors_blocks/clkb] [get_bd_pins smartconnect_other_peripherals/aclk] [get_bd_pins system_ila_0/clk]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/CLK] [get_bd_pins PYNQ_wrapper_blocks/clk] [get_bd_pins ZYNQ_ARM_processing_system/FCLK_CLK0] [get_bd_pins ZYNQ_ARM_processing_system/M_AXI_GP0_ACLK] [get_bd_pins ZYNQ_ARM_processing_system/S_AXI_HP0_ACLK] [get_bd_pins axi_dma_console_io/m_axi_mm2s_aclk] [get_bd_pins axi_dma_console_io/m_axi_s2mm_aclk] [get_bd_pins axi_dma_console_io/s_axi_lite_aclk] [get_bd_pins axi_dma_receive_tran_0/clk] [get_bd_pins console_io_dma_0/clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins sensors_blocks/clkb] [get_bd_pins smartconnect_other_peripherals/aclk] [get_bd_pins system_ila_0/clk]
 
   # Create address segments
   assign_bd_address -offset 0xC0003000 -range 0x00001000 -target_address_space [get_bd_addr_spaces CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_addr_segs sensors_blocks/axi_bram_ctrl_sensors/S_AXI/Mem0] -force
   assign_bd_address -offset 0x40400000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/continuous_monitoring_system_blocks/axi_dma_0/S_AXI_LITE/Reg] -force
+  assign_bd_address -offset 0x40410000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs axi_dma_console_io/S_AXI_LITE/Reg] -force
   assign_bd_address -offset 0x41200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/axi_gpio_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x41220000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/bram_loader/axi_gpio_2/S_AXI/Reg] -force
   assign_bd_address -offset 0x41230000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/axi_gpio_3/S_AXI/Reg] -force
   assign_bd_address -offset 0x41240000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/continuous_monitoring_system_blocks/axi_gpio_to_cms_ctrl_interface/axi_gpio_cms_ctrl/S_AXI/Reg] -force
+  assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces axi_dma_console_io/Data_MM2S] [get_bd_addr_segs ZYNQ_ARM_processing_system/S_AXI_HP0/HP0_DDR_LOWOCM] -force
+  assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces axi_dma_console_io/Data_S2MM] [get_bd_addr_segs ZYNQ_ARM_processing_system/S_AXI_HP0/HP0_DDR_LOWOCM] -force
   assign_bd_address -offset 0x00000000 -range 0x40000000 -target_address_space [get_bd_addr_spaces PYNQ_wrapper_blocks/continuous_monitoring_system_blocks/axi_dma_0/Data_S2MM] [get_bd_addr_segs ZYNQ_ARM_processing_system/S_AXI_HP0/HP0_DDR_LOWOCM] -force
 
 
