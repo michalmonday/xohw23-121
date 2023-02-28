@@ -21,13 +21,15 @@
     - [Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)
 
 # Overview
-This guide describes how to prepare and/or compile all components involved in the whole PYNQ wrapper project, like:
+This guide describes how to prepare and/or compile most components involved in the whole PYNQ wrapper project, like:
 * **PYNQ image** for ZC706 board that has to be compiled and flashed into SD card.
 * Modified **Flute RISC-V** processor, that propagates relevant signals, allowing them to be collected by external modules.
 * **Vivado block design** that includes RISC-V processor, PYNQ wrapper modules, and processing system configuration.
 * **Python files** that interacts with and controls the programmable logic modules (including RISC-V processor) and must be placed on the PYNQ filesystem.
 
-Please note that this project is constantly under development, so files and documentation are most likely not updated. If you are planning to follow this guide, please contact me and I will update it with the most recent files (email: mb19424@essex.ac.uk, discord:michalmonday#3687).
+Since February 2023, the PYNQ wrapper uses a custom extension board (connected to XADC port) to collect up to 16 analog inputs and read them in RISC-V programs. The extension board is not required to run the PYNQ wrapper, lack of it will not result in any errors. To build the extension board see the list part and the wiring diagram from [sensors_extension.md](sensors_extension.md) file.
+
+Please note that this project is constantly under development, so files and documentation may not be fully updated at all times. If you are planning to follow this guide, please contact me and I will update it with the most recent files (email: mb19424@essex.ac.uk, discord:michalmonday#3687).
 
 # Prerequisites
 * PYNQ board (e.g. ZC706) with at least 100k logic cells in programmable logic (e.g. Ultra96-V2 is not suitable)
@@ -41,10 +43,10 @@ Please note that this project is constantly under development, so files and docu
 We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this guide. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
 
 ### Precompiled image
-I compiled the 2.7.0 version for the ZC706 board and uploaded it to Google Drive. You can download it from the link below:
+I compiled the 2.7.0 version for the ZC706 board and uploaded it to Google Drive. It is available at the link below:
 https://drive.google.com/file/d/1ieKwj0o5VDYzU0CycIzul4IUF5pB3oO5/view?usp=share_link
 
-It takes a lot of space, there is no guarantee it will be available in the future, below I describe how to build it yourself.
+It takes a lot of space, there is no guarantee it will be available in the future, below I describe how to build it.
 
 ### Steps to build PYNQ image for ZC706
 I found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and I encountered many issues trying to compile the image, so below I describe the steps that worked for me. The steps are as follows:  
@@ -57,7 +59,7 @@ git clone --depth 1 --branch v2.7.0 git@github.com:Xilinx/PYNQ.git
 # setup_host.sh suggests to logout/login after it completes
 
 cd PYNQ/boards
-# delete all boards to avoid compiling them ("git rm" must be used instead of "rm")
+# delete all boards to avoid compiling them 
 git rm -r ZCU104/ Pynq-Z1/ Pynq-Z2/
 mkdir ZC706
 cd ZC706
@@ -180,10 +182,10 @@ Where `imported_design` stands for the name of the block design.
 ## Modifying and recompiling the Flute processor
 We used [CTSRD-CHERI](https://github.com/CTSRD-CHERI/Flute) version of Flute which we forked and modified (to propagate signals using ContinuousMonitoringSystem_IFC). The forked version is available a [this link](https://github.com/michalmonday/Flute/tree/continuous_monitoring/), modifications were done in the `continous_monitoring` branch (`git checkout continuous_monitoring`).
 
-The [README.adoc](https://github.com/bluespec/Flute/blob/master/README.adoc) of the Flute repository (including CHERI fork and my fork) contains instructions on how to build the processor. The main steps are as follows:
-* Install [bsc](https://github.com/B-Lang-org/bsc) compiler.
-* Install libraries for bsc compiler from [bsc-contrib](https://github.com/B-Lang-org/bsc-contrib) as described in bsc-contrib README.md file. Make sure to use PREFIX that will lead to bsc compiler. In my case, after installing libraries, the `bsc/bsc-2022.01-ubuntu-18.04/lib/Libraries/` directory contains all folders from [bsc-contrib/Libraries/](https://github.com/B-Lang-org/bsc-contrib/tree/main/Libraries) (e.g. Bus, COBS, FPGA).
-* Navigate to `builds/RV64ACDFIMSUxCHERI_Flute_verilator` directory and run `make compile` to produce Verilog files (stored in `Verilog_RTL` directory) from Bluespec files.
+The [README.adoc](https://github.com/bluespec/Flute/blob/master/README.adoc) of the Flute repository (including CHERI fork and my fork) contains most instructions on how to build the processor (however the PYNQ wrapper requires slightly modified version of bsc compiler as described below). The main steps are as follows:
+* Compile bsc compiler from [this fork](https://github.com/michalmonday/bsc), [this page](https://github.com/michalmonday/bsc/blob/main/INSTALL.md) explains how to do it. After compilation add the newly created `bsc/inst/bin` directory to the PATH environment variable. Compiling from source is required because the default RegFile module (used to implement general purpose registers in the Flute processor) does not allow simultaneous read access to sufficient number of registers (in other words, modifying and recompiling bsc allows to continuously monitor A0-A4 registers that are traced by PYNQ wrapper as of 28/02/2023).
+* Install libraries for bsc compiler from [bsc-contrib](https://github.com/B-Lang-org/bsc-contrib) as described in bsc-contrib README.md file. Make sure to use PREFIX that will lead to bsc compiler. In my case, after installing libraries, the `bsc/lib/Libraries/` directory contains all folders from [bsc-contrib/Libraries/](https://github.com/B-Lang-org/bsc-contrib/tree/main/Libraries) (e.g. Bus, COBS, FPGA).
+* Navigate to `Flute/builds/RV64ACDFIMSUxCHERI_Flute_verilator` directory and run `make compile` to produce Verilog files (stored in `Verilog_RTL` directory) from Bluespec files.
 
 
 ## Simulating our program binary running on the modified processor
