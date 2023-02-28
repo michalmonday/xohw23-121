@@ -46,9 +46,16 @@ def setup_cms(cms_ctrl):
     # Allow further trace collection if last traced program used "wfi"
     # (wait for interrupt) instruction which stops the trace.
     cms_ctrl.reset_wfi_wait()
+    
+    cms_ctrl.set_tlast_interval(TLAST_INTERVAL)
+
+    # halting is enabled by default anyway
+    cms_ctrl.enable_halting_cpu()
+    # cms_ctrl.disable_halting_cpu()
+
 
 # the long name is because of using hierarchy in Vivado block design
-cms_ctrl_axi_gpio = base.continuous_monitoring_system_blocks.axi_gpio_to_cms_ctrl_interface.axi_gpio_cms_ctrl.channel1    
+cms_ctrl_axi_gpio = base.PYNQ_wrapper_blocks.continuous_monitoring_system_blocks.axi_gpio_to_cms_ctrl_interface.axi_gpio_cms_ctrl.channel1    
 cms_ctrl = ContinuousMonitoringSystemController(cms_ctrl_axi_gpio)
 setup_cms(cms_ctrl)
 ```

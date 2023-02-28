@@ -27,7 +27,7 @@ TaskHandle_t drawing_thread;
 QueueHandle_t queue = NULL;
 
 const IPAddress server_ip(192, 168, 0, 104);
-const uint16_t server_port = 9092;
+const uint16_t server_port = 9093;
 const String server_ip_str = "192.168.0.104:" + String(server_port); // just for displaying status
 WiFiClient client;
 

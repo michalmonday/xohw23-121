@@ -84,12 +84,21 @@ Each row corresponds to each row from table above. It's shown in 2 separate tabl
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/collected_data_2.png" />  
 
 # How much data can be collected
-Currently the AXI-4 Stream Data FIFO depth is set to 4096 items. A single run of the [stack-mission](https://github.com/michalmonday/riscv-baremetal-minimal-example-c/blob/flute_design/stack-mission.c) program results in around 1300 items being collected (under assumption that it immediately receives data through standard input instead of waiting for it). If we tried running longer program that would result in more than 4096 items being collected, items would be lost because currently there is no mechanism implemented by the pynq wrapper which would halt the processor until FIFO becomes not full. 
+Currently the AXI-4 Stream Data FIFO depth is set to 2000 items. A single run of the [stack-mission](https://github.com/michalmonday/riscv-baremetal-minimal-example-c/blob/flute_design/stack-mission.c) program results in around 1300 items being collected (under assumption that it immediately receives data through standard input instead of waiting for it). Halting mechanism is implemented which halts the processor until the FIFO is not full. Halting is enabled by default but can be optionally disabled or enabled using the following commands:
+```python
+from continuous_monitoring_system_controller import ContinuousMonitoringSystemController
+# the long name is because of using hierarchy in Vivado block design
+cms_ctrl_axi_gpio = base.PYNQ_wrapper_blocks.continuous_monitoring_system_blocks.axi_gpio_to_cms_ctrl_interface.axi_gpio_cms_ctrl.channel1    
+cms_ctrl = ContinuousMonitoringSystemController(cms_ctrl_axi_gpio)
+cms_ctrl.disable_halting_cpu()
+#cms_ctrl.enable_halting_cpu()
+```
+Disabling the halting mechanism can be useful when testing features of design other than trace collection (e.g. console interaction, sensor data collection by the RISC-V program, etc.)
 
 <!-- *stack-mission program is a slightly modified version of the [original stack-mission program from cheri-exercises](https://github.com/CTSRD-CHERI/cheri-exercises/blob/master/src/missions/uninitialized-stack-frame-control-flow/stack-mission.c) (modified to avoid using any libraries) -->
 
 ### Possible way to handle low speed/low memory
-Inability to collect the data fast enough is a major shortcoming of this design, especially that python is relatively slow. One way to tackle that issue would be to change granularity of data collection (e.g. collect data every function call/return instead of every branch/jump/return, possibly this could involve collecting frequency distribution of certain events, similarly to performance counters collection). 
+Inability to collect/process the data fast enough is a major shortcoming of this design, especially that python is relatively slow. One way to tackle that issue would be to change granularity of data collection (e.g. collect data every function call/return instead of every branch/jump/return, possibly this could involve collecting frequency distribution of certain events, similarly to performance counters collection). 
 
 # Data filtering
 Data items are only collected when program counter changes value and the current instruction is either a branch, jump, return or any instruction immediately following these.
