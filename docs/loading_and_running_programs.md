@@ -12,7 +12,7 @@
 # Overview
 Simplified high level overview diagram: 
 
-<img src="../images/bram_high_level.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/bram_high_level.png" />
 
 # What is provided by the Flute itself for interacting with memory
 The SoC_Top.v module (generated from the [SoC_Top.bsv](https://github.com/bluespec/Flute/blob/master/src_Testbench/SoC/SoC_Top.bsv)) provided in the open source Flute processor contains the following signals to interact with memory:
@@ -26,7 +26,7 @@ The SoC_Top.v module (generated from the [SoC_Top.bsv](https://github.com/bluesp
 * **EN_to_raw_mem_request_get (input)** notifies the processor that reading/writing took place (in PYNQ wrapper design it is directly connected to `RDY_to_raw_mem_request_get`)
 * **EN_to_raw_mem_response_put (input)** notifies the processor that the memory is outputting data (previously requested by the processor itself)
 
-<img src="../images/memory_interface_flute.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/memory_interface_flute.png" />
 
 
 # How PYNQ wrapper is using what Flute provides
@@ -34,14 +34,14 @@ PYNQ wrapper contains Block Memory Generator that has 2 ports (each port allowin
 * **port A** - connected to Flute processor using signals mentioned above (allowing it to read/write data from/to memory, e.g. to read program instructions or push/pop data from stack etc.)
 * **port B** - controllable from python, connected to PS through the `bram_loader` hierachical block, allowing to load a program binary into memory
 
-<img src="../images/bram_logic.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/bram_logic.png" />
 
 ### bram_loader
 `bram_loader` hierarchical block allows the python script using PYNQ API to interact with the **port B** of the Block Memory Generator to upload a program into it. `bram_loader` contains AXI GPIO module and a shift register to overcome the 32-pin per channel limitation of the AXI GPIO module, thanks to shift register the `bram_loader` outputs 256 data, 32 bit address, and 1 bit write enable signal, all being supplied through only 19 bits of the AXI GPIO module.
 
-<img src="../images/bram_loader.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/bram_loader.png" />
 
-The [bram_loader.py](../jupyter_notebooks/bram_loader.py) file contains a class that allows to interact with the `bram_loader` block. The code below is a part of [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) and presents how that class is used to load a program into the Block Memory Generator.
+The [bram_loader.py](../jupyter_notebooks/bram_loader.py) file contains a class that allows to interact with the `bram_loader` block. The code below is a part of [pynq_wrapper.ipynb](../jupyter_notebooks/pynq_wrapper.ipynb) and presents how that class is used to load a program into the Block Memory Generator.
 
 ```python
 from bram_loader import Bram_Loader
@@ -68,7 +68,7 @@ make -f Makefile_gcc_stack_mission
 The riscv-stack-mission.bin should appear in the directory. That file should be transferred to PYNQ board `design_files` directory (it is shown how to do it in the [PYNQ getting started guide](https://pynq.readthedocs.io/en/latest/getting_started/pynq_sdcard_getting_started.html#accessing-files-on-the-board)). After transferring the file to the board processing system, the python script will be able to access it and transfer it into programmable logic (into the Block Memory Generator through `bram_loader`)
 
 # Running the program
-To run the program, we first neet to load it into block ram memory and then use `run_and_collect` function. Code below is a part of [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code that runs the same program multiple times with different inputs and saves collected data in csv files.
+To run the program, we first neet to load it into block ram memory and then use `run_and_collect` function. Code below is a part of [pynq_wrapper.ipynb](../jupyter_notebooks/pynq_wrapper.ipynb) code that runs the same program multiple times with different inputs and saves collected data in csv files.
 ```python
 bram_loader.load(PATH / 'riscv-stack-mission.bin')
 
@@ -131,4 +131,4 @@ def run_and_collect(stdin):
 
 The returned DataFrame contains data like:
 
-<img src="../images/df.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/df.png" />

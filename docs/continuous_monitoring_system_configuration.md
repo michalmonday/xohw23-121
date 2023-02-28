@@ -8,7 +8,7 @@
 
 # Overview
 
-<img src="../images/cms_configuration_high_level.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/cms_configuration_high_level.png" />
 
 # What can be configured
 The [continuous_monitoring_system](https://github.com/michalmonday/continuous_monitoring_system) (cms) module can be configured to:  
@@ -23,10 +23,10 @@ Configuration is done by interacting with the AXI GPIO module connected to the `
 
 Image below shows the AXI GPIO module and surrounding circuitry (shift register, Slice blocks) that allow to control all 73 control bits of the `continuous_monitoring_system` module using AXI GPIO that has only 32-bit output per channel.
 
-<img src="../images/axi_gpio_to_cms_ctrl_interface.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/axi_gpio_to_cms_ctrl_interface.png" />
 
 # Software used for configuration (PYNQ API)
-[continuous_monitoring_system_controller.py](../jupyter_notebooks/continuous_monitoring_system_controller.py) file implements a class that provides high-level methods and interacts with AXI GPIO underneath. The code below is a part of [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) and presents how that class is used to configure the module (`cms_ctrl` is the object). 
+[continuous_monitoring_system_controller.py](../jupyter_notebooks/continuous_monitoring_system_controller.py) file implements a class that provides high-level methods and interacts with AXI GPIO underneath. The code below is a part of [pynq_wrapper.ipynb](../jupyter_notebooks/pynq_wrapper.ipynb) and presents how that class is used to configure the module (`cms_ctrl` is the object). 
 ```python
 from continuous_monitoring_system_controller import ContinuousMonitoringSystemController
 

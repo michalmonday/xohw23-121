@@ -19,6 +19,7 @@
 
 from pynq import allocate
 import numpy as np
+import time
 
 class Console_IO:
     """ This class controls AXI DMA to read and write data to buffers in FPGA.
@@ -46,15 +47,22 @@ class Console_IO:
         self.receive_transfer()
         return bool(self.recv_str)
 
-    def read(self):
-        self.receive_transfer()
+    def read(self, blocking=False):
+        if blocking:
+            while not self.data_available():
+                time.sleep(0.01)
+            # else can be used because data_available called receive_transfer already
+        else:
+            self.receive_transfer()
         return_str = str(self.recv_str)
         self.recv_str = ''
         return return_str
     
-    def send(self, string, wait=False):
+    def send(self, string, wait=False, end_byte=None):
         # "encode" + "frombuffer" way is significantly slower (when tested on PYNQ with actual contiguous buffer)
         #self.send_buffer[:len(string)] = np.frombuffer(string.encode('utf-8'), dtype='u1')
+        if end_byte is not None:
+            string += chr(end_byte)
         if len(string) > self.send_buffer_capacity:
             raise Exception(f'string suppled to Console_IO.send method exceeds send_buffer_size ({len(string)} > {self.send_buffer_size})')
         for i, c in enumerate(string):
@@ -62,6 +70,8 @@ class Console_IO:
         self.sendchannel.transfer(self.send_buffer, nbytes=len(string))
         if wait:
             self.sendchannel.wait()
+
+    # def send_bytes(self, bytes, wait=False):
 
     #####################################################################################
     # internal/private methods not to be really used outside of this class implementation

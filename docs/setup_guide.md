@@ -104,7 +104,7 @@ It probably shouldn't happen if you follow steps above, but while trying to figu
 
 Set the SW11 - "boot mode select" DIP switch into the `00110` position (boot from SD card).
 
-<img src="../images/sw11.jpg" /> 
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/sw11.jpg" /> 
 
 More details about this switch can be found in the [ZC706 User Guide](https://docs.xilinx.com/v/u/en-US/ug954-zc706-eval-board-xc7z045-ap-soc) page.
 
@@ -121,7 +121,7 @@ Access PYNQ terminal (either through [COM port](#accessing-console-port-using-pu
 python3 -m pip install pip --upgrade
 ```
 
-The [pynq_wrapper_for_flute.ipynb]() uses only 1 additional python library called `riscv-model`. We can install it with:
+The [pynq_wrapper.ipynb]() uses only 1 additional python library called `riscv-model`. We can install it with:
 ```bash
 python3 -m pip install riscv-model
 ``` -->
@@ -141,11 +141,11 @@ Installing packages may take long time, sometimes without receiving any verbose 
 
 <!-- 
 
-~~As of 11/01/2023, the only additional library used by the [pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) code is called `riscv-model`.
+~~As of 11/01/2023, the only additional library used by the [pynq_wrapper.ipynb](../jupyter_notebooks/pynq_wrapper.ipynb) code is called `riscv-model`.
 Normally installing python libraries is straightforward, but ZC706 doesn't have internet connectivity by default so installing libraries requires additional step. First we download the `.whl` file on a separate PC (with internet connection):~~
 
 ```bash
-# riscv-model library is used by the pynq_wrapper_for_flute.ipynb to decode instructions
+# riscv-model library is used by the pynq_wrapper.ipynb to decode instructions
 python3 -m pip download riscv-model -d .
 ```
 ~~Then we copy it to the board and install it with: ~~
@@ -158,11 +158,11 @@ python3 -m pip install <file>.whl -f ./ --no-index
 
 We can check in device manager the com port number (in my case it was COM5), and use it in putty to access the serial port (baud rate is set to 115200).
 
-<img src="../images/com_port.png" />  
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/com_port.png" />  
 
 Then we can use the console port to install python libraries (as described above).
 
-<img src="../images/com_port_2.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/com_port_2.png" />
 
 ## Create Vivado project
 For the PYNQ wrapper design itself (not for building SD card) we used 2020.1 Vivado (instead of 2020.2) because initially we started with 2.6 version of PYNQ.
@@ -193,7 +193,7 @@ Following the next steps will simulate the processor running our program but wit
 ### Specifying program path
 We can hardcode program full path in the `builds/Resources/Include_Common.mk` file (by setting EXAMPLE variable):
 
-<img src="../images/run_example_path.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/run_example_path.png" />
 
 Note that this is a path to the ELF file, not the `.bin` (both are produced during compilation as it is described in the [loading_and_running_programs.md](./loading_and_running_programs.md) file).
 
@@ -204,7 +204,7 @@ make compile simulator && ./run_example.sh && gtkwave vcd/vlt_dump.vcd
 
 We may then click `File -> Read Save File` and select signals.gtkw (which will populate waveform window with signals I checked while testing CPU modifications and trying to understand how it works in general). It should then display something like this:  
 
-<img src="../images/gtkwave_waveform.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/gtkwave_waveform.png" />
 
 ### Simulation length
 Note that the simulation lasts 1500 clock cycles thanks to the [sim_main.cpp](https://github.com/michalmonday/Flute/blob/continuous_monitoring/builds/Resources/Verilator_resources/sim_main.cpp) file modification (it is crudely modified, but it works for this specific purpose).  
@@ -220,16 +220,16 @@ To run and control the python script we may (but don't have to) use a separate "
 ### Connecting through router (allows ZC706 PS to use internet)
 We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on my network it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103:9090` on my network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
 
-<img src="../images/jupyter_notebook.png" width="600"/>
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/jupyter_notebook.png" width="600"/>
 
 Initially I had problems accessing ZC706 board that is connected to the router, for that reason there's a separate section for this case ([Direct connection](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)), but using it won't allow to install required python libraries. Recently I tried connecting through router again and it just worked well (allowing to mitigate the problematic offline package installation).
 
 
 ### Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)
-<img src="../images/pynq_overview.png">
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/pynq_overview.png">
 
 For direct connection we can connect the Ethernet cable to both ends (host PC, ZC706 board) and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
 
-<img src="../images/static_ip.png" width="600"/>
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/static_ip.png" width="600"/>
 
 Where 192.168.2.98 is the IP of the host PC (Windows) and the 192.168.2.99 is the IP of the PYNQ system running on PS of the ZC706 board. After powering on the board it should take a minute or two before the Jupyter Notebook can be accessed by going into browser and navigating to: `192.168.2.99:9090/`. 

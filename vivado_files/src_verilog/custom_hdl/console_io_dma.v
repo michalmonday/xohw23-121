@@ -17,13 +17,11 @@ module console_io_dma #(
     // input output_read_en,
     input output_tready,
     output reg [7:0]output_data_reg,
-    output reg output_available,
-    output reg output_available_delayed,
-    output last_output_char_available,
+    output reg output_tvalid_delayed,
 
     input [7:0]input_data,
     input input_write_en,
-    output input_not_full,
+    output wire input_not_full,
 
     // input fifo signals
     input rst_n_input_fifo,
@@ -48,7 +46,7 @@ module console_io_dma #(
     wire output_fifo_wr_en = RDY_get_to_console_get || receive_transfer_request;
     wire output_fifo_empty;
     wire [7:0] output_data;
-    wire [7:0] output_fifo_wr_data = receive_transfer_request ? 'h255 : get_to_console_get;
+    wire [7:0] output_fifo_wr_data = receive_transfer_request ? 'hFF : get_to_console_get;
 
     assign input_not_full = input_fifo_counter < DATA_DEPTH-1;
     assign last_output_char_available = output_fifo_counter == 1;
@@ -60,6 +58,7 @@ module console_io_dma #(
     wire output_read_en = output_tready & (~output_fifo_empty || RDY_get_to_console_get);
 
     wire output_tlast;
+    reg output_tvalid;
 
     // output fifo isn't expected to be read at such high speed (it's read by AXI GPIO)
     // so such mechanism is not needed (at least for now)
@@ -93,8 +92,9 @@ module console_io_dma #(
     always @(posedge clk) begin
         // if fifo is empty but both: read enable and write enable are HIGH,
         // then the char is outputted by fifo while keeping it empty
-        output_available_delayed <= output_available;
-        output_available <= output_read_en;
+        output_tvalid_delayed <= output_tvalid;
+        output_tvalid <= output_read_en;
+
         output_data_reg <= output_data;
         output_tlast_reg <= output_tlast; 
     end
