@@ -20,7 +20,7 @@ The transfer is initiated on PS by using PYNQ API (python `pynq` module), after 
 ### Data transfer path
 
 <p>
-<img src="../images/data_transfer_path.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/data_transfer_path.png" />
 </p>
 
 
@@ -31,15 +31,15 @@ The processor (implemented in Bluespec Verilog language) is modified to propagat
 - 39 performance event indicating bits (each indicating different performance event currently taking place)
 
 Image below presents ContinousMonitoringSystem_IFC declaration in the [ContinuousMonitoringSystem_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/ContinuousMonitoring_IFC.bsv):  
-<img src="../images/ContinuousMonitoringSystem_IFC_declaration.bsv.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/ContinuousMonitoringSystem_IFC_declaration.bsv.png" />
 
 Image below presents how that interface is defined in the [CPU.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/CPU.bsv) (showing only 8 of 39 extracted performance event indicators):  
 
-<img src="../images/ContinuousMonitoringSystem_IFC_definition.bsv.png" />
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/ContinuousMonitoringSystem_IFC_definition.bsv.png" />
 
 Continuous monitoring system module (`cms_ip_wrapper` on image below) receives these signals as inputs, it then decides whether or not to collect them (that is elaborated in [Data filtering](#data-filtering) section). The continuous monitoring module is responsible for counting each performance event, and counting clock cycles since last collected item. If the data item is to be collected, it turns all values into a single 512 bit vector and transfers it to AXI4-Stream Data FIFO using AXI protocol. Contents of that 512 bit vector are described in the [What data is collected](#what-data-is-collected) section.
 <!-- <img src="../images/cms_ifc.png" width=300/> -->
-<img src="../images/data_transfer_path_block_design.png" width=500/>
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/data_transfer_path_block_design.png" width=500/>
 
 After delivering the data to FIFO, the AXI DMA may be requested to transfer the contents of it into previously allocated contiguous memory. This kind of allocation was accomplished by using `allocate` function from the PYNQ API, requesting transfer is done by using PYNQ API as well (shown below). Control over AXI DMA module is possible through `S_AXI_LITE` port (connected to PS, thus controllable from python script)
 
@@ -63,7 +63,7 @@ input_buffer = allocate(shape=(buffer_length,), dtype='u8')
 items_transferred = get_dma_transfer(input_buffer, dma_rec)
 ```
 
-[pynq_wrapper_for_flute.ipynb](../jupyter_notebooks/pynq_wrapper_for_flute.ipynb) contains the full code used for controlling/testing the design.
+[pynq_wrapper.ipynb](../jupyter_notebooks/pynq_wrapper.ipynb) contains the full code used for controlling/testing the design.
 
 
 # What data is collected
@@ -76,12 +76,12 @@ Each collected data item received by the python script contains:
 
 ### Example collected data (performance counters not shown)
 
-<img src="../images/collected_data_1.png" />  
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/collected_data_1.png" />  
 
 ### Example collected data (performance counters)
 Each row corresponds to each row from table above. It's shown in 2 separate tables because of the image width.
 
-<img src="../images/collected_data_2.png" />  
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/collected_data_2.png" />  
 
 # How much data can be collected
 Currently the AXI-4 Stream Data FIFO depth is set to 4096 items. A single run of the [stack-mission](https://github.com/michalmonday/riscv-baremetal-minimal-example-c/blob/flute_design/stack-mission.c) program results in around 1300 items being collected (under assumption that it immediately receives data through standard input instead of waiting for it). If we tried running longer program that would result in more than 4096 items being collected, items would be lost because currently there is no mechanism implemented by the pynq wrapper which would halt the processor until FIFO becomes not full. 
