@@ -8,13 +8,13 @@
 # Overview
 The diagram is simplified to show high level overview.  
 
-<img src='../images/console_io_high_level.png' />
+<img src='../../images/console_io_high_level.png' />
 
 # What is provided by the Flute itself for controlling console I/O
 
 The SoC_Top.v module (generated from the [SoC_Top.bsv](https://github.com/bluespec/Flute/blob/master/src_Testbench/SoC/SoC_Top.bsv)) provided in the open source Flute processor contains handy signals for controlling console input/output.
 
-<img src="../images/console_io_soc_top.png" width="600" />
+<img src="../../images/console_io_soc_top.png" width="600" />
 
 Signals useful for console output are:
 * **get_to_console_get[7:0]** (output) - output character value (e.g. 'H' in "Hello World!" program)
@@ -29,7 +29,7 @@ Signals useful for console input are:
 # How PYNQ wrapper is using what Flute provides
 In the PYNQ wrapper, console input and output is implemented by controlling the 3 processor inputs mentioned above while monitoring the 3 outputs. Additionally, the PYNQ wrapper uses 2 FIFO buffers, one to store output characters before these are read, and one to store input characters. Reading and writing into these buffers is accomplished by using AXI GPIO module together with signal edge detectors that ensure reading/writing is done for no longer than 1 clock cycle (despite not being able to control signals that quickly from python).
 
-<img src="../images/console_io.png" />
+<img src="../../images/console_io.png" />
 
 # Python code for controlling console I/O using PYNQ wrapper hardware
 
