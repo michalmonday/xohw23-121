@@ -68,9 +68,9 @@ static int getchar() {
 
 void puts(char *s) {
     while (*s) {
-        putchar2(*s++);
+        putchar(*s++);
     }
-    putchar2('\n');
+    putchar('\n');
 }
 ```
 
