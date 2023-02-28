@@ -1,0 +1,270 @@
+# Table of contents
+- [Overview](#overview)
+- [Propagation of relevant signals outside and into the SoC](#propagation-of-relevant-signals-outside-and-into-the-soc)
+    - [ContinuousMonitoring interface declaration](#continuousmonitoring-interface-declaration)
+    - [ContinuousMonitoring interface definition](#continuousmonitoring-interface-definition)
+    - [Propagating ContinuousMonitoring interface](#propagating-continuousmonitoring-interface)
+    - [Halting the CPU](#halting-the-cpu)
+- [Extending the internal fabric (interconnect) of the Soc\_Top module.](#extending-the-internal-fabric-interconnect-of-the-soc_top-module)
+    - [Soc\_Top.bsv](#soc_topbsv)
+    - [Soc\_Map.bsv](#soc_mapbsv)
+- [Simultaneus access to general purpose registers](#simultaneus-access-to-general-purpose-registers)
+    - [Shortcomings of this modification](#shortcomings-of-this-modification)
+
+
+# Overview
+The Flute processor was modified in the following ways:
+* signals relevant for tracing were propagated from the CPU to the outside of the SoC
+* a new port was added to the internal fabric (interconnect) of the Soc_Top module (allowing RISC-V to interact with custom peripherals we wish to use, like the [sensors extension board](./sensors_extension.md))
+* bsc compiler was modified and recompiled to allow simultaneous access to general purpose registers (A0-A3)
+
+In the following sections these modifications are described in more detail.
+
+
+# Propagation of relevant signals outside and into the SoC
+### ContinuousMonitoring interface declaration
+[ContinuousMonitoring_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/ContinuousMonitoring_IFC.bsv) file was created and it contains the declaration of the ContinousMonitoring_IFC (IFC standing for interface). In Bluespec Verilog language, interfaces are grouping input and output ports of modules. Interfaces can include other interfaces, allowing to easily group and manage large number of ports (in standard Verilog each port needs to be declared separately). The ContinuousMonitoring_IFC groups ports that had to be propagated from the CPU itself, all the way outside the Soc_Top module, as well as the halt_cpu input signal. Below is the declaration of that interface:
+```verilog
+interface ContinuousMonitoring_IFC;
+    // "Value" methods return signal value (they can be understood to be output ports)
+    (* always_ready, always_enabled *) method WordXL pc;
+    (* always_ready, always_enabled *) method Instr instr; 
+    (* always_ready, always_enabled *) method Bit#(No_Of_Selected_Evts) performance_events; // Events bitmap, indicating which event is currently taking place
+    (* always_ready, always_enabled *) method Bit#(512) registers;
+
+    // Action method applies some action (it can be understood to be an input port), which 
+    // affects the internal state of module having this interface (CPU in this case)
+    (* always_ready *) method Action halt_cpu(Bit#(1) state);
+endinterface
+```
+
+### ContinuousMonitoring interface definition
+Methods/ports declared in the ContinousMonitoring_IFC file, are defined in the [CPU.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/CPU.bsv) in the following way:
+
+```verilog
+interface ContinuousMonitoring_IFC cms_ifc;
+    method Action halt_cpu(Bit#(1) state);
+        cms_halt_cpu <= state; 
+    endmethod
+
+    method WordXL pc; 
+        return getPC(stage1.out.data_to_stage2.pcc);
+    endmethod
+
+    method Instr instr; 
+        return stage1.out.data_to_stage2.instr;
+    endmethod
+
+    method Bit#(512) registers;
+        Bit #(512) registers_local = 0;
+        // A0 - A3 only 
+        CapPipe cp = gpr_regfile.read_cms (fromInteger(10)); registers_local[0*128+127:0*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+        cp = gpr_regfile.read_cms2 (fromInteger(11)); registers_local[1*128+127:1*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+        cp = gpr_regfile.read_cms3 (fromInteger(12)); registers_local[2*128+127:2*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+        cp = gpr_regfile.read_cms4 (fromInteger(13)); registers_local[3*128+127:3*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+
+        return registers_local;
+    endmethod
+
+    method Bit#(No_Of_Selected_Evts) performance_events;
+        Bit#(No_Of_Selected_Evts) performance_events_local = 0;
+        performance_events_local[0] = events[2][0]; // Core__TRAP
+        performance_events_local[1] = events[3][0]; // Core__BRANCH
+        performance_events_local[2] = events[4][0]; // Core__JAL
+        performance_events_local[3] = events[5][0]; // Core__JALR
+        performance_events_local[4] = events[6][0]; // Core__AUIPC
+        performance_events_local[5] = events[7][0]; // Core__LOAD
+        performance_events_local[6] = events[8][0]; // Core__STORE
+        performance_events_local[7] = events[12][0]; // Core__SERIAL_SHIFT
+        performance_events_local[8] = events[16][0]; // Core__LOAD_WAIT
+        performance_events_local[9] = events[17][0]; // Core__STORE_WAIT
+        performance_events_local[10] = events[19][0]; // Core__F_BUSY_NO_CONSUME
+        performance_events_local[11] = events[21][0]; // Core__1_BUSY_NO_CONSUME
+        performance_events_local[12] = events[22][0]; // Core__2_BUSY_NO_CONSUME
+        performance_events_local[13] = events[30][0]; // Core__INTERRUPT
+        performance_events_local[14] = events[32][0]; // L1I__LD
+        performance_events_local[15] = events[33][0]; // L1I__LD_MISS
+        performance_events_local[16] = events[34][0]; // L1I__LD_MISS_LAT
+        performance_events_local[17] = events[41][0]; // L1I__TLB
+        performance_events_local[18] = events[48][0]; // L1D__LD
+        performance_events_local[19] = events[49][0]; // L1D__LD_MISS
+        performance_events_local[20] = events[50][0]; // L1D__LD_MISS_LAT
+        performance_events_local[21] = events[51][0]; // L1D__ST
+        performance_events_local[22] = events[57][0]; // L1D__TLB
+        performance_events_local[23] = events[66][0]; // TGC__READ
+        performance_events_local[24] = events[67][0]; // TGC__READ_MISS
+        performance_events_local[25] = events[71][0]; // AXI4_Slave__AW_FLIT
+        performance_events_local[26] = events[72][0]; // AXI4_Slave__W_FLIT
+        performance_events_local[27] = events[73][0]; // AXI4_Slave__W_FLIT_FINAL
+        performance_events_local[28] = events[74][0]; // AXI4_Slave__B_FLIT
+        performance_events_local[29] = events[75][0]; // AXI4_Slave__AR_FLIT
+        performance_events_local[30] = events[76][0]; // AXI4_Slave__R_FLIT
+        performance_events_local[31] = events[77][0]; // AXI4_Slave__R_FLIT_FINAL
+        performance_events_local[32] = events[78][0]; // AXI4_Master__AW_FLIT
+        performance_events_local[33] = events[79][0]; // AXI4_Master__W_FLIT
+        performance_events_local[34] = events[80][0]; // AXI4_Master__W_FLIT_FINAL
+        performance_events_local[35] = events[81][0]; // AXI4_Master__B_FLIT
+        performance_events_local[36] = events[82][0]; // AXI4_Master__AR_FLIT
+        performance_events_local[37] = events[83][0]; // AXI4_Master__R_FLIT
+        performance_events_local[38] = events[84][0]; // AXI4_Master__R_FLIT_FINAL
+        // for (Integer i=0; i<valueOf(No_Of_Evts); i=i+1)
+        //       performance_events_local[i] = events[i][0];
+        return performance_events_local;
+    endmethod
+```
+
+### Propagating ContinuousMonitoring interface 
+Each intermediate module from the CPU to SoC_Top had to include the newly created interface. Its declaration had to be added in the following 3 existing interfaces:
+* [CPU_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/CPU_IFC.bsv)  
+* [Core_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/Core/Core_IFC.bsv)  
+* [Soc_Top.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Testbench/SoC/SoC_Map.bsv) - (Soc_Map_IFC is in the same file with definition of Soc_Top module)  
+
+In all 3 cases it involved adding the same line in the interface declaration:
+```verilog
+    // Requires the following include at the top of the file:
+    // import ContinuousMonitoring_IFC :: *;
+    interface ContinuousMonitoring_IFC cms_ifc;
+```
+
+The definition of each interface also had to be added in 3 corresponding modules:
+* [CPU.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/CPU.bsv) - the long definition included above  
+* [Core.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/Core/Core.bsv) - The follwing line was added: `interface cms_ifc = cpu.cms_ifc;` 
+* [SoC_Top.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Testbench/SoC/SoC_Map.bsv) - The following line was added: `interface cms_ifc = core.cms_ifc;` 
+
+
+The resulting cms_ifc pins can be seen on the diagram below:  
+
+<img alt="ERROR: IMAGE DIDNT SHOW" src="../images/cms_ifc2.png" width="400" />
+
+
+### Halting the CPU
+Fortunately, the CPU.bsv contains a "halting" internal signal. We added an "OR" condition to control it from an external pin (controlled by the fill level of PYNQ wrapper trace storage which halts the CPU when the storage is full).
+```verilog
+Bool halting = (stop_step_halt || mip_cmd_needed || (interrupt_pending && stage1_has_arch_instr) || unpack(cms_halt_cpu));
+```
+
+
+# Extending the internal fabric (interconnect) of the Soc_Top module.
+
+### Soc_Top.bsv
+In order to allow the RISC-V program interact with custom hardware, like the [sensors extension board](./sensors_extension.md) the PYNQ wrapper uses, it was necessary to create another port in the internal fabric (interconnect) of the Soc_Top module. The [Soc_Top](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Testbench/SoC/SoC_Top.bsv) module internal fabric/bus interconnects multiple AXI master ports (instruction, data and I/O, optional accelerator) with multiple AXI slave ports (memory controller, uart, boot rom, optional accelerator). Code parts below (from the Soc_Top.bsv file) show key parts where that is defined in the unmodified Flute:
+
+```verilog
+    // CPU IMem master to fabric
+    master_vector[imem_master_num] = prepend_AXI4_Master_id(0, zero_AXI4_Master_user(core.cpu_imem_master));
+
+    // CPU DMem master to fabric
+    master_vector[dmem_master_num] = core.core_mem_master; 
+
+    // Fabric to Boot ROM
+    mkConnection(boot_rom_axi4_deburster.master, boot_rom.slave);
+    slave_vector[boot_rom_slave_num] = zero_AXI4_Slave_user(boot_rom_axi4_deburster.slave);
+    route_vector[boot_rom_slave_num] = soc_map.m_boot_rom_addr_range;
+
+    // Fabric to Mem Controller
+    mkConnection(mem0_controller_axi4_deburster.master, mem0_controller.slave);
+    slave_vector[mem0_controller_slave_num] = zero_AXI4_Slave_user(mem0_controller_axi4_deburster.slave);
+    route_vector[mem0_controller_slave_num] = soc_map.m_mem0_controller_addr_range;
+
+    // Fabric to UART0
+    slave_vector[uart0_slave_num] = zero_AXI4_Slave_user(uart0.slave);
+    route_vector[uart0_slave_num] = soc_map.m_uart0_addr_range;
+
+    let bus <- mkAXI4Bus ( routeFromMappingTable(route_vector)
+                            , master_vector, slave_vector);
+```
+
+To extend the internal fabric with a `other_peripherals` port, the following key part was added in the Soc_Top.bsv:
+```verilog
+   let s_otherPeripheralsPortShim <- mkAXI4ShimFF;
+   let s_otherPeripheralsPort_master_sig <- toAXI4_Master_Sig( s_otherPeripheralsPortShim.master );
+
+   // Fabric to other peripherals
+   slave_vector[other_peripherals_slave_num] = zero_AXI4_Slave_user(s_otherPeripheralsPortShim.slave);
+   route_vector[other_peripherals_slave_num] = soc_map.m_other_peripherals_addr_range;
+```
+The `other_peripherals` port ultimately connects to smartconnect block in PYNQ wrapper block design (it is called `core_dmem_post_fabric` on the image below).
+
+<img alt="ERROR: IMAGE DIDNT SHOW" src="../images/other_peripherals_vivado2.png">
+
+### Soc_Map.bsv
+
+It can be noticed that the route_vector entry of `other_peripherals` is set to an address range of that port, this was specified in the [Soc_Map.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Testbench/SoC/SoC_Map.bsv) file which also had to be modified to provide the following address range definition:
+```verilog
+   let other_peripherals_addr_range = Range {
+      base: 'hC000_3000,
+      size: 'h0000_1000     
+   };
+```
+
+This address range corresponds to the one specified for the AXI BRAM Controller in the PYNQ wrapper block design. 
+
+<img alt="ERROR: IMAGE DIDNT SHOW" src="../images/axi_bram_ctrl_sensors_address_editor.png" />
+
+The new address range had to be added to the existing `fn_is_IO_addr` function:
+```verilog
+   // ----------------------------------------------------------------
+   // I/O address predicate
+   // Identifies I/O addresses in the Fabric.
+   // (Caches need this information to avoid cacheing these addresses.)
+
+   function Bool fn_is_IO_addr (Fabric_Addr addr);
+      return (   inRange(near_mem_io_addr_range, addr)
+              || inRange(plic_addr_range, addr)
+              || inRange(uart0_addr_range, addr) 
+              || inRange(other_peripherals_addr_range, addr));
+   endfunction
+```
+
+The part of Soc_Map.bsv setting the number of AXI ports (and setting each port index) also had to be modified using the following code:
+```verilog
+Integer imem_master_num   = 0;
+Integer dmem_master_num   = 1;
+Integer accel0_master_num = 2;
+
+Integer boot_rom_slave_num        = 0;
+Integer mem0_controller_slave_num = 1;
+Integer uart0_slave_num           = 2;
+Integer accel0_slave_num          = 3;
+
+`ifdef INCLUDE_ACCEL0
+   typedef 3 Num_Masters;
+   typedef 5 Num_Slaves;
+   Integer other_peripherals_slave_num = 4;
+`else
+   typedef 2 Num_Masters;
+   typedef 4 Num_Slaves;
+   Integer other_peripherals_slave_num = 3;
+`endif
+```
+
+# Simultaneus access to general purpose registers
+
+By default, the Flute seems to have a single write port and 3 read ports for the register file where the general purpose registers are stored. These ports are:
+* rs1 port (for reading source register 1)
+* rs2 port (for reading source register 2)
+* debug only port (called read_rs1_port2)
+
+This can be seen in the [GPR_RegFile.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/RegFiles/GPR_RegFile.bsv) file.
+
+Wanting to read some register values in real time, we added 4 additional ports (cms stands for continuous monitoring system):
+```verilog
+   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms (RegName rs);
+   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms2 (RegName rs);
+   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms3 (RegName rs);
+   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms4 (RegName rs);
+```
+
+The problem was that the Flute source code wouldn't compile anymore because the number of read ports in the RegFile module (that implements the general purpose registers file) is limited to max 5 read ports. Unfortunately we couldn't just simply change a RegFile definition in the Flute source code because the RegFile module seems to be a part of the bsc compiler default libraries.
+
+We modified [RegFile.bs](https://github.com/michalmonday/bsc/blob/main/src/Libraries/Base1/RegFile.bs) by changing every occurence of number `5` to `9` in that file (to increase the number of ports by 4, although setting it to 7 should probably be sufficient). Then we recompiled the bsc compiler and used that new compiler to compile the Flute source code.
+
+Additionally, the [RegFile.v](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_bsc_lib_RTL/RegFile.v) and [RegFileLoad.v](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_bsc_lib_RTL/RegFileLoad.v) files also were modified (to include the new ports).
+
+
+### Shortcomings of this modification
+Initially we increased the number of ports to collect all 32 registers, this increased the Vivado compilation time by over 2 times (it went from around 40 minutes to around 90 minutes). Changing it back to 4 additional ports reduced the compilation time back to around 40 minutes.
+
+I am by no means knowledgable person on this topic but I assume that physical space utilization in hardware plays big role in terms of performance, and inclusion of additional ports in the heavily accessed register file probably does not help with that.
+
+The problem that still remains regarding this modification is that it affects not only general purpose register file but also all the files where RegFile module is used. A better solution would be to create some kind of subclass of the RegFile only used for the general purpose registers file (or maybe add some kind of a generic argument to the RegFile module to set the number of read ports at compile time). But so far we prioritized other tasks over this one, because for our use case this shortcoming is not critical (although it's not elegant either).

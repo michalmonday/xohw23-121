@@ -11,6 +11,7 @@ Documentation files are in the [docs](./docs) directory and include:
 * [continuous_monitoring_system_configuration.md](./docs/continuous_monitoring_system_configuration.md) - how to customize operation of the CMS module (responsible for filtering/preprocessing of the data)
 * [loading_and_running_programs.md](./docs/loading_and_running_programs.md) - how to load a program into memory and run it on the RISC-V processor
 * [sensors_extension.md](./docs/sensors_extension.md) - reading analog sensor inputs inside a RISC-V program
+* [flute_modifications.md](./docs/flute_modifications.md) - how the Flute processor was modified
 * [display.md](./docs/display.md) (TODO)
 
 # Purpose
