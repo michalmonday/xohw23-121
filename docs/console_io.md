@@ -2,8 +2,12 @@
 - [Overview](#overview)
 - [What is provided by the Flute itself for controlling console I/O](#what-is-provided-by-the-flute-itself-for-controlling-console-io)
 - [How PYNQ wrapper is using what Flute provides](#how-pynq-wrapper-is-using-what-flute-provides)
-- [Python code for controlling console I/O using PYNQ wrapper hardware](#python-code-for-controlling-console-io-using-pynq-wrapper-hardware)
-    - [Independent reset signals for FIFO buffers](#independent-reset-signals-for-fifo-buffers)
+- [RISC-V code for interacting with console](#risc-v-code-for-interacting-with-console)
+    - [Compiler](#compiler)
+    - [Source files we used](#source-files-we-used)
+- [Python code for interacting with console through AXI DMA](#python-code-for-interacting-with-console-through-axi-dma)
+- [AXI DMA module adjustments for console I/O](#axi-dma-module-adjustments-for-console-io)
+- [Speed comparison against GPIO based console I/O](#speed-comparison-against-gpio-based-console-io)
 
 # Overview
 The diagram is simplified to show high level overview.  
