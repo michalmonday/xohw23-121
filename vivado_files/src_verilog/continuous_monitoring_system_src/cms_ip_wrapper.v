@@ -10,8 +10,11 @@ in SystemVerilog. This is just a workaround.
 `define XLEN 64
 `define AXI_DATA_WIDTH 1024
 `define RISC_V_INSTRUCTION_WIDTH 32
+
 // 32 regs * (64 each + 64 of CHERI meta data)
-`define GENERAL_PURPOSE_REGISTERS_WIDTH 4096
+// `define GENERAL_PURPOSE_REGISTERS_WIDTH 4096
+
+`define REGISTER_WIDTH 128
 
 
 module cms_ip_wrapper #(
@@ -48,7 +51,10 @@ module cms_ip_wrapper #(
     input en,
     input [`NO_OF_PERFORMANCE_EVENTS-1:0]performance_events,
     input fifo_full, // CPU is halted when fifo is full, we can use this to count ticks while halted and later calculate performance penalty due to CMS usage
-    input [`GENERAL_PURPOSE_REGISTERS_WIDTH-1:0] general_purpose_registers,
+    // input [`GENERAL_PURPOSE_REGISTERS_WIDTH-1:0] general_purpose_registers,
+    input wire [`REGISTER_WIDTH-1:0] gpr_value,
+    input wire [4:0] gpr_address,
+    input wire gpr_write_enable,
 
     output wire halt_cpu,
 
@@ -100,7 +106,11 @@ continuous_monitoring_system #(
 
     // CPU is halted when fifo is full, we can use this to count ticks while halted and later calculate performance penalty due to CMS usage
     .fifo_full(fifo_full), 
-    .general_purpose_registers(general_purpose_registers),
+    // .general_purpose_registers(general_purpose_registers),
+
+    .gpr_value(gpr_value),
+    .gpr_address(gpr_address),
+    .gpr_write_enable(gpr_write_enable),
 
     .halt_cpu(halt_cpu),
 

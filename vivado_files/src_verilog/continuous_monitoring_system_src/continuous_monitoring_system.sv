@@ -40,7 +40,11 @@ module continuous_monitoring_system #(
     input   logic   [NO_OF_PERFORMANCE_EVENTS - 1 : 0]  performance_events,
     // CPU is halted when fifo is full, we can use this to count ticks while halted and later calculate performance penalty due to CMS usage
     input fifo_full, 
-    input   logic   [GENERAL_PURPOSE_REGISTERS_WIDTH - 1 : 0] general_purpose_registers,
+    // input   logic   [GENERAL_PURPOSE_REGISTERS_WIDTH - 1 : 0] general_purpose_registers,
+
+    input wire [REGISTER_WIDTH-1:0] gpr_value,
+    input wire [4:0] gpr_address,
+    input wire gpr_write_enable,
 
     output logic halt_cpu,
 
@@ -63,6 +67,7 @@ module continuous_monitoring_system #(
     output wire [63:0] item_counter_probe
 );
     logic drop_instr;
+    wire [REGISTER_WIDTH-1:0]shadow_general_purpose_registers[31:0];
 
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
@@ -110,6 +115,20 @@ module continuous_monitoring_system #(
     reg halting_on_full_fifo_enabled = 1; // enabled by default
     assign halt_cpu = halting_on_full_fifo_enabled & fifo_full;
 
+
+
+    shadow_general_purpose_registers_file #(
+        .REGISTER_WIDTH(REGISTER_WIDTH) 
+    ) shadow_general_purpose_registers_file_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .write_address(gpr_address), // 5-bit address for 32 locations
+        .write_data(gpr_value),
+        .write_enable(gpr_write_enable),
+
+        .registers_output(shadow_general_purpose_registers)
+    );
+
     // reg [63:0] program_start_address = 'h1000;
     // reg reset_clk_count_on_program_start_enabled = 0;
 
@@ -146,25 +165,23 @@ module continuous_monitoring_system #(
     localparam CLK_COUNTER_DELTA_LOCATION = PC_LOCATION + XLEN;
     localparam INSTR_LOCATION = CLK_COUNTER_DELTA_LOCATION + CLK_COUNTER_WIDTH;
 
-    // locations in general_purpose_registers input
-    localparam A0_IN_GPR_LOCATION = 10 * 128; // value is the first 64 bits, CHERI meta data is the second 64 bits
-    localparam A1_IN_GPR_LOCATION = 11 * 128;
-    localparam A2_IN_GPR_LOCATION = 12 * 128;
-    localparam A3_IN_GPR_LOCATION = 13 * 128;
-    localparam A4_IN_GPR_LOCATION = 14 * 128;
-    localparam A5_IN_GPR_LOCATION = 15 * 128;
-    localparam A6_IN_GPR_LOCATION = 16 * 128;
-    localparam A7_IN_GPR_LOCATION = 17 * 128;
+    // OLD WAY:
+    // // locations in general_purpose_registers input
+    // localparam A0_IN_GPR_LOCATION = 0 * REGISTER_WIDTH; // value is the first 64 bits, CHERI meta data is the second 64 bits
+    // localparam A1_IN_GPR_LOCATION = 1 * REGISTER_WIDTH;
+    // localparam A2_IN_GPR_LOCATION = 2 * REGISTER_WIDTH;
+    // localparam A3_IN_GPR_LOCATION = 3 * REGISTER_WIDTH;
 
     wire [AXI_DATA_WIDTH - 1 : 0]data_pkt = {
-        // general_purpose_registers[A7_IN_GPR_LOCATION + 63 : A7_IN_GPR_LOCATION],
-        // general_purpose_registers[A6_IN_GPR_LOCATION + 63 : A6_IN_GPR_LOCATION],
-        // general_purpose_registers[A5_IN_GPR_LOCATION + 63 : A5_IN_GPR_LOCATION],
-        // general_purpose_registers[A4_IN_GPR_LOCATION + 63 : A4_IN_GPR_LOCATION],
-        general_purpose_registers[A3_IN_GPR_LOCATION + 63 : A3_IN_GPR_LOCATION],
-        general_purpose_registers[A2_IN_GPR_LOCATION + 63 : A2_IN_GPR_LOCATION],
-        general_purpose_registers[A1_IN_GPR_LOCATION + 63 : A1_IN_GPR_LOCATION],
-        general_purpose_registers[A0_IN_GPR_LOCATION + 63 : A0_IN_GPR_LOCATION],
+        shadow_general_purpose_registers[13][63:0],
+        shadow_general_purpose_registers[12][63:0],
+        shadow_general_purpose_registers[11][63:0],
+        shadow_general_purpose_registers[10][63:0],
+        // OLD WAY:
+        // general_purpose_registers[A3_IN_GPR_LOCATION + 63 : A3_IN_GPR_LOCATION],
+        // general_purpose_registers[A2_IN_GPR_LOCATION + 63 : A2_IN_GPR_LOCATION],
+        // general_purpose_registers[A1_IN_GPR_LOCATION + 63 : A1_IN_GPR_LOCATION],
+        // general_purpose_registers[A0_IN_GPR_LOCATION + 63 : A0_IN_GPR_LOCATION],
         fifo_full_ticks_count,
         last_instr[1],
         // data_to_axi_write_enable ? 64'b1 : clk_counter - last_write_timestamp,  
