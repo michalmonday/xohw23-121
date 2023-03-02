@@ -45,7 +45,8 @@ Graph graph(tft);
 // Graph graph(graph_x, graph_y, graph_w, graph_h);
 
 double xlo = 0;
-double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
+// double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
+double xhi = 100; // this is pretty much setting how many values we want to display in the graph at once
 
 double ylo = 0; // line plot lower value bound
 double yhi = 1; // line plot upper value bound

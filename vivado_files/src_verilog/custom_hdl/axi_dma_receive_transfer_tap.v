@@ -46,7 +46,8 @@ module axi_dma_receive_transfer_tap (
     // output wire m_axi_lite_wvalid,
 
     // main purpose of this module signals
-    output reg receive_transfer_request
+    output reg receive_transfer_request,
+    output reg requested_length = 0
 );
 
     // // connect all outputs to inputs
@@ -89,6 +90,7 @@ module axi_dma_receive_transfer_tap (
             axilite_tap_wvalid) 
         begin
             receive_transfer_request <= 1'b1;
+            requested_length <= axilite_tap_wdata;
         end
         else begin
             receive_transfer_request <= 1'b0;

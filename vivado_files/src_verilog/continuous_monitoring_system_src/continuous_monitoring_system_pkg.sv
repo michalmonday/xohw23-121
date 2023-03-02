@@ -32,7 +32,11 @@ parameter WFI_INSTRUCTION = 32'h10500073;
 parameter CTRL_ADDR_WIDTH = 8; // internal addressing (each of 256 addresses can result in a different action upon writing/reading)
 parameter CTRL_DATA_WIDTH = 64; // control data width, the functionality of the module is controlled by writing to address+data ports
 
-parameter GENERAL_PURPOSE_REGISTERS_WIDTH = 4096;
+parameter REGISTER_WIDTH = 128; // 64-bit system with Cheri extension
+// parameter GENERAL_PURPOSE_REGISTERS_WIDTH = 4096;
+// get only A0-A3 (4*128=512)
+// parameter GENERAL_PURPOSE_REGISTERS_WIDTH = 4*REGISTER_WIDTH;
+
 
 typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     TRIGGER_TRACE_START_ADDRESS_ENABLED,
