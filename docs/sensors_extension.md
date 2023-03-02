@@ -4,7 +4,7 @@
 - [Wiring](#wiring)
 - [Flute modification](#flute-modification)
 - [How values are read in the RISC-V program](#how-values-are-read-in-the-risc-v-program)
-- [Vivado implementation](#vivado-implementation)
+- [Working principle and Vivado implementation](#working-principle-and-vivado-implementation)
     - [Intermediate sensor data storage](#intermediate-sensor-data-storage)
     - [Block diagram (interconnect)](#block-diagram-interconnect)
     - [Block diagram (XADC wizard and storage)](#block-diagram-xadc-wizard-and-storage)
@@ -24,6 +24,7 @@ Embedded systems often interact with the outside world through sensors and actua
     * Microphone
     * Hall sensor
     * Temperature 
+* [AD8232](https://www.amazon.co.uk/gp/product/B08216YR9H) ECG sensor with [SKINTACT electrodes](https://www.amazon.co.uk/dp/B00D3O9NPI) (much better than the ones that come with the sensor)
 * [CD74HC4067](https://www.amazon.co.uk/DollaTek-CD74HC4067-Channel-Multiplexer-Breakout/dp/B07PPKRVGW/ref=sr_1_6) multiplexer 
 * [TXS0108E (HW221)](https://www.amazon.co.uk/XTVTX-TXS0108E-Converter-Bi-Directional-Compatible/dp/B09P87R16M/ref=sr_1_8) logic level converter (for converting XADC_GPIO from 1.5V to 3.3V)
 * 20-pin ribbon cable (for connecting the sensors extension to the J63 XADC connector on the ZC706 board)
@@ -73,7 +74,7 @@ The currently selected input travels to the FPGA through XADC_VAUX0P pin (while 
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/sensors_input_extension_select_pins_waveform.png" width="600" />
 
-It can be noticed that the address never goes above 6, that is because in the XADC wizard I selected only 7 inputs to be used in the channel sequencer (because the extension board only has 7 sensors as of 26/02/2023).  
+It can be noticed that the address never goes above 6, that is because in the XADC wizard I selected only 7 inputs to be used in the channel sequencer (because the extension board only had 7 sensors as of 26/02/2023).  
 
 ![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_input_extension_channel_sequencer.png)
 
