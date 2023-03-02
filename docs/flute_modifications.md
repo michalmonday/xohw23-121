@@ -5,18 +5,19 @@
     - [ContinuousMonitoring interface definition](#continuousmonitoring-interface-definition)
     - [Propagating ContinuousMonitoring interface](#propagating-continuousmonitoring-interface)
     - [Halting the CPU](#halting-the-cpu)
+    - [cpu\_reset\_completed signal](#cpu_reset_completed-signal)
 - [Extending the internal fabric (interconnect) of the Soc\_Top module.](#extending-the-internal-fabric-interconnect-of-the-soc_top-module)
     - [Soc\_Top.bsv](#soc_topbsv)
     - [Soc\_Map.bsv](#soc_mapbsv)
-- [Simultaneus access to general purpose registers](#simultaneus-access-to-general-purpose-registers)
-    - [Shortcomings of this modification](#shortcomings-of-this-modification)
+- [General purpose registers (GPR) file access](#general-purpose-registers-gpr-file-access)
+    - [Use of CReg](#use-of-creg)
 
 
 # Overview
 The Flute processor was modified in the following ways:
 * signals relevant for tracing were propagated from the CPU to the outside of the SoC
 * a new port was added to the internal fabric (interconnect) of the Soc_Top module (allowing RISC-V to interact with custom peripherals we wish to use, like the [sensors extension board](./sensors_extension.md))
-* bsc compiler was modified and recompiled to allow simultaneous access to general purpose registers (A0-A3)
+* write port of general purpose registers (GPR) file is monitored
 
 In the following sections these modifications are described in more detail.
 
@@ -30,7 +31,11 @@ interface ContinuousMonitoring_IFC;
     (* always_ready, always_enabled *) method WordXL pc;
     (* always_ready, always_enabled *) method Instr instr; 
     (* always_ready, always_enabled *) method Bit#(No_Of_Selected_Evts) performance_events; // Events bitmap, indicating which event is currently taking place
-    (* always_ready, always_enabled *) method Bit#(512) registers;
+    (* always_ready, always_enabled *) method RegName gp_write_reg_name;
+    (* always_ready, always_enabled *) method Capability gp_write_reg;
+    (* always_ready, always_enabled *) method Bool gp_write_valid;
+    // OLD WAY:
+    // (* always_ready, always_enabled *) method Bit#(512) registers;
 
     // Action method applies some action (it can be understood to be an input port), which 
     // affects the internal state of module having this interface (CPU in this case)
@@ -55,16 +60,44 @@ interface ContinuousMonitoring_IFC cms_ifc;
         return stage1.out.data_to_stage2.instr;
     endmethod
 
-    method Bit#(512) registers;
-        Bit #(512) registers_local = 0;
-        // A0 - A3 only 
-        CapPipe cp = gpr_regfile.read_cms (fromInteger(10)); registers_local[0*128+127:0*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
-        cp = gpr_regfile.read_cms2 (fromInteger(11)); registers_local[1*128+127:1*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
-        cp = gpr_regfile.read_cms3 (fromInteger(12)); registers_local[2*128+127:2*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
-        cp = gpr_regfile.read_cms4 (fromInteger(13)); registers_local[3*128+127:3*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
-
-        return registers_local;
+    // returns index/address of register in GPR file
+    method RegName gp_write_reg_name;
+        return gpr_regfile.written_reg_name();
     endmethod
+
+    method Capability gp_write_reg;
+    // Defitinition of the packCap function:
+    // function Capability packCap(CapFat fat);
+    //   CapabilityInMemory thin = CapabilityInMemory{
+    //       isCapability: fat.isCapability
+    //     , perms:        fat.perms
+    //     , flags:        fat.flags
+    //     , reserved:     fat.reserved
+    //     , otype:        fat.otype
+    //     , bounds:       encBounds(fat.format,fat.bounds)
+    //     , address:      fat.address };
+    //   return pack(thin);
+    // endfunction
+        CapReg cr = gpr_regfile.written_reg_value();
+        return packCap(cr);
+    endmethod
+
+    // returns True if GPR file is being written to currently
+    method Bool gp_write_valid;
+        return gpr_regfile.written_reg_valid();
+    endmethod
+
+    // OLD WAY:
+    // method Bit#(512) registers;
+    //     Bit #(512) registers_local = 0;
+    //     // A0 - A3 only 
+    //     CapPipe cp = gpr_regfile.read_cms (fromInteger(10)); registers_local[0*128+127:0*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+    //     cp = gpr_regfile.read_cms2 (fromInteger(11)); registers_local[1*128+127:1*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+    //     cp = gpr_regfile.read_cms3 (fromInteger(12)); registers_local[2*128+127:2*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+    //     cp = gpr_regfile.read_cms4 (fromInteger(13)); registers_local[3*128+127:3*128] = {pack(getMeta(cp)), pack(getAddr(cp))};
+
+    //     return registers_local;
+    // endmethod
 
     method Bit#(No_Of_Selected_Evts) performance_events;
         Bit#(No_Of_Selected_Evts) performance_events_local = 0;
@@ -144,6 +177,22 @@ Bool halting = (stop_step_halt || mip_cmd_needed || (interrupt_pending && stage1
 ```
 
 
+### cpu_reset_completed signal
+The cpu_reset_completed signal is used to indicate that the CPU has completed its reset sequence. It was needed because we recognized that the processor was "eating" the first character of console input FIFO despite RST_N signal being active (active low). Using the cpu_reset_completed signal we are able to recognize when the cpu is ready to receive the first character of the input. Adding that signal required the following additions in the [SoC_Top.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Testbench/SoC/SoC_Top.bsv) file:
+```verilog
+    // these 2 lines in the interface declaration
+    (* always_enabled, always_ready *)
+    interface Bool cpu_reset_completed;
+
+    // and these lines in the Soc_Top module definition
+    Reset rst_n <- exposeCurrentReset; // clk and reset signals in bluespec are generated automatically, exposeCurrentReset is a builtin way of getting the reset value in bluespec code
+    Reg#(Bool) rg_cpu_reset_completed <- mkReg(False, reset_by rst_n);
+
+    // and this line in the "fa_reset_complete_actions" function
+    rg_cpu_reset_completed <= True;
+```
+
+
 # Extending the internal fabric (interconnect) of the Soc_Top module.
 
 ### Soc_Top.bsv
@@ -197,7 +246,7 @@ It can be noticed that the route_vector entry of `other_peripherals` is set to a
    };
 ```
 
-This address range corresponds to the one specified for the AXI BRAM Controller in the PYNQ wrapper block design. 
+This address range corresponds to the one specified for the AXI BRAM Controller (connected to smarconnect on the image above) in the PYNQ wrapper block design. 
 
 <img alt="ERROR: IMAGE DIDNT SHOW" src="../images/axi_bram_ctrl_sensors_address_editor.png" />
 
@@ -238,33 +287,85 @@ Integer accel0_slave_num          = 3;
 `endif
 ```
 
-# Simultaneus access to general purpose registers
+# General purpose registers (GPR) file access
 
-By default, the Flute seems to have a single write port and 3 read ports for the register file where the general purpose registers are stored. These ports are:
-* rs1 port (for reading source register 1)
-* rs2 port (for reading source register 2)
-* debug only port (called read_rs1_port2)
+By default, the Flute seems to have a single write port and 3 read ports for the GPR file. These ports are:
+* read_rs1 (for reading source register 1)
+* read_rs2 (for reading source register 2)
+* read_rs1_port2 (for debugger access only)
 
 This can be seen in the [GPR_RegFile.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/RegFiles/GPR_RegFile.bsv) file.
 
-Wanting to read some register values in real time, we added 4 additional ports (cms stands for continuous monitoring system):
+Wanting to read some register values in real time, initially we added more read ports to the RegFile module. As described in the [old_way_of_accessing_general_purpose_registers.md](old/old_way_of_accessing_general_purpose_registers.md), this introduced a lot of inefficiency (and increased Vivado compilation time by over 2 times). Instead we decided to monitor the write port of the GPR file and created a "shadow" version of it in the CMS module, meaning that each write to the original GPR file would do the same change to the "shadow" copy in the CMS, resulting in 2 identical files.
+
+Modifications involved making the following changes to the [mkGPR_RegFile](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/RegFiles/GPR_RegFile.bsv) module.
+
+Declaration of new ports (that will be connected to the CMS module):
 ```verilog
-   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms (RegName rs);
-   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms2 (RegName rs);
-   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms3 (RegName rs);
-   (* always_ready *) method `EXTERNAL_REG_TYPE_OUT read_cms4 (RegName rs);
+    // inclusion 
+    (* always_ready *)
+    method RegName written_reg_name;
+    (* always_ready *)
+    method `EXTERNAL_REG_TYPE_IN written_reg_value;
+    (* always_ready *)
+    method Bool written_reg_valid;
 ```
 
-The problem was that the Flute source code wouldn't compile anymore because the number of read ports in the RegFile module (that implements the general purpose registers file) is limited to max 5 read ports. Unfortunately we couldn't just simply change a RegFile definition in the Flute source code because the RegFile module seems to be a part of the bsc compiler default libraries.
+New methods definition:
+```verilog
+    method RegName written_reg_name;
+        return rg_written_reg_name;
+    endmethod 
 
-We modified [RegFile.bs](https://github.com/michalmonday/bsc/blob/main/src/Libraries/Base1/RegFile.bs) by changing every occurence of number `5` to `9` in that file (to increase the number of ports by 4, although setting it to 7 should probably be sufficient). Then we recompiled the bsc compiler and used that new compiler to compile the Flute source code.
+    method `EXTERNAL_REG_TYPE_IN written_reg_value;
+        return rg_written_reg_value;
+    endmethod 
 
-Additionally, the [RegFile.v](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_bsc_lib_RTL/RegFile.v) and [RegFileLoad.v](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_bsc_lib_RTL/RegFileLoad.v) files also were modified (to include the new ports).
+    method Bool written_reg_valid;
+        return rg_written_reg_valid[0];
+    endmethod 
+```
+
+Declaration of new internal signals:  
+```verilog
+    Reg#(RegName) rg_written_reg_name <- mkRegU;
+    Reg#(`EXTERNAL_REG_TYPE_IN) rg_written_reg_value <- mkRegU;
+    Reg#(Bool) rg_written_reg_valid[3] <- mkCReg(3, False);
+```
+
+Setting new signals values:
+```verilog
+    // Inside the "rl_reset_loop" rule
+    rg_written_reg_name <= rg_j;
+    rg_written_reg_value <= `INITIAL_CONTENTS;
+    rg_written_reg_valid[2] <= True;
+
+    // Inside the write_rd method
+    rg_written_reg_name <= rd;
+    rg_written_reg_value <= rd_val;
+    rg_written_reg_valid[1] <= True;
+```
+
+Addition of "rl_reset_write_reg_valid" rule which fires on every clock cycle and resets the `written_reg_valid` signal back to 0 after it has been set to 1 by the `write_rd` method or the `rl_reset_loop` rule:
+```verilog
+   rule rl_reset_write_reg_valid;
+      // This write only takes effect if the gp register file 
+      // is not currently written to (when write_rd method is not called).
+      // This happens thanks to the magic of CReg (concurrent register) which
+      // allows multiple rules to write to the same register on the same clock cycle.
+      // The value of register on the following clock cycle is determined by 
+      // the write value to the highest index of CReg.
+      // It is noteworthy that if for example we write to index [1], then the index [>1] will
+      // immediately contain the value written to index [1].
+      // If at the same clock cycle we wrote to index[3] as well, then the value written at index [1] 
+      // won't overwrite the value written at index [3] or higher, it will only overwrite value at index[2].
+      rg_written_reg_valid[0] <= False;
+   endrule 
+```
 
 
-### Shortcomings of this modification
-Initially we increased the number of ports to collect all 32 registers, this increased the Vivado compilation time by over 2 times (it went from around 40 minutes to around 90 minutes). Changing it back to 4 additional ports reduced the compilation time back to around 40 minutes.
 
-I am by no means knowledgable person on this topic but I assume that physical space utilization in hardware plays big role in terms of performance, and inclusion of additional ports in the heavily accessed register file probably does not help with that.
+### Use of CReg 
+In verilog setting register value in 2 "always" blocks is not allowed. In Bluespec, the CReg provides bypass mechanism which allows to set the value of the register from many different "rule" blocks (equivalent to standard verilog "always" blocks).
 
-The problem that still remains regarding this modification is that it affects not only general purpose register file but also all the files where RegFile module is used. A better solution would be to create some kind of subclass of the RegFile only used for the general purpose registers file (or maybe add some kind of a generic argument to the RegFile module to set the number of read ports at compile time). But so far we prioritized other tasks over this one, because for our use case this shortcoming is not critical (although it's not elegant either).
+
