@@ -432,9 +432,7 @@ module mkMem_Controller(CLK,
 		MUX_slavePortShim_rff$enq_1__VAL_2;
   wire [8 : 0] MUX_slavePortShim_bff$enq_1__VAL_1,
 	       MUX_slavePortShim_bff$enq_1__VAL_2;
-  wire MUX_f_raw_mem_reqs_rv$port1__write_1__SEL_1,
-       MUX_rg_state$write_1__SEL_1,
-       MUX_rg_state$write_1__SEL_3;
+  wire MUX_f_raw_mem_reqs_rv$port1__write_1__SEL_1;
 
   // declarations used by system tasks
   // synopsys translate_off
@@ -687,8 +685,8 @@ module mkMem_Controller(CLK,
   assign WILL_FIRE_RL_rl_miss_clean_req = CAN_FIRE_RL_rl_miss_clean_req ;
 
   // rule RL_rl_reload
-  assign CAN_FIRE_RL_rl_reload = MUX_rg_state$write_1__SEL_3 ;
-  assign WILL_FIRE_RL_rl_reload = MUX_rg_state$write_1__SEL_3 ;
+  assign CAN_FIRE_RL_rl_reload = f_raw_mem_rsps_rv[256] && rg_state == 2'd2 ;
+  assign WILL_FIRE_RL_rl_reload = CAN_FIRE_RL_rl_reload ;
 
   // rule RL_rl_process_rd_req
   assign CAN_FIRE_RL_rl_process_rd_req =
@@ -736,20 +734,17 @@ module mkMem_Controller(CLK,
 
   // rule RL_rl_power_on_reset
   assign CAN_FIRE_RL_rl_power_on_reset = rg_state == 2'd0 ;
-  assign WILL_FIRE_RL_rl_power_on_reset = rg_state == 2'd0 ;
+  assign WILL_FIRE_RL_rl_power_on_reset = CAN_FIRE_RL_rl_power_on_reset ;
 
   // rule RL_rl_external_reset
-  assign CAN_FIRE_RL_rl_external_reset = MUX_rg_state$write_1__SEL_1 ;
-  assign WILL_FIRE_RL_rl_external_reset = MUX_rg_state$write_1__SEL_1 ;
+  assign CAN_FIRE_RL_rl_external_reset =
+	     f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N && rg_state == 2'd3 ;
+  assign WILL_FIRE_RL_rl_external_reset = CAN_FIRE_RL_rl_external_reset ;
 
   // inputs to muxes for submodule ports
   assign MUX_f_raw_mem_reqs_rv$port1__write_1__SEL_1 =
 	     WILL_FIRE_RL_rl_writeback_dirty ||
 	     WILL_FIRE_RL_rl_writeback_dirty_idle ;
-  assign MUX_rg_state$write_1__SEL_1 =
-	     f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N && rg_state == 2'd3 ;
-  assign MUX_rg_state$write_1__SEL_3 =
-	     f_raw_mem_rsps_rv[256] && rg_state == 2'd2 ;
   assign MUX_f_raw_mem_reqs_rv$port1__write_1__VAL_1 =
 	     { 34'h3FFFFFFFF,
 	       rg_cached_raw_mem_addr,
@@ -845,7 +840,7 @@ module mkMem_Controller(CLK,
 	       354'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA :
 	       f_raw_mem_reqs_rv$port2__read ;
   assign f_raw_mem_rsps_rv$port1__read =
-	     MUX_rg_state$write_1__SEL_3 ?
+	     CAN_FIRE_RL_rl_reload ?
 	       257'h0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA :
 	       f_raw_mem_rsps_rv ;
   assign f_raw_mem_rsps_rv$port1__write_1 =
@@ -957,11 +952,11 @@ module mkMem_Controller(CLK,
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_server_reset_request_put ;
-  assign f_reset_reqs$DEQ = MUX_rg_state$write_1__SEL_1 ;
+  assign f_reset_reqs$DEQ = CAN_FIRE_RL_rl_external_reset ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
-  assign f_reset_rsps$ENQ = MUX_rg_state$write_1__SEL_1 ;
+  assign f_reset_rsps$ENQ = CAN_FIRE_RL_rl_external_reset ;
   assign f_reset_rsps$DEQ = EN_server_reset_response_get ;
   assign f_reset_rsps$CLR = 1'b0 ;
 

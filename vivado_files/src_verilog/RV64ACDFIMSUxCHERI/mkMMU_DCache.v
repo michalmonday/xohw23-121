@@ -862,8 +862,8 @@ module mkMMU_DCache(CLK,
        MUX_cache_rg_state$write_1__SEL_9,
        MUX_cache_tlb$ma_insert_1__SEL_1,
        MUX_cache_tlb$ma_insert_1__SEL_2,
-       MUX_cache_tlb$ma_insert_1__SEL_3,
-       MUX_cache_tlb$ma_insert_1__SEL_4;
+       MUX_cache_tlb$ma_insert_1__SEL_4,
+       MUX_cache_tlb$ma_insert_2__SEL_3;
 
   // declarations used by system tasks
   // synopsys translate_off
@@ -1944,15 +1944,6 @@ module mkMMU_DCache(CLK,
   assign MUX_cache_tlb$ma_insert_1__SEL_2 =
 	     WILL_FIRE_RL_cache_rl_ptw_level_2 &&
 	     cache_masterPortShim_rff_first__192_BITS_3_TO__ETC___d1268 ;
-  assign MUX_cache_tlb$ma_insert_1__SEL_3 =
-	     WILL_FIRE_RL_cache_rl_ptw_level_1 &&
-	     cache_masterPortShim_rff$D_OUT[3:2] == 2'd0 &&
-	     cache_masterPortShim_rff$D_OUT[4] &&
-	     (cache_masterPortShim_rff$D_OUT[5] ||
-	      !cache_masterPortShim_rff$D_OUT[6]) &&
-	     (cache_masterPortShim_rff$D_OUT[7] ||
-	      cache_masterPortShim_rff$D_OUT[5]) &&
-	     cache_masterPortShim_rff$D_OUT[22:14] == 9'd0 ;
   assign MUX_cache_tlb$ma_insert_1__SEL_4 =
 	     WILL_FIRE_RL_cache_rl_ptw_level_0 &&
 	     cache_masterPortShim_rff$D_OUT[3:2] == 2'd0 &&
@@ -1961,6 +1952,15 @@ module mkMMU_DCache(CLK,
 	      !cache_masterPortShim_rff$D_OUT[6]) &&
 	     (cache_masterPortShim_rff$D_OUT[7] ||
 	      cache_masterPortShim_rff$D_OUT[5]) ;
+  assign MUX_cache_tlb$ma_insert_2__SEL_3 =
+	     WILL_FIRE_RL_cache_rl_ptw_level_1 &&
+	     cache_masterPortShim_rff$D_OUT[3:2] == 2'd0 &&
+	     cache_masterPortShim_rff$D_OUT[4] &&
+	     (cache_masterPortShim_rff$D_OUT[5] ||
+	      !cache_masterPortShim_rff$D_OUT[6]) &&
+	     (cache_masterPortShim_rff$D_OUT[7] ||
+	      cache_masterPortShim_rff$D_OUT[5]) &&
+	     cache_masterPortShim_rff$D_OUT[22:14] == 9'd0 ;
   assign MUX_cache_dw_output_ld_val$wset_1__VAL_1 =
 	     (cache_rg_op == 2'd0 ||
 	      cache_rg_op == 2'd2 && cache_rg_amo_funct5 == 5'b00010) ?
@@ -2991,21 +2991,21 @@ module mkMMU_DCache(CLK,
   always@(MUX_cache_tlb$ma_insert_1__SEL_1 or
 	  cache_tlb$mv_vm_get_xlate or
 	  MUX_cache_tlb$ma_insert_1__SEL_2 or
-	  MUX_cache_tlb$ma_insert_1__SEL_3 or
+	  MUX_cache_tlb$ma_insert_2__SEL_3 or
 	  MUX_cache_tlb$ma_insert_1__SEL_4)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_cache_tlb$ma_insert_1__SEL_1:
 	  cache_tlb$ma_insert_level = cache_tlb$mv_vm_get_xlate[65:64];
       MUX_cache_tlb$ma_insert_1__SEL_2: cache_tlb$ma_insert_level = 2'd2;
-      MUX_cache_tlb$ma_insert_1__SEL_3: cache_tlb$ma_insert_level = 2'd1;
+      MUX_cache_tlb$ma_insert_2__SEL_3: cache_tlb$ma_insert_level = 2'd1;
       MUX_cache_tlb$ma_insert_1__SEL_4: cache_tlb$ma_insert_level = 2'd0;
       default: cache_tlb$ma_insert_level = 2'b10 /* unspecified value */ ;
     endcase
   end
   assign cache_tlb$ma_insert_pte =
 	     (MUX_cache_tlb$ma_insert_1__SEL_2 ||
-	      MUX_cache_tlb$ma_insert_1__SEL_3 ||
+	      MUX_cache_tlb$ma_insert_2__SEL_3 ||
 	      MUX_cache_tlb$ma_insert_1__SEL_4) ?
 	       cache_masterPortShim_rff$D_OUT[67:4] :
 	       cache_tlb$mv_vm_get_xlate[129:66] ;
