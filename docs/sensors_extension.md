@@ -84,10 +84,14 @@ A baremetal program can interact with any peripherals we add to the design (e.g.
 For example, a program can read potentiometer and light sensor values by using the following snippet:
 ```cpp
 static volatile long *sensors = (long*)0xC0003000;
+static volatile long *digital_inputs = (long *)(long *)(0xC0003000 + (sizeof(long) * 16));
 
 int main() {
     long potentiometer_value = sensors[0];
     long light_value = sensors[1];
+
+    char first_pin = digital_inputs[0];
+    char second_pin = digital_inputs[1];
     return 0;
 }
 ```
