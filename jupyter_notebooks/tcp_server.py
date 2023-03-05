@@ -77,6 +77,7 @@ class TCP_Server:
 
         #Create new server socket
         listen_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listen_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listen_sock.bind((host_ip, port))
         listen_sock.listen(2)
         self.listen_thread = threading.Thread(target=self.listen_worker, args=(listen_sock,), daemon=True)

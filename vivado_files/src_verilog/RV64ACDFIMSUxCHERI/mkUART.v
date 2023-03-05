@@ -786,7 +786,7 @@ module mkUART(CLK,
 
   // submodule f_reset_reqs
   assign f_reset_reqs$ENQ = EN_server_reset_request_put ;
-  assign f_reset_reqs$DEQ = CAN_FIRE_RL_rl_reset ;
+  assign f_reset_reqs$DEQ = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
   assign f_reset_reqs$CLR = 1'b0 ;
 
   // submodule f_reset_rsps
@@ -806,13 +806,15 @@ module mkUART(CLK,
   assign slavePortShim_arff$D_IN = slave_ar_put_val ;
   assign slavePortShim_arff$ENQ = EN_slave_ar_put ;
   assign slavePortShim_arff$DEQ = WILL_FIRE_RL_rl_process_rd_req ;
-  assign slavePortShim_arff$CLR = CAN_FIRE_RL_rl_reset ;
+  assign slavePortShim_arff$CLR =
+	     f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // submodule slavePortShim_awff
   assign slavePortShim_awff$D_IN = slave_aw_put_val ;
   assign slavePortShim_awff$ENQ = EN_slave_aw_put ;
   assign slavePortShim_awff$DEQ = CAN_FIRE_RL_rl_process_wr_req ;
-  assign slavePortShim_awff$CLR = CAN_FIRE_RL_rl_reset ;
+  assign slavePortShim_awff$CLR =
+	     f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // submodule slavePortShim_bff
   assign slavePortShim_bff$D_IN =
@@ -820,7 +822,7 @@ module mkUART(CLK,
 	       IF_slavePortShim_awff_first__22_BITS_92_TO_29__ETC___d554 } ;
   assign slavePortShim_bff$ENQ = CAN_FIRE_RL_rl_process_wr_req ;
   assign slavePortShim_bff$DEQ = EN_slave_b_drop ;
-  assign slavePortShim_bff$CLR = CAN_FIRE_RL_rl_reset ;
+  assign slavePortShim_bff$CLR = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // submodule slavePortShim_rff
   assign slavePortShim_rff$D_IN =
@@ -830,13 +832,13 @@ module mkUART(CLK,
 	       1'd1 } ;
   assign slavePortShim_rff$ENQ = WILL_FIRE_RL_rl_process_rd_req ;
   assign slavePortShim_rff$DEQ = EN_slave_r_drop ;
-  assign slavePortShim_rff$CLR = CAN_FIRE_RL_rl_reset ;
+  assign slavePortShim_rff$CLR = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // submodule slavePortShim_wff
   assign slavePortShim_wff$D_IN = slave_w_put_val ;
   assign slavePortShim_wff$ENQ = EN_slave_w_put ;
   assign slavePortShim_wff$DEQ = CAN_FIRE_RL_rl_process_wr_req ;
-  assign slavePortShim_wff$CLR = CAN_FIRE_RL_rl_reset ;
+  assign slavePortShim_wff$CLR = f_reset_reqs$EMPTY_N && f_reset_rsps$FULL_N ;
 
   // remaining internal signals
   assign IF_slavePortShim_arff_first__1_BITS_92_TO_29_2_ETC___d214 =

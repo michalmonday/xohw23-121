@@ -22,6 +22,14 @@
 // It is added to .gitignore file, this way it's not shared
 #include "michal_wifi_credentials.h"
 
+
+// Serial is temporarily added to this file until I get 2nd display that
+// will be dedicated to getting data from RISC-V program and displaying it.
+// Until then, this display will show ECG data, and also use as controller/displayer
+// of the continuous monitoring system.
+#include <HardwareSerial.h>
+HardwareSerial serial_riscv(2);  // UART2 (GPIO17=TX, GPIO16=RX)
+
 // Thread used for drawing will be on separate thread from receiving/parsing data from tcp server
 TaskHandle_t drawing_thread;
 QueueHandle_t queue = NULL;
@@ -118,6 +126,9 @@ void drawing_thread_func(void *parameter) {
     while (true) {
         String* line;
         // Serial.printf("Queue size: %d, free space: %d, max size: %d\n", uxQueueMessagesWaiting(queue), uxQueueSpacesAvailable(queue), uxQueueMessagesWaiting(queue) + uxQueueSpacesAvailable(queue));
+        while (uxQueueMessagesWaiting(queue) == 0) {
+            delay(1);
+        }
         if ( xQueueReceive(queue, &line, portMAX_DELAY) ) {
             // Serial.printf("Drawing thread: received '%s'\n", (*line).c_str());
             check_protocol(*line);
@@ -137,6 +148,7 @@ void init_display() {
 void setup() {
     Serial.begin(115200);
     Serial.println();
+    serial_riscv.begin(115200);
     init_display();
     init_wifi();
 
@@ -160,7 +172,8 @@ void setup() {
         );
 
     // producer (loop) allocates the string, consumer (drawing_thread_func) dealocates it
-    queue = xQueueCreate(1000, sizeof(String*));
+    // queue = xQueueCreate(1000, sizeof(String*));
+    queue = xQueueCreate(5, sizeof(String*));
 	xTaskCreatePinnedToCore(
 			drawing_thread_func, /* Function to implement the task */
 			"drawing_thread", /* Name of the task */
@@ -171,35 +184,89 @@ void setup() {
 			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
 }
 
+void swap(char &a, char &b) {
+    char t = a;
+    a = b;
+    b = t;
+}
+
+String reverse(String str) {
+    int n = str.length();
+    for (int i = 0; i < n / 2; i++)
+        swap(str[i], str[n - i - 1]);
+    return str;
+}
+
+bool add_string_to_queue(String *str) {
+    if (xQueueSendToBack(queue, &str, 0) == errQUEUE_FULL) {
+        // Serial.println("Queue is full, ignoring...");
+        return false;
+    }
+    // while (xQueueSend(queue, &str, 0) == errQUEUE_FULL) {
+    //     Serial.println("Queue is full, waiting...");
+    //     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // }
+    return true;
+}
+
+void handle_riscv_serial() {
+    while (serial_riscv.available()) {
+        // Serial.println("Received something from riscv");
+        String line = serial_riscv.readStringUntil('\n');
+        // Serial.print("Received from riscv: '");
+        // Serial.print(line);
+        // Serial.println("'");
+
+        float ecg_value = atof(reverse(line).c_str()) / 60000.0f;
+        // Serial.print("ecg_value=");
+        // Serial.println(ecg_value);
+
+        if (ecg_value < 0.05 || ecg_value > 1.0) {
+            Serial.println(line);
+            Serial.print("ecg_value=");
+            Serial.println(ecg_value);
+            continue;
+        } 
+
+        String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
+        // Serial.print("Sending to drawing thread: '");
+        // Serial.println(*formatted_msg);
+        if (!add_string_to_queue(formatted_msg)) {
+            delete formatted_msg;
+        }
+    }
+}
+
 void loop(void) {
+    handle_riscv_serial();
     static bool redraw_on_first_call_only_trace4 = true;
 
     Serial.println("Attempt to access server...");
-    status_display.set_status("tcp_connection_status", "Connecting to ZC706 TCP server (" + server_ip_str + ")");
+    // status_display.set_status("tcp_connection_status", "Connecting to ZC706 TCP server (" + server_ip_str + ")");
     if (!client.connect(server_ip, server_port)) {
         Serial.println("Access failed.");
         client.stop();
         for (int i=5; i>0; i--) {
-            status_display.set_status("tcp_connection_status", "Retrying ZC706 TCP server (" + server_ip_str + ") connection in " + String(i) + " seconds...");
+            handle_riscv_serial();
+            // status_display.set_status("tcp_connection_status", "Retrying ZC706 TCP server (" + server_ip_str + ") connection in " + String(i) + " seconds...");
             delay(1000);
         }
         return;
     }
-    status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
+    // status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
 
     Serial.println("Access successful.");
     client.print("Hello world!");
     while (client.connected() || client.available()) {
-        if (client.available()) {
+        handle_riscv_serial();
+
+        while (client.available()) {
             String *line = new String(client.readStringUntil('\n'));
             // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')
             Serial.print("Received: '");
             Serial.print(*line);
             Serial.println("'");
-            while (xQueueSend(queue, &line, 0) == errQUEUE_FULL) {
-                Serial.println("Queue is full, waiting...");
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-            }
+            add_string_to_queue(line);
         }
     }
     Serial.println("Closing connection.");

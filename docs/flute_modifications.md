@@ -242,7 +242,7 @@ It can be noticed that the route_vector entry of `other_peripherals` is set to a
 ```verilog
    let other_peripherals_addr_range = Range {
       base: 'hC000_3000,
-      size: 'h0000_1000     
+      size: 'h0000_4000     
    };
 ```
 

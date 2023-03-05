@@ -6,12 +6,12 @@
 - [How values are read in the RISC-V program](#how-values-are-read-in-the-risc-v-program)
 - [Working principle and Vivado implementation](#working-principle-and-vivado-implementation)
     - [Intermediate sensor data storage](#intermediate-sensor-data-storage)
-    - [Block diagram (interconnect)](#block-diagram-interconnect)
+    - [Interconnect](#interconnect)
     - [Block diagram (XADC wizard and storage)](#block-diagram-xadc-wizard-and-storage)
 
 
 # Overview
-Embedded systems often interact with the outside world through sensors and actuators. By default, the Flute processor does not seem to have support for interacting with such peripherals. We created a custom board with support for up to 16 analog sensors and modified the processor to allow reading their values. This way we can run programs on the Flute RISC-V that use sensor data, making it easy to disrupt their baseline behaviour, or emulate sensor failure for presentation purposes.
+Embedded systems often interact with the outside world through sensors and actuators. By default, the Flute processor does not seem to have support for interacting with such peripherals. We created a custom board with support for up to 16 analog inputs and 16 digital inputs, we modified the processor to allow reading their values. This way we can run programs on the Flute RISC-V that use sensor data, making it easy to disrupt their baseline behaviour, or emulate sensor failure for presentation purposes.
 
 ![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_input_extension.png)
 
@@ -24,12 +24,14 @@ Embedded systems often interact with the outside world through sensors and actua
     * Microphone
     * Hall sensor
     * Temperature 
-* [AD8232](https://www.amazon.co.uk/gp/product/B08216YR9H) ECG sensor with [SKINTACT electrodes](https://www.amazon.co.uk/dp/B00D3O9NPI) (much better than the ones that come with the sensor)
+* [AD8232](https://www.amazon.co.uk/gp/product/B08216YR9H) ECG sensor with [SKINTACT electrodes](https://www.amazon.co.uk/dp/B00D3O9NPI) (these electrodes are much better than the ones that come with the sensor)
 * [CD74HC4067](https://www.amazon.co.uk/DollaTek-CD74HC4067-Channel-Multiplexer-Breakout/dp/B07PPKRVGW/ref=sr_1_6) multiplexer 
-* [TXS0108E (HW221)](https://www.amazon.co.uk/XTVTX-TXS0108E-Converter-Bi-Directional-Compatible/dp/B09P87R16M/ref=sr_1_8) logic level converter (for converting XADC_GPIO from 1.5V to 3.3V)
-* 20-pin ribbon cable (for connecting the sensors extension to the J63 XADC connector on the ZC706 board)
-* 5.1k, 2k resitors (for voltage divider because ZC706 board expects no more than 1V on the analog input pins)
-* 2x 10k (or similar) resistor (for pull-up of the level shifter output enable pin and pull-down of the multiplexer enable pin)
+* 2x [TXS0108E (HW221)](https://www.amazon.co.uk/XTVTX-TXS0108E-Converter-Bi-Directional-Compatible/dp/B09P87R16M/ref=sr_1_8) logic level converter (for converting XADC_GPIO from 1.5V to 3.3V, and PMOD from 2.5V to 3.3V)
+* 20-pin ribbon cable (for connecting the analog inputs to the J63 XADC connector on the ZC706 board)
+* 12-pin ribbon cable (for connecting digital inputs to the J58 connector on the ZC706 board)
+* 2x 5.1k, 2x 2k resitors (for voltage dividers because ZC706 board expects no more than 1V on the analog input pins, and the PMOD J58 header expects 2.5V inputs)
+* 3x 10k (or similar) resistor (for pull-up of the level shifter output enable pin and pull-down of the multiplexer enable pin)
+* 2x [SN74HC165N](https://www.amazon.co.uk/dp/B08LYS98RQ) shift registers (for reading digital inputs through only 3 pins of the ZC706 board)
 * [Voltage regulator](https://www.amazon.co.uk/AMS1117-3-3-4-75V-12V-voltage-regulator-module/dp/B09Q8Q3ZVM/ref=sr_1_3), 5V to 3.3V (using 3.3V potentially allows to avoid using the level shifter when alternative 2.5V pins from J58 are used, but it is more elegant to just use the level shifter and keep all connections within the single ribbon cable)
 * 2*10 header pins (it would be better to use a proper [20-pin socket](https://www.amazon.co.uk/sourcingmap%C2%AE-2-54mm-Socket-Straight-Connector/dp/B013FM9S2K/ref=sr_1_5) which enforces the right orientation and position of the ribbon cable, but we were to eager to make it work and didn't wait for the delivery)
 * perfboard
@@ -38,7 +40,7 @@ Embedded systems often interact with the outside world through sensors and actua
 
 ![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_fritzing_view.png)
 
-Notice that multiplexer EN is pulled down, while the OE pin of the level shifter is pulled up. Wiring of sensors is not shown in the diagram, their analog output pins go to the mutiplexer pins C0-C15. The J63 on the diagram signifies the header pins for the ribbon cable connector but correspond directly to the XADC_GPIO pins on the ZC706 board.
+Notice that multiplexer EN is pulled down, while the OE pin of the level shifter is pulled up. Wiring of sensors is not shown in the diagram, their analog output pins go to the mutiplexer pins C0-C15. The J63 on the diagram signifies the header pins for the ribbon cable connector but correspond directly to the XADC_GPIO pins on the ZC706 board, the same applies to J58 representation. It can be noticed that only 2 pins of 16 inputs available are connected to the 74HC165 shift registers, we could connect them directly to J58 but this implementation allow easy expansion if more digital sources need to be read.
 
 
 # Flute modification
@@ -46,9 +48,33 @@ Soc_Top.bsv is the top level synthesizable module of the Flute (there is also a 
 
 We modified that fabric to contain another port called `other_peripherals` (visible on diagram below as `core_dmem_post_fabric` as we also propagate the input of internal fabric called `core_dmem_pre_fabric` just in case if we wanted to monitor specific events of some internal modules on that bus). 
 
-![ERROR: IMAGE WASNT DISPLAYED](../images/other_peripherals_address_map.png)  
+```verilog
+// Part of the SoC_Map.bsv file:
 
-![ERROR: IMAGE WASNT DISPLAYED](../images/soc_map_modification.png)
+   // ----------------------------------------------------------------
+   // Other peripherals 0 (e.g. to be added in Vivado block design)
+
+   let other_peripherals_addr_range = Range {
+      base: 'hC000_3000,
+      size: 'h0000_4000     
+   };
+```
+
+```verilog
+// Part of the Soc_Map.bsv file:
+
+   // ----------------------------------------------------------------
+   // I/O address predicate
+   // Identifies I/O addresses in the Fabric.
+   // (Caches need this information to avoid cacheing these addresses.)
+
+   function Bool fn_is_IO_addr (Fabric_Addr addr);
+      return (   inRange(near_mem_io_addr_range, addr)
+              || inRange(plic_addr_range, addr)
+              || inRange(uart0_addr_range, addr) 
+              || inRange(other_peripherals_addr_range, addr)); // added line
+   endfunction
+```
 
 To view all exact changes see the history of the [SoC_Map.bsv](https://github.com/michalmonday/Flute/commits/continuous_monitoring/src_Testbench/SoC/SoC_Map.bsv) and [Soc_Top.bsv](https://github.com/michalmonday/Flute/commits/continuous_monitoring/src_Testbench/SoC/SoC_Top.bsv) files.
 
@@ -81,9 +107,14 @@ It can be noticed that the address never goes above 6, that is because in the XA
 The lowest possible conversion rate was selected (39 KSPS, while using 50MHz clock), because initially with the highest one the mutliplexer didn't work well.
 
 ### Intermediate sensor data storage 
-The output of the XADC wizard (do_out pin) is connected to the small block memory generator dedicated for storing sensor values. That memory has 2 ports, PORTB is constantly updating the memory with the latest sensor values, while the PORTA is controlled by the RISC-V processor. Using this approach most sensor values are overwritten before they're read, but it is not a problem for our use case.
+The output of the XADC wizard (do_out pin) is connected to the small 32x64-bit memory ([extension_bram.v](../vivado_files/src_verilog/custom_hdl/extension_bram.v)) dedicated for storing sensor values. That memory has 3 ports:
+* port a - it is controlled by the RISC-V processor, it can be used to read or write to the memory (currently it is only used for reading)
+* port b - it is constantly updating the memory with up to 16 of the latest analog sensor values (as many as the XADC wizard was set to use)
+* port c - it is constantly updating the memory with up to 16 of the latest digital sensor values (the number of digital sensors is a generic parameter of the [digital_input_sequencer.v](../vivado_files/src_verilog/custom_hdl/digital_input_sequencer.v), which relies on 2 cascaded shift registers.
 
-### Block diagram (interconnect)
+:warning: Using memory with 3 write ports and not using BRAM may be considered not good practice (inefficient) as mentioned in [this stackexchange answer](https://electronics.stackexchange.com/a/50975), however in this case memory is rather small so it shouldn't be a big issue, although possibly it would be more elegant to use separate memories for analog and digital sensors, each with a one or two write ports, and utilizing BRAM (but "if it works, it works").
+
+### Interconnect
 Diagram below shows the newly created output (of the internal Soc_Top fabric) connected to BRAM controller (through smartconnect block used for the sake of address translation, it is set to start at address `0xC0003000` in address editor to match with Soc_Map.bsv definition).
 
 ![ERROR: IMAGE WASNT DISPLAYED](../images/other_peripherals_vivado.png)

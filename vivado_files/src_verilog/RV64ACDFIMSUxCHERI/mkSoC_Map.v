@@ -173,7 +173,7 @@ module mkSoC_Map(CLK,
 
   // value method m_other_peripherals_addr_range
   assign m_other_peripherals_addr_range =
-	     128'h00000000C00030000000000000001000 ;
+	     128'h00000000C00030000000000000004000 ;
 
   // value method m_boot_rom_addr_range
   assign m_boot_rom_addr_range = 128'h00000000000010000000000000001000 ;
@@ -196,7 +196,7 @@ module mkSoC_Map(CLK,
   assign m_is_IO_addr =
 	     NOT_m_is_IO_addr_addr_ULT_0x2000000_1_2_AND_m__ETC___d27 ||
 	     m_is_IO_addr_addr >= 64'h00000000C0003000 &&
-	     x__h283 < 64'h0000000000001000 ;
+	     x__h283 < 64'h0000000000004000 ;
 
   // value method m_is_near_mem_IO_addr
   assign m_is_near_mem_IO_addr =

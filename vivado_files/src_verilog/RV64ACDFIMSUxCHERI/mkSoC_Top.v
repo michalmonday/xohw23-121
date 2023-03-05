@@ -6359,14 +6359,14 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_1$wget[3] ? 3'd1 : 3'd0) !=
 	     3'd1 ;
   assign MUX_bus_toDfltOutput$wset_1__SEL_3 =
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) !=
 	     3'd1 ;
   assign MUX_bus_toDfltOutput$wset_1__SEL_4 =
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6381,7 +6381,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_inputDest_0$wget[0] ;
   assign MUX_bus_toOutput_0$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6389,7 +6389,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_moreFlits[0] ;
   assign MUX_bus_toOutput_0$wset_1__SEL_3 =
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6411,19 +6411,19 @@ module mkSoC_Top(CLK,
 	     2'd1 &&
 	     bus_inputDest_0_1$wget[0] ;
   assign MUX_bus_toOutput_0_1$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
-	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
-	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
-	     2'd1 &&
-	     bus_moreFlits_1[0] ;
-  assign MUX_bus_toOutput_0_1$wset_1__SEL_3 =
 	     WILL_FIRE_RL_bus_input_follow_flit_2 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_moreFlits_1[0] ;
-  assign MUX_bus_toOutput_0_1$wset_1__SEL_4 =
+  assign MUX_bus_toOutput_0_1$wset_1__SEL_3 =
 	     WILL_FIRE_RL_bus_input_follow_flit_3 &&
+	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
+	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
+	     2'd1 &&
+	     bus_moreFlits_1[0] ;
+  assign MUX_bus_toOutput_0_1$wset_1__SEL_4 =
+	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
@@ -6473,7 +6473,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_inputDest_0$wget[1] ;
   assign MUX_bus_toOutput_1$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6481,7 +6481,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_moreFlits[1] ;
   assign MUX_bus_toOutput_1$wset_1__SEL_3 =
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6503,19 +6503,19 @@ module mkSoC_Top(CLK,
 	     2'd1 &&
 	     bus_inputDest_0_1$wget[1] ;
   assign MUX_bus_toOutput_1_1$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
-	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
-	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
-	     2'd1 &&
-	     bus_moreFlits_1[1] ;
-  assign MUX_bus_toOutput_1_1$wset_1__SEL_3 =
 	     WILL_FIRE_RL_bus_input_follow_flit_2 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_moreFlits_1[1] ;
-  assign MUX_bus_toOutput_1_1$wset_1__SEL_4 =
+  assign MUX_bus_toOutput_1_1$wset_1__SEL_3 =
 	     WILL_FIRE_RL_bus_input_follow_flit_3 &&
+	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
+	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
+	     2'd1 &&
+	     bus_moreFlits_1[1] ;
+  assign MUX_bus_toOutput_1_1$wset_1__SEL_4 =
+	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
@@ -6565,7 +6565,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_inputDest_0$wget[2] ;
   assign MUX_bus_toOutput_2$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6573,7 +6573,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_moreFlits[2] ;
   assign MUX_bus_toOutput_2$wset_1__SEL_3 =
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6597,7 +6597,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_inputDest_0$wget[3] ;
   assign MUX_bus_toOutput_3$wset_1__SEL_2 =
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6605,7 +6605,7 @@ module mkSoC_Top(CLK,
 	     3'd1 &&
 	     bus_moreFlits[3] ;
   assign MUX_bus_toOutput_3$wset_1__SEL_3 =
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6629,9 +6629,9 @@ module mkSoC_Top(CLK,
 	     core$RDY_cpu_reset_server_request_put &&
 	     rg_state == 2'd0 ;
   assign MUX_rg_state$write_1__SEL_2 =
+	     mem0_controller$RDY_set_addr_map &&
 	     mem0_controller$RDY_server_reset_response_get &&
 	     uart0$RDY_server_reset_response_get &&
-	     mem0_controller$RDY_set_addr_map &&
 	     core$RDY_cpu_reset_server_response_get &&
 	     rg_state == 2'd1 ;
   assign MUX_bus_1_moreFlits_1$write_1__VAL_1 =
@@ -6805,17 +6805,17 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_0$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput$wset_1__VAL_1 or
 	  MUX_bus_toOutput_0$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_0$wset_1__SEL_3 or
+	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_0$wset_1__SEL_4)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_bus_toOutput_0$wset_1__SEL_1:
 	  bus_toOutput_0$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
       MUX_bus_toOutput_0$wset_1__SEL_2:
-	  bus_toOutput_0$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
-      MUX_bus_toOutput_0$wset_1__SEL_3:
 	  bus_toOutput_0$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
+      MUX_bus_toOutput_0$wset_1__SEL_3:
+	  bus_toOutput_0$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       MUX_bus_toOutput_0$wset_1__SEL_4:
 	  bus_toOutput_0$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       default: bus_toOutput_0$wget =
@@ -6830,14 +6830,14 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0$wget[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_inputDest_0$wget[0] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_moreFlits[0] ||
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6854,17 +6854,17 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_1$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput$wset_1__VAL_1 or
 	  MUX_bus_toOutput_1$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_1$wset_1__SEL_3 or
+	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_1$wset_1__SEL_4)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_bus_toOutput_1$wset_1__SEL_1:
 	  bus_toOutput_1$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
       MUX_bus_toOutput_1$wset_1__SEL_2:
-	  bus_toOutput_1$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
-      MUX_bus_toOutput_1$wset_1__SEL_3:
 	  bus_toOutput_1$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
+      MUX_bus_toOutput_1$wset_1__SEL_3:
+	  bus_toOutput_1$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       MUX_bus_toOutput_1$wset_1__SEL_4:
 	  bus_toOutput_1$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       default: bus_toOutput_1$wget =
@@ -6879,14 +6879,14 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0$wget[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_inputDest_0$wget[1] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_moreFlits[1] ||
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6903,17 +6903,17 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_2$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput$wset_1__VAL_1 or
 	  MUX_bus_toOutput_2$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_2$wset_1__SEL_3 or
+	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_2$wset_1__SEL_4)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_bus_toOutput_2$wset_1__SEL_1:
 	  bus_toOutput_2$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
       MUX_bus_toOutput_2$wset_1__SEL_2:
-	  bus_toOutput_2$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
-      MUX_bus_toOutput_2$wset_1__SEL_3:
 	  bus_toOutput_2$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
+      MUX_bus_toOutput_2$wset_1__SEL_3:
+	  bus_toOutput_2$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       MUX_bus_toOutput_2$wset_1__SEL_4:
 	  bus_toOutput_2$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       default: bus_toOutput_2$wget =
@@ -6928,14 +6928,14 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0$wget[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_inputDest_0$wget[2] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_moreFlits[2] ||
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -6952,17 +6952,17 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_3$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput$wset_1__VAL_1 or
 	  MUX_bus_toOutput_3$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_3$wset_1__SEL_3 or
+	  MUX_bus_toDfltOutput$wset_1__VAL_2 or
 	  MUX_bus_toOutput_3$wset_1__SEL_4)
   begin
     case (1'b1) // synopsys parallel_case
       MUX_bus_toOutput_3$wset_1__SEL_1:
 	  bus_toOutput_3$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
       MUX_bus_toOutput_3$wset_1__SEL_2:
-	  bus_toOutput_3$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
-      MUX_bus_toOutput_3$wset_1__SEL_3:
 	  bus_toOutput_3$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
+      MUX_bus_toOutput_3$wset_1__SEL_3:
+	  bus_toOutput_3$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       MUX_bus_toOutput_3$wset_1__SEL_4:
 	  bus_toOutput_3$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       default: bus_toOutput_3$wget =
@@ -6977,14 +6977,14 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0$wget[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_inputDest_0$wget[3] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) ==
 	     3'd1 &&
 	     bus_moreFlits[3] ||
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -7011,9 +7011,9 @@ module mkSoC_Top(CLK,
       MUX_bus_toDfltOutput$wset_1__SEL_2:
 	  bus_toDfltOutput$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       MUX_bus_toDfltOutput$wset_1__SEL_3:
-	  bus_toDfltOutput$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
-      MUX_bus_toDfltOutput$wset_1__SEL_4:
 	  bus_toDfltOutput$wget = MUX_bus_toDfltOutput$wset_1__VAL_1;
+      MUX_bus_toDfltOutput$wset_1__SEL_4:
+	  bus_toDfltOutput$wget = MUX_bus_toDfltOutput$wset_1__VAL_2;
       default: bus_toDfltOutput$wget =
 		   174'h2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA /* unspecified value */ ;
     endcase
@@ -7031,13 +7031,13 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_1$wget[2] ? 3'd1 : 3'd0) +
 	     (bus_inputDest_1$wget[3] ? 3'd1 : 3'd0) !=
 	     3'd1 ||
-	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
+	     WILL_FIRE_RL_bus_input_follow_flit &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[3] ? 3'd1 : 3'd0) !=
 	     3'd1 ||
-	     WILL_FIRE_RL_bus_input_follow_flit &&
+	     WILL_FIRE_RL_bus_input_follow_flit_1 &&
 	     (bus_moreFlits[0] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[1] ? 3'd1 : 3'd0) +
 	     (bus_moreFlits[2] ? 3'd1 : 3'd0) +
@@ -7064,10 +7064,10 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_0_1$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_1 or
 	  MUX_bus_toOutput_0_1$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput_1$wset_1__VAL_3 or
 	  MUX_bus_toOutput_0_1$wset_1__SEL_3 or
-	  MUX_bus_toOutput_0_1$wset_1__SEL_4 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_2 or
+	  MUX_bus_toOutput_0_1$wset_1__SEL_4 or
+	  MUX_bus_toDfltOutput_1$wset_1__VAL_3 or
 	  MUX_bus_toOutput_0_1$wset_1__SEL_5 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_4 or
 	  MUX_bus_toOutput_0_1$wset_1__SEL_6 or
@@ -7081,11 +7081,11 @@ module mkSoC_Top(CLK,
       MUX_bus_toOutput_0_1$wset_1__SEL_1:
 	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_1;
       MUX_bus_toOutput_0_1$wset_1__SEL_2:
-	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_3;
-      MUX_bus_toOutput_0_1$wset_1__SEL_3:
 	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_1;
-      MUX_bus_toOutput_0_1$wset_1__SEL_4:
+      MUX_bus_toOutput_0_1$wset_1__SEL_3:
 	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_2;
+      MUX_bus_toOutput_0_1$wset_1__SEL_4:
+	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_3;
       MUX_bus_toOutput_0_1$wset_1__SEL_5:
 	  bus_toOutput_0_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_4;
       MUX_bus_toOutput_0_1$wset_1__SEL_6:
@@ -7107,17 +7107,17 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0_1$wget[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_inputDest_0_1$wget[0] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
-	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
-	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
-	     2'd1 &&
-	     bus_moreFlits_1[0] ||
 	     WILL_FIRE_RL_bus_input_follow_flit_2 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_moreFlits_1[0] ||
 	     WILL_FIRE_RL_bus_input_follow_flit_3 &&
+	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
+	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
+	     2'd1 &&
+	     bus_moreFlits_1[0] ||
+	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
@@ -7155,10 +7155,10 @@ module mkSoC_Top(CLK,
   always@(MUX_bus_toOutput_1_1$wset_1__SEL_1 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_1 or
 	  MUX_bus_toOutput_1_1$wset_1__SEL_2 or
-	  MUX_bus_toDfltOutput_1$wset_1__VAL_3 or
 	  MUX_bus_toOutput_1_1$wset_1__SEL_3 or
-	  MUX_bus_toOutput_1_1$wset_1__SEL_4 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_2 or
+	  MUX_bus_toOutput_1_1$wset_1__SEL_4 or
+	  MUX_bus_toDfltOutput_1$wset_1__VAL_3 or
 	  MUX_bus_toOutput_1_1$wset_1__SEL_5 or
 	  MUX_bus_toDfltOutput_1$wset_1__VAL_4 or
 	  MUX_bus_toOutput_1_1$wset_1__SEL_6 or
@@ -7172,11 +7172,11 @@ module mkSoC_Top(CLK,
       MUX_bus_toOutput_1_1$wset_1__SEL_1:
 	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_1;
       MUX_bus_toOutput_1_1$wset_1__SEL_2:
-	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_3;
-      MUX_bus_toOutput_1_1$wset_1__SEL_3:
 	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_1;
-      MUX_bus_toOutput_1_1$wset_1__SEL_4:
+      MUX_bus_toOutput_1_1$wset_1__SEL_3:
 	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_2;
+      MUX_bus_toOutput_1_1$wset_1__SEL_4:
+	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_3;
       MUX_bus_toOutput_1_1$wset_1__SEL_5:
 	  bus_toOutput_1_1$wget = MUX_bus_toDfltOutput_1$wset_1__VAL_4;
       MUX_bus_toOutput_1_1$wset_1__SEL_6:
@@ -7198,17 +7198,17 @@ module mkSoC_Top(CLK,
 	     (bus_inputDest_0_1$wget[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_inputDest_0_1$wget[1] ||
-	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
-	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
-	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
-	     2'd1 &&
-	     bus_moreFlits_1[1] ||
 	     WILL_FIRE_RL_bus_input_follow_flit_2 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
 	     bus_moreFlits_1[1] ||
 	     WILL_FIRE_RL_bus_input_follow_flit_3 &&
+	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
+	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
+	     2'd1 &&
+	     bus_moreFlits_1[1] ||
+	     WILL_FIRE_RL_bus_input_follow_flit_4 &&
 	     (bus_moreFlits_1[0] ? 2'd1 : 2'd0) +
 	     (bus_moreFlits_1[1] ? 2'd1 : 2'd0) ==
 	     2'd1 &&
