@@ -40,7 +40,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# mkSoC_Top, mux_select_to_gpio, shift_register, delayer, axi_dma_receive_transfer_tap, console_io_dma, cms_ip_wrapper, shift_register_generic
+# mkSoC_Top, shift_register, delayer, axi_dma_receive_transfer_tap, console_io_dma, cms_ip_wrapper, shift_register_generic, digital_input_sequencer, extension_bram, mux_select_to_gpio
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -133,18 +133,19 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:proc_sys_reset:5.0\
-xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:axi_gpio:2.0\
+xilinx.com:ip:smartconnect:1.0\
 xilinx.com:ip:xlslice:1.0\
 xilinx.com:ip:xlconcat:2.1\
-xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:blk_mem_gen:8.4\
-xilinx.com:ip:c_addsub:12.0\
-xilinx.com:ip:xadc_wiz:3.3\
 xilinx.com:ip:util_vector_logic:2.0\
 xilinx.com:ip:axi_dma:7.1\
 xilinx.com:ip:axis_data_fifo:2.0\
+xilinx.com:ip:axi_uartlite:2.0\
+xilinx.com:ip:axi_bram_ctrl:4.1\
+xilinx.com:ip:c_addsub:12.0\
+xilinx.com:ip:xadc_wiz:3.3\
 "
 
    set list_ips_missing ""
@@ -171,13 +172,15 @@ set bCheckModules 1
 if { $bCheckModules == 1 } {
    set list_check_mods "\ 
 mkSoC_Top\
-mux_select_to_gpio\
 shift_register\
 delayer\
 axi_dma_receive_transfer_tap\
 console_io_dma\
 cms_ip_wrapper\
 shift_register_generic\
+digital_input_sequencer\
+extension_bram\
+mux_select_to_gpio\
 "
 
    set list_mods_missing ""
@@ -205,6 +208,215 @@ if { $bCheckIPsPassed != 1 } {
 # DESIGN PROCs
 ##################################################################
 
+
+# Hierarchical cell: sensors_blocks
+proc create_hier_cell_sensors_blocks { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_sensors_blocks() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
+
+
+  # Create pins
+  create_bd_pin -dir O XADC_GPIO_0
+  create_bd_pin -dir O XADC_GPIO_1
+  create_bd_pin -dir O XADC_GPIO_2
+  create_bd_pin -dir O XADC_GPIO_3
+  create_bd_pin -dir I XADC_VAUX0N_R
+  create_bd_pin -dir I XADC_VAUX0P_R
+  create_bd_pin -dir I -type rst axi_resetn
+  create_bd_pin -dir I -type clk clkb
+  create_bd_pin -dir I -type rst reset_in
+  create_bd_pin -dir I -type rst s_axi_aresetn
+  create_bd_pin -dir O -type clk sr_clock
+  create_bd_pin -dir I -from 63 -to 0 sr_data
+  create_bd_pin -dir O sr_latch
+
+  # Create instance: axi_bram_ctrl_sensors, and set properties
+  set axi_bram_ctrl_sensors [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_sensors ]
+  set_property -dict [ list \
+   CONFIG.DATA_WIDTH {64} \
+   CONFIG.ECC_TYPE {0} \
+   CONFIG.SINGLE_PORT_BRAM {1} \
+ ] $axi_bram_ctrl_sensors
+
+  # Create instance: c_addsub_minus_0x10, and set properties
+  set c_addsub_minus_0x10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:c_addsub:12.0 c_addsub_minus_0x10 ]
+  set_property -dict [ list \
+   CONFIG.A_Type {Unsigned} \
+   CONFIG.A_Width {5} \
+   CONFIG.Add_Mode {Subtract} \
+   CONFIG.B_Constant {true} \
+   CONFIG.B_Type {Unsigned} \
+   CONFIG.B_Value {10000} \
+   CONFIG.B_Width {5} \
+   CONFIG.CE {false} \
+   CONFIG.Latency {0} \
+   CONFIG.Out_Width {5} \
+ ] $c_addsub_minus_0x10
+
+  # Create instance: digital_input_sequen_0, and set properties
+  set block_name digital_input_sequencer
+  set block_cell_name digital_input_sequen_0
+  if { [catch {set digital_input_sequen_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $digital_input_sequen_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: extension_bram_0, and set properties
+  set block_name extension_bram
+  set block_cell_name extension_bram_0
+  if { [catch {set extension_bram_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $extension_bram_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+    set_property -dict [ list \
+   CONFIG.DEPTH {32} \
+ ] $extension_bram_0
+
+  # Create instance: mux_select_to_gpio_0, and set properties
+  set block_name mux_select_to_gpio
+  set block_cell_name mux_select_to_gpio_0
+  if { [catch {set mux_select_to_gpio_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $mux_select_to_gpio_0 eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
+  # Create instance: xadc_wiz_analog_input, and set properties
+  set xadc_wiz_analog_input [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc_wiz_analog_input ]
+  set_property -dict [ list \
+   CONFIG.ADC_CONVERSION_RATE {39} \
+   CONFIG.ADC_OFFSET_AND_GAIN_CALIBRATION {false} \
+   CONFIG.CHANNEL_AVERAGING {None} \
+   CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP10_VAUXN10 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP11_VAUXN11 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP12_VAUXN12 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP13_VAUXN13 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP14_VAUXN14 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP15_VAUXN15 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP2_VAUXN2 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP3_VAUXN3 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP4_VAUXN4 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP5_VAUXN5 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP6_VAUXN6 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP7_VAUXN7 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP8_VAUXN8 {true} \
+   CONFIG.CHANNEL_ENABLE_VAUXP9_VAUXN9 {true} \
+   CONFIG.CHANNEL_ENABLE_VP_VN {false} \
+   CONFIG.DCLK_FREQUENCY {50} \
+   CONFIG.ENABLE_CALIBRATION_AVERAGING {false} \
+   CONFIG.ENABLE_EXTERNAL_MUX {true} \
+   CONFIG.ENABLE_RESET {true} \
+   CONFIG.ENABLE_VCCDDRO_ALARM {false} \
+   CONFIG.ENABLE_VCCPAUX_ALARM {false} \
+   CONFIG.ENABLE_VCCPINT_ALARM {false} \
+   CONFIG.EXTERNAL_MUX_CHANNEL {VAUXP0_VAUXN0} \
+   CONFIG.INTERFACE_SELECTION {ENABLE_DRP} \
+   CONFIG.OT_ALARM {false} \
+   CONFIG.SENSOR_OFFSET_AND_GAIN_CALIBRATION {false} \
+   CONFIG.SEQUENCER_MODE {Continuous} \
+   CONFIG.SINGLE_CHANNEL_SELECTION {VAUXP0_VAUXN0} \
+   CONFIG.USER_TEMP_ALARM {false} \
+   CONFIG.VCCAUX_ALARM {false} \
+   CONFIG.VCCINT_ALARM {false} \
+   CONFIG.XADC_STARUP_SELECTION {channel_sequencer} \
+ ] $xadc_wiz_analog_input
+
+  # Create instance: xlslice_0, and set properties
+  set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {11} \
+   CONFIG.DIN_TO {3} \
+   CONFIG.DIN_WIDTH {12} \
+   CONFIG.DOUT_WIDTH {9} \
+ ] $xlslice_0
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_bram_ctrl_sensors/S_AXI]
+
+  # Create port connections
+  connect_bd_net -net PMOD1_4_LS_1 [get_bd_pins sr_data] [get_bd_pins extension_bram_0/port_c_din]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets PMOD1_4_LS_1]
+  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_pins XADC_VAUX0N_R] [get_bd_pins xadc_wiz_analog_input/vauxn0]
+  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_pins XADC_VAUX0P_R] [get_bd_pins xadc_wiz_analog_input/vauxp0]
+  connect_bd_net -net addr_divider_0_addr_out [get_bd_pins extension_bram_0/port_a_addr] [get_bd_pins xlslice_0/Dout]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets addr_divider_0_addr_out]
+  connect_bd_net -net axi_bram_ctrl_sensors_bram_addr_a [get_bd_pins axi_bram_ctrl_sensors/bram_addr_a] [get_bd_pins xlslice_0/Din]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axi_bram_ctrl_sensors_bram_addr_a]
+  connect_bd_net -net axi_bram_ctrl_sensors_bram_we_a [get_bd_pins axi_bram_ctrl_sensors/bram_we_a] [get_bd_pins extension_bram_0/port_a_we]
+  connect_bd_net -net axi_bram_ctrl_sensors_bram_wrdata_a [get_bd_pins axi_bram_ctrl_sensors/bram_wrdata_a] [get_bd_pins extension_bram_0/port_a_din]
+  connect_bd_net -net c_addsub_0_S [get_bd_pins c_addsub_minus_0x10/S] [get_bd_pins extension_bram_0/port_b_addr]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets c_addsub_0_S]
+  connect_bd_net -net channel_out [get_bd_pins c_addsub_minus_0x10/A] [get_bd_pins xadc_wiz_analog_input/channel_out] [get_bd_pins xadc_wiz_analog_input/daddr_in]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets channel_out]
+  connect_bd_net -net digital_input_sequen_0_address [get_bd_pins digital_input_sequen_0/address] [get_bd_pins extension_bram_0/port_c_addr]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets digital_input_sequen_0_address]
+  connect_bd_net -net digital_input_sequen_0_sr_clock [get_bd_pins sr_clock] [get_bd_pins digital_input_sequen_0/sr_clock]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets digital_input_sequen_0_sr_clock]
+  connect_bd_net -net digital_input_sequen_0_sr_latch [get_bd_pins sr_latch] [get_bd_pins digital_input_sequen_0/sr_latch]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets digital_input_sequen_0_sr_latch]
+  connect_bd_net -net digital_input_sequen_0_write_enable [get_bd_pins digital_input_sequen_0/write_enable] [get_bd_pins extension_bram_0/port_c_we]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets digital_input_sequen_0_write_enable]
+  connect_bd_net -net do_out [get_bd_pins extension_bram_0/port_b_din] [get_bd_pins xadc_wiz_analog_input/do_out]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets do_out]
+  connect_bd_net -net drdy_out [get_bd_pins extension_bram_0/port_b_we] [get_bd_pins xadc_wiz_analog_input/drdy_out]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets drdy_out]
+  connect_bd_net -net extension_bram_0_port_a_dout [get_bd_pins axi_bram_ctrl_sensors/bram_rddata_a] [get_bd_pins extension_bram_0/port_a_dout]
+  connect_bd_net -net mux_select_to_gpio_0_gpio_0 [get_bd_pins XADC_GPIO_0] [get_bd_pins mux_select_to_gpio_0/gpio_0]
+  connect_bd_net -net mux_select_to_gpio_0_gpio_1 [get_bd_pins XADC_GPIO_1] [get_bd_pins mux_select_to_gpio_0/gpio_1]
+  connect_bd_net -net mux_select_to_gpio_0_gpio_2 [get_bd_pins XADC_GPIO_2] [get_bd_pins mux_select_to_gpio_0/gpio_2]
+  connect_bd_net -net mux_select_to_gpio_0_gpio_3 [get_bd_pins XADC_GPIO_3] [get_bd_pins mux_select_to_gpio_0/gpio_3]
+  connect_bd_net -net muxaddr_out [get_bd_pins mux_select_to_gpio_0/muxaddr_out] [get_bd_pins xadc_wiz_analog_input/muxaddr_out]
+  connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins reset_in] [get_bd_pins xadc_wiz_analog_input/reset_in]
+  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins axi_bram_ctrl_sensors/s_axi_aresetn] [get_bd_pins digital_input_sequen_0/rst_n]
+  connect_bd_net -net xadc_wiz_0_eoc_out [get_bd_pins xadc_wiz_analog_input/den_in] [get_bd_pins xadc_wiz_analog_input/eoc_out]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets xadc_wiz_0_eoc_out]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins clkb] [get_bd_pins axi_bram_ctrl_sensors/s_axi_aclk] [get_bd_pins digital_input_sequen_0/clk] [get_bd_pins extension_bram_0/clk] [get_bd_pins xadc_wiz_analog_input/dclk_in]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
 
 # Hierarchical cell: axi_gpio_to_cms_ctrl_interface
 proc create_hier_cell_axi_gpio_to_cms_ctrl_interface { parentCell nameHier } {
@@ -321,6 +533,108 @@ proc create_hier_cell_axi_gpio_to_cms_ctrl_interface { parentCell nameHier } {
   current_bd_instance $oldCurInst
 }
 
+# Hierarchical cell: riscv_other_peripherals
+proc create_hier_cell_riscv_other_peripherals { parentCell nameHier } {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_riscv_other_peripherals() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S00_AXI
+
+
+  # Create pins
+  create_bd_pin -dir O PMOD1_0_LS
+  create_bd_pin -dir O PMOD1_1_LS
+  create_bd_pin -dir O PMOD1_1_LS1
+  create_bd_pin -dir O PMOD1_2_LS
+  create_bd_pin -dir O -type clk PMOD1_3_LS
+  create_bd_pin -dir O PMOD1_4_LS
+  create_bd_pin -dir I -from 63 -to 0 PMOD1_4_LS1
+  create_bd_pin -dir O PMOD1_5_LS
+  create_bd_pin -dir I PMOD_1_1_LS
+  create_bd_pin -dir I XADC_VAUX0N_R
+  create_bd_pin -dir I XADC_VAUX0P_R
+  create_bd_pin -dir I -type rst axi_resetn
+  create_bd_pin -dir I -type rst reset_in
+  create_bd_pin -dir I -type rst rst_n
+  create_bd_pin -dir I -type clk s_axi_lite_aclk
+
+  # Create instance: axi_uartlite_0, and set properties
+  set axi_uartlite_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_uartlite:2.0 axi_uartlite_0 ]
+  set_property -dict [ list \
+   CONFIG.C_BAUDRATE {115200} \
+   CONFIG.C_ODD_PARITY {0} \
+   CONFIG.C_USE_PARITY {0} \
+   CONFIG.PARITY {No_Parity} \
+ ] $axi_uartlite_0
+
+  # Create instance: sensors_blocks
+  create_hier_cell_sensors_blocks $hier_obj sensors_blocks
+
+  # Create instance: smartconnect_other_peripherals, and set properties
+  set smartconnect_other_peripherals [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_other_peripherals ]
+  set_property -dict [ list \
+   CONFIG.NUM_MI {2} \
+   CONFIG.NUM_SI {1} \
+ ] $smartconnect_other_peripherals
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins S00_AXI] [get_bd_intf_pins smartconnect_other_peripherals/S00_AXI]
+  connect_bd_intf_net -intf_net smartconnect_other_peripherals_M00_AXI [get_bd_intf_pins sensors_blocks/S_AXI] [get_bd_intf_pins smartconnect_other_peripherals/M00_AXI]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets smartconnect_other_peripherals_M00_AXI]
+  connect_bd_intf_net -intf_net smartconnect_other_peripherals_M01_AXI [get_bd_intf_pins axi_uartlite_0/S_AXI] [get_bd_intf_pins smartconnect_other_peripherals/M01_AXI]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets smartconnect_other_peripherals_M01_AXI]
+
+  # Create port connections
+  connect_bd_net -net PMOD1_4_LS_1 [get_bd_pins PMOD1_4_LS1] [get_bd_pins sensors_blocks/sr_data]
+  connect_bd_net -net PMOD_1_1_LS_1 [get_bd_pins PMOD_1_1_LS] [get_bd_pins axi_uartlite_0/rx]
+  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_pins XADC_VAUX0N_R] [get_bd_pins sensors_blocks/XADC_VAUX0N_R]
+  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_pins XADC_VAUX0P_R] [get_bd_pins sensors_blocks/XADC_VAUX0P_R]
+  connect_bd_net -net axi_uartlite_0_tx [get_bd_pins PMOD1_1_LS1] [get_bd_pins axi_uartlite_0/tx]
+  connect_bd_net -net gpio_0_Dout [get_bd_pins rst_n] [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins sensors_blocks/s_axi_aresetn] [get_bd_pins smartconnect_other_peripherals/aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_resetn] [get_bd_pins sensors_blocks/axi_resetn]
+  connect_bd_net -net reset_in_1 [get_bd_pins reset_in] [get_bd_pins sensors_blocks/reset_in]
+  connect_bd_net -net sensors_blocks_PMOD1_2_LS [get_bd_pins PMOD1_2_LS] [get_bd_pins sensors_blocks/sr_latch]
+  connect_bd_net -net sensors_blocks_PMOD1_3_LS [get_bd_pins PMOD1_3_LS] [get_bd_pins sensors_blocks/sr_clock]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_0 [get_bd_pins PMOD1_0_LS] [get_bd_pins sensors_blocks/XADC_GPIO_0]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_1 [get_bd_pins PMOD1_1_LS] [get_bd_pins sensors_blocks/XADC_GPIO_1]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_2 [get_bd_pins PMOD1_4_LS] [get_bd_pins sensors_blocks/XADC_GPIO_2]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_3 [get_bd_pins PMOD1_5_LS] [get_bd_pins sensors_blocks/XADC_GPIO_3]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins s_axi_lite_aclk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins sensors_blocks/clkb] [get_bd_pins smartconnect_other_peripherals/aclk]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
 # Hierarchical cell: continuous_monitoring_system_blocks
 proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier } {
 
@@ -370,10 +684,11 @@ proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier 
   create_bd_pin -dir I -type rst aresetn
   create_bd_pin -dir O -from 31 -to 0 axis_wr_data_count
   create_bd_pin -dir I en
-  create_bd_pin -dir I -from 511 -to 0 general_purpose_registers
+  create_bd_pin -dir I -from 4 -to 0 gpr_address
+  create_bd_pin -dir I -from 128 -to 0 gpr_value
+  create_bd_pin -dir I gpr_write_enable
   create_bd_pin -dir O halt_cpu
   create_bd_pin -dir I -from 31 -to 0 instr
-  create_bd_pin -dir O -from 63 -to 0 item_counter_probe1
   create_bd_pin -dir I -from 63 -to 0 pc
   create_bd_pin -dir I -from 38 -to 0 performance_events
 
@@ -432,9 +747,9 @@ proc create_hier_cell_continuous_monitoring_system_blocks { parentCell nameHier 
   connect_bd_net -net axis_data_fifo_0_prog_full [get_bd_pins axis_data_fifo_0/prog_full] [get_bd_pins cms_ip_wrapper_0/fifo_full]
   connect_bd_net -net cms_ip_wrapper_0_halt_cpu [get_bd_pins halt_cpu] [get_bd_pins cms_ip_wrapper_0/halt_cpu]
   connect_bd_net -net en_1 [get_bd_pins en] [get_bd_pins cms_ip_wrapper_0/cpu_rst_n] [get_bd_pins cms_ip_wrapper_0/en]
-  connect_bd_net -net general_purpose_registers_1 [get_bd_pins general_purpose_registers] [get_bd_pins cms_ip_wrapper_0/general_purpose_registers]
-  connect_bd_net -net item_counter_probe [get_bd_pins item_counter_probe1] [get_bd_pins cms_ip_wrapper_0/item_counter_probe]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets item_counter_probe]
+  connect_bd_net -net gpr_address_1 [get_bd_pins gpr_address] [get_bd_pins cms_ip_wrapper_0/gpr_address]
+  connect_bd_net -net gpr_value_1 [get_bd_pins gpr_value] [get_bd_pins cms_ip_wrapper_0/gpr_value]
+  connect_bd_net -net gpr_write_enable_1 [get_bd_pins gpr_write_enable] [get_bd_pins cms_ip_wrapper_0/gpr_write_enable]
   connect_bd_net -net mkCore_Synth_0_instr [get_bd_pins instr] [get_bd_pins cms_ip_wrapper_0/instr]
   connect_bd_net -net mkCore_Synth_0_pc [get_bd_pins pc] [get_bd_pins cms_ip_wrapper_0/pc]
   connect_bd_net -net performance_events_1 [get_bd_pins performance_events] [get_bd_pins cms_ip_wrapper_0/performance_events]
@@ -605,12 +920,9 @@ proc create_hier_cell_bram_logic { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -from 352 -to 0 Din
-  create_bd_pin -dir O -from 0 -to 0 Dout
   create_bd_pin -dir I -from 0 -to 0 Op1
-  create_bd_pin -dir O -from 31 -to 0 addra
   create_bd_pin -dir I -from 31 -to 0 addrb
   create_bd_pin -dir I -type clk clka
-  create_bd_pin -dir O -from 255 -to 0 dina
   create_bd_pin -dir I -from 255 -to 0 dinb
   create_bd_pin -dir O -from 255 -to 0 memory_data_output
   create_bd_pin -dir O memory_ready
@@ -718,14 +1030,14 @@ proc create_hier_cell_bram_logic { parentCell nameHier } {
   connect_bd_net -net gpio_0_Dout [get_bd_pins rst_n] [get_bd_pins memory_read_ready_delayer/rst_n]
   connect_bd_net -net mkSoC_Top_0_RDY_to_raw_mem_request_get [get_bd_pins Op1] [get_bd_pins blk_mem_gen_0/ena] [get_bd_pins util_vector_logic_0/Op2] [get_bd_pins util_vector_logic_3/Op1]
   connect_bd_net -net mkSoC_Top_0_to_raw_mem_request_get [get_bd_pins Din] [get_bd_pins read_address/Din] [get_bd_pins write_data/Din] [get_bd_pins write_enable/Din]
-  connect_bd_net -net read_address1_Dout [get_bd_pins addra] [get_bd_pins blk_mem_gen_0/addra] [get_bd_pins read_address1/Dout]
+  connect_bd_net -net read_address1_Dout [get_bd_pins blk_mem_gen_0/addra] [get_bd_pins read_address1/Dout]
   connect_bd_net -net read_address_Dout [get_bd_pins read_address/Dout] [get_bd_pins read_address1/Din]
   connect_bd_net -net shift_register_0_addr [get_bd_pins addrb] [get_bd_pins blk_mem_gen_0/addrb]
   connect_bd_net -net shift_register_0_data [get_bd_pins dinb] [get_bd_pins blk_mem_gen_0/dinb]
   connect_bd_net -net util_vector_logic_2_Res [get_bd_pins not_write_enable/Res] [get_bd_pins util_vector_logic_3/Op2]
   connect_bd_net -net util_vector_logic_3_Res [get_bd_pins memory_read_ready_delayer/sig] [get_bd_pins util_vector_logic_3/Res]
-  connect_bd_net -net write_data_Dout [get_bd_pins dina] [get_bd_pins blk_mem_gen_0/dina] [get_bd_pins write_data/Dout]
-  connect_bd_net -net write_enable_Dout [get_bd_pins Dout] [get_bd_pins not_write_enable/Op1] [get_bd_pins util_vector_logic_0/Op1] [get_bd_pins write_enable/Dout]
+  connect_bd_net -net write_data_Dout [get_bd_pins blk_mem_gen_0/dina] [get_bd_pins write_data/Dout]
+  connect_bd_net -net write_enable_Dout [get_bd_pins not_write_enable/Op1] [get_bd_pins util_vector_logic_0/Op1] [get_bd_pins write_enable/Dout]
   connect_bd_net -net xlslice_3_Dout [get_bd_pins web] [get_bd_pins blk_mem_gen_0/web]
   connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins clka] [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins blk_mem_gen_0/clkb] [get_bd_pins memory_read_ready_delayer/clk]
 
@@ -850,193 +1162,6 @@ proc create_hier_cell_bram_loader { parentCell nameHier } {
   current_bd_instance $oldCurInst
 }
 
-# Hierarchical cell: sensors_blocks
-proc create_hier_cell_sensors_blocks { parentCell nameHier } {
-
-  variable script_folder
-
-  if { $parentCell eq "" || $nameHier eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_sensors_blocks() - Empty argument(s)!"}
-     return
-  }
-
-  # Get object for parentCell
-  set parentObj [get_bd_cells $parentCell]
-  if { $parentObj == "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
-     return
-  }
-
-  # Make sure parentObj is hier blk
-  set parentType [get_property TYPE $parentObj]
-  if { $parentType ne "hier" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
-     return
-  }
-
-  # Save current instance; Restore later
-  set oldCurInst [current_bd_instance .]
-
-  # Set parent object as current
-  current_bd_instance $parentObj
-
-  # Create cell and set as current instance
-  set hier_obj [create_bd_cell -type hier $nameHier]
-  current_bd_instance $hier_obj
-
-  # Create interface pins
-  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI
-
-
-  # Create pins
-  create_bd_pin -dir O XADC_GPIO_0
-  create_bd_pin -dir O XADC_GPIO_1
-  create_bd_pin -dir O XADC_GPIO_2
-  create_bd_pin -dir O XADC_GPIO_3
-  create_bd_pin -dir I XADC_VAUX0N_R
-  create_bd_pin -dir I XADC_VAUX0P_R
-  create_bd_pin -dir I -type clk clkb
-  create_bd_pin -dir I -type rst reset_in
-  create_bd_pin -dir I -type rst s_axi_aresetn
-
-  # Create instance: axi_bram_ctrl_sensors, and set properties
-  set axi_bram_ctrl_sensors [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_sensors ]
-  set_property -dict [ list \
-   CONFIG.DATA_WIDTH {64} \
-   CONFIG.ECC_TYPE {0} \
-   CONFIG.SINGLE_PORT_BRAM {1} \
- ] $axi_bram_ctrl_sensors
-
-  # Create instance: blk_mem_gen_sensors, and set properties
-  set blk_mem_gen_sensors [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_sensors ]
-  set_property -dict [ list \
-   CONFIG.Byte_Size {9} \
-   CONFIG.EN_SAFETY_CKT {false} \
-   CONFIG.Enable_32bit_Address {false} \
-   CONFIG.Enable_A {Always_Enabled} \
-   CONFIG.Enable_B {Always_Enabled} \
-   CONFIG.Memory_Type {True_Dual_Port_RAM} \
-   CONFIG.Port_B_Clock {100} \
-   CONFIG.Port_B_Enable_Rate {100} \
-   CONFIG.Port_B_Write_Rate {50} \
-   CONFIG.Read_Width_A {64} \
-   CONFIG.Read_Width_B {64} \
-   CONFIG.Register_PortA_Output_of_Memory_Core {false} \
-   CONFIG.Register_PortA_Output_of_Memory_Primitives {true} \
-   CONFIG.Register_PortB_Output_of_Memory_Primitives {true} \
-   CONFIG.Use_Byte_Write_Enable {false} \
-   CONFIG.Use_REGCEA_Pin {false} \
-   CONFIG.Use_RSTA_Pin {false} \
-   CONFIG.Use_RSTB_Pin {false} \
-   CONFIG.Write_Depth_A {128} \
-   CONFIG.Write_Width_A {64} \
-   CONFIG.Write_Width_B {64} \
-   CONFIG.use_bram_block {Stand_Alone} \
- ] $blk_mem_gen_sensors
-
-  # Create instance: c_addsub_minus_0x10, and set properties
-  set c_addsub_minus_0x10 [ create_bd_cell -type ip -vlnv xilinx.com:ip:c_addsub:12.0 c_addsub_minus_0x10 ]
-  set_property -dict [ list \
-   CONFIG.A_Type {Unsigned} \
-   CONFIG.A_Width {5} \
-   CONFIG.Add_Mode {Subtract} \
-   CONFIG.B_Constant {true} \
-   CONFIG.B_Type {Unsigned} \
-   CONFIG.B_Value {10000} \
-   CONFIG.B_Width {5} \
-   CONFIG.CE {false} \
-   CONFIG.Latency {0} \
-   CONFIG.Out_Width {5} \
- ] $c_addsub_minus_0x10
-
-  # Create instance: mux_select_to_gpio_0, and set properties
-  set block_name mux_select_to_gpio
-  set block_cell_name mux_select_to_gpio_0
-  if { [catch {set mux_select_to_gpio_0 [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2095 -severity "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   } elseif { $mux_select_to_gpio_0 eq "" } {
-     catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
-     return 1
-   }
-  
-  # Create instance: xadc_wiz_0, and set properties
-  set xadc_wiz_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc_wiz_0 ]
-  set_property -dict [ list \
-   CONFIG.ADC_CONVERSION_RATE {39} \
-   CONFIG.ADC_OFFSET_AND_GAIN_CALIBRATION {false} \
-   CONFIG.CHANNEL_AVERAGING {None} \
-   CONFIG.CHANNEL_ENABLE_VAUXP0_VAUXN0 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP1_VAUXN1 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP2_VAUXN2 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP3_VAUXN3 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP4_VAUXN4 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP5_VAUXN5 {true} \
-   CONFIG.CHANNEL_ENABLE_VAUXP6_VAUXN6 {true} \
-   CONFIG.CHANNEL_ENABLE_VP_VN {false} \
-   CONFIG.DCLK_FREQUENCY {50} \
-   CONFIG.ENABLE_CALIBRATION_AVERAGING {false} \
-   CONFIG.ENABLE_EXTERNAL_MUX {true} \
-   CONFIG.ENABLE_RESET {true} \
-   CONFIG.ENABLE_VCCDDRO_ALARM {false} \
-   CONFIG.ENABLE_VCCPAUX_ALARM {false} \
-   CONFIG.ENABLE_VCCPINT_ALARM {false} \
-   CONFIG.EXTERNAL_MUX_CHANNEL {VAUXP0_VAUXN0} \
-   CONFIG.INTERFACE_SELECTION {ENABLE_DRP} \
-   CONFIG.OT_ALARM {false} \
-   CONFIG.SENSOR_OFFSET_AND_GAIN_CALIBRATION {false} \
-   CONFIG.SEQUENCER_MODE {Continuous} \
-   CONFIG.SINGLE_CHANNEL_SELECTION {VAUXP0_VAUXN0} \
-   CONFIG.USER_TEMP_ALARM {false} \
-   CONFIG.VCCAUX_ALARM {false} \
-   CONFIG.VCCINT_ALARM {false} \
-   CONFIG.XADC_STARUP_SELECTION {channel_sequencer} \
- ] $xadc_wiz_0
-
-  # Create instance: xlslice_0, and set properties
-  set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
-  set_property -dict [ list \
-   CONFIG.DIN_FROM {11} \
-   CONFIG.DIN_TO {3} \
-   CONFIG.DIN_WIDTH {12} \
-   CONFIG.DOUT_WIDTH {9} \
- ] $xlslice_0
-
-  # Create interface connections
-  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins axi_bram_ctrl_sensors/BRAM_PORTA] [get_bd_intf_pins blk_mem_gen_sensors/BRAM_PORTA]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets axi_bram_ctrl_0_BRAM_PORTA]
-  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins S_AXI] [get_bd_intf_pins axi_bram_ctrl_sensors/S_AXI]
-
-  # Create port connections
-  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_pins XADC_VAUX0N_R] [get_bd_pins xadc_wiz_0/vauxn0]
-  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_pins XADC_VAUX0P_R] [get_bd_pins xadc_wiz_0/vauxp0]
-  connect_bd_net -net addr_divider_0_addr_out [get_bd_pins blk_mem_gen_sensors/addra] [get_bd_pins xlslice_0/Dout]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets addr_divider_0_addr_out]
-  connect_bd_net -net axi_bram_ctrl_sensors_bram_addr_a [get_bd_pins axi_bram_ctrl_sensors/bram_addr_a] [get_bd_pins xlslice_0/Din]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets axi_bram_ctrl_sensors_bram_addr_a]
-  connect_bd_net -net c_addsub_0_S [get_bd_pins blk_mem_gen_sensors/addrb] [get_bd_pins c_addsub_minus_0x10/S]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets c_addsub_0_S]
-  connect_bd_net -net channel_out [get_bd_pins c_addsub_minus_0x10/A] [get_bd_pins xadc_wiz_0/channel_out]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets channel_out]
-  connect_bd_net -net do_out [get_bd_pins blk_mem_gen_sensors/dinb] [get_bd_pins xadc_wiz_0/do_out]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets do_out]
-  connect_bd_net -net drdy_out [get_bd_pins blk_mem_gen_sensors/web] [get_bd_pins xadc_wiz_0/drdy_out]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets drdy_out]
-  connect_bd_net -net mux_select_to_gpio_0_gpio_0 [get_bd_pins XADC_GPIO_0] [get_bd_pins mux_select_to_gpio_0/gpio_0]
-  connect_bd_net -net mux_select_to_gpio_0_gpio_1 [get_bd_pins XADC_GPIO_1] [get_bd_pins mux_select_to_gpio_0/gpio_1]
-  connect_bd_net -net mux_select_to_gpio_0_gpio_2 [get_bd_pins XADC_GPIO_2] [get_bd_pins mux_select_to_gpio_0/gpio_2]
-  connect_bd_net -net mux_select_to_gpio_0_gpio_3 [get_bd_pins XADC_GPIO_3] [get_bd_pins mux_select_to_gpio_0/gpio_3]
-  connect_bd_net -net muxaddr_out [get_bd_pins mux_select_to_gpio_0/muxaddr_out] [get_bd_pins xadc_wiz_0/daddr_in] [get_bd_pins xadc_wiz_0/muxaddr_out]
-  connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins reset_in] [get_bd_pins xadc_wiz_0/reset_in]
-  connect_bd_net -net s_axi_aresetn_1 [get_bd_pins s_axi_aresetn] [get_bd_pins axi_bram_ctrl_sensors/s_axi_aresetn]
-  connect_bd_net -net xadc_wiz_0_eoc_out [get_bd_pins xadc_wiz_0/den_in] [get_bd_pins xadc_wiz_0/eoc_out]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets xadc_wiz_0_eoc_out]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins clkb] [get_bd_pins axi_bram_ctrl_sensors/s_axi_aclk] [get_bd_pins blk_mem_gen_sensors/clkb] [get_bd_pins xadc_wiz_0/dclk_in]
-
-  # Restore current instance
-  current_bd_instance $oldCurInst
-}
-
 # Hierarchical cell: PYNQ_wrapper_blocks
 proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
 
@@ -1076,16 +1201,31 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
 
   create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S00_AXI
 
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S00_AXI1
+
 
   # Create pins
   create_bd_pin -dir O EN_put_from_console_put
+  create_bd_pin -dir O PMOD1_0_LS
+  create_bd_pin -dir O PMOD1_1_LS
+  create_bd_pin -dir O PMOD1_1_LS1
+  create_bd_pin -dir O PMOD1_2_LS
+  create_bd_pin -dir O -type clk PMOD1_3_LS
+  create_bd_pin -dir O PMOD1_4_LS
+  create_bd_pin -dir I -from 63 -to 0 PMOD1_4_LS1
+  create_bd_pin -dir O PMOD1_5_LS
+  create_bd_pin -dir I PMOD_1_1_LS
   create_bd_pin -dir I RDY_get_to_console_get
   create_bd_pin -dir I RDY_put_from_console_put
   create_bd_pin -dir I -from 0 -to 0 RDY_to_raw_mem_request_get
+  create_bd_pin -dir I XADC_VAUX0N_R
+  create_bd_pin -dir I XADC_VAUX0P_R
   create_bd_pin -dir I -type rst axi_resetn
   create_bd_pin -dir I cpu_reset_completed
-  create_bd_pin -dir I -from 511 -to 0 general_purpose_registers
   create_bd_pin -dir I -from 7 -to 0 get_to_console_get
+  create_bd_pin -dir I -from 4 -to 0 gpr_address
+  create_bd_pin -dir I -from 128 -to 0 gpr_value
+  create_bd_pin -dir I gpr_write_enable
   create_bd_pin -dir O halt_cpu
   create_bd_pin -dir I -from 31 -to 0 instr
   create_bd_pin -dir O -from 1 -to 0 interrupts
@@ -1095,6 +1235,7 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   create_bd_pin -dir I -from 63 -to 0 pc
   create_bd_pin -dir I -from 38 -to 0 performance_events
   create_bd_pin -dir O -from 7 -to 0 put_from_console_put
+  create_bd_pin -dir I -type rst reset_in
   create_bd_pin -dir O -from 0 -to 0 -type rst rst_n
   create_bd_pin -dir I -type clk s_axi_lite_aclk
 
@@ -1128,6 +1269,9 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   # Create instance: gpio_reset_slice, and set properties
   set gpio_reset_slice [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 gpio_reset_slice ]
 
+  # Create instance: riscv_other_peripherals
+  create_hier_cell_riscv_other_peripherals $hier_obj riscv_other_peripherals
+
   # Create instance: smartconnect_1, and set properties
   set smartconnect_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_1 ]
   set_property -dict [ list \
@@ -1138,6 +1282,7 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   set xlconcat_interrupts [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_interrupts ]
 
   # Create interface connections
+  connect_bd_intf_net -intf_net Conn2 [get_bd_intf_pins S00_AXI1] [get_bd_intf_pins riscv_other_peripherals/S00_AXI]
   connect_bd_intf_net -intf_net PYNQ_wrapper_blocks_M03_AXI [get_bd_intf_pins axi_smc/M03_AXI] [get_bd_intf_pins console_io/S_AXI_LITE]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets PYNQ_wrapper_blocks_M03_AXI]
   connect_bd_intf_net -intf_net axi_dma_console_io_M_AXI_MM2S [get_bd_intf_pins console_io/M_AXI_MM2S] [get_bd_intf_pins smartconnect_1/S01_AXI]
@@ -1151,11 +1296,15 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   connect_bd_intf_net -intf_net smartconnect_1_M00_AXI [get_bd_intf_pins M00_AXI] [get_bd_intf_pins smartconnect_1/M00_AXI]
 
   # Create port connections
-  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_registers [get_bd_pins general_purpose_registers] [get_bd_pins continuous_monitoring_system_blocks/general_purpose_registers]
   connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed [get_bd_pins cpu_reset_completed] [get_bd_pins console_io/cpu_reset_completed]
   connect_bd_net -net Din_1 [get_bd_pins memory_request] [get_bd_pins bram_logic/Din]
+  connect_bd_net -net PMOD1_4_LS_1 [get_bd_pins PMOD1_4_LS1] [get_bd_pins riscv_other_peripherals/PMOD1_4_LS1]
+  connect_bd_net -net PMOD_1_1_LS_1 [get_bd_pins PMOD_1_1_LS] [get_bd_pins riscv_other_peripherals/PMOD_1_1_LS]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets PMOD_1_1_LS_1]
   connect_bd_net -net PYNQ_wrapper_blocks_halt_cpu [get_bd_pins halt_cpu] [get_bd_pins continuous_monitoring_system_blocks/halt_cpu]
   connect_bd_net -net RDY_get_to_console_get [get_bd_pins RDY_get_to_console_get] [get_bd_pins console_io/RDY_get_to_console_get]
+  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_pins XADC_VAUX0N_R] [get_bd_pins riscv_other_peripherals/XADC_VAUX0N_R]
+  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_pins XADC_VAUX0P_R] [get_bd_pins riscv_other_peripherals/XADC_VAUX0P_R]
   connect_bd_net -net axi_dma_console_io_mm2s_introut [get_bd_pins console_io/mm2s_introut] [get_bd_pins xlconcat_interrupts/In0]
   connect_bd_net -net axi_dma_console_io_s2mm_introut [get_bd_pins console_io/s2mm_introut] [get_bd_pins xlconcat_interrupts/In1]
   connect_bd_net -net axi_gpio_0_gpio_io_o [get_bd_pins axi_gpio_0/gpio_io_o] [get_bd_pins gpio_reset_slice/Din]
@@ -1168,19 +1317,31 @@ proc create_hier_cell_PYNQ_wrapper_blocks { parentCell nameHier } {
   connect_bd_net -net console_io_dma_0_EN_put_from_console_put [get_bd_pins EN_put_from_console_put] [get_bd_pins console_io/EN_put_from_console_put]
   connect_bd_net -net console_io_dma_0_put_from_console_put [get_bd_pins put_from_console_put] [get_bd_pins console_io/put_from_console_put]
   connect_bd_net -net get_to_console_get [get_bd_pins get_to_console_get] [get_bd_pins console_io/get_to_console_get]
-  connect_bd_net -net gpio_0_Dout [get_bd_pins rst_n] [get_bd_pins bram_logic/rst_n] [get_bd_pins continuous_monitoring_system_blocks/en] [get_bd_pins gpio_reset_slice/Dout]
+  connect_bd_net -net gpio_0_Dout [get_bd_pins rst_n] [get_bd_pins bram_logic/rst_n] [get_bd_pins continuous_monitoring_system_blocks/en] [get_bd_pins gpio_reset_slice/Dout] [get_bd_pins riscv_other_peripherals/rst_n]
+  connect_bd_net -net gpr_address_1 [get_bd_pins gpr_address] [get_bd_pins continuous_monitoring_system_blocks/gpr_address]
+  connect_bd_net -net gpr_value_1 [get_bd_pins gpr_value] [get_bd_pins continuous_monitoring_system_blocks/gpr_value]
+  connect_bd_net -net gpr_write_enable_1 [get_bd_pins gpr_write_enable] [get_bd_pins continuous_monitoring_system_blocks/gpr_write_enable]
   connect_bd_net -net memory_ready_net [get_bd_pins memory_ready] [get_bd_pins bram_logic/memory_ready]
   connect_bd_net -net mkCore_Synth_0_instr [get_bd_pins instr] [get_bd_pins continuous_monitoring_system_blocks/instr]
   connect_bd_net -net mkCore_Synth_0_pc [get_bd_pins pc] [get_bd_pins continuous_monitoring_system_blocks/pc]
   connect_bd_net -net mkSoC_Top_0_RDY_put_from_console_put [get_bd_pins RDY_put_from_console_put] [get_bd_pins console_io/RDY_put_from_console_put]
   connect_bd_net -net mkSoC_Top_0_RDY_to_raw_mem_request_get [get_bd_pins RDY_to_raw_mem_request_get] [get_bd_pins bram_logic/Op1]
   connect_bd_net -net mkSoC_Top_1_cms_ifc_performance_events [get_bd_pins performance_events] [get_bd_pins continuous_monitoring_system_blocks/performance_events]
-  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_resetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins bram_loader/s_axi_aresetn] [get_bd_pins console_io/axi_resetn] [get_bd_pins continuous_monitoring_system_blocks/aresetn] [get_bd_pins smartconnect_1/aresetn]
+  connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins axi_resetn] [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins bram_loader/s_axi_aresetn] [get_bd_pins console_io/axi_resetn] [get_bd_pins continuous_monitoring_system_blocks/aresetn] [get_bd_pins riscv_other_peripherals/axi_resetn] [get_bd_pins smartconnect_1/aresetn]
+  connect_bd_net -net reset_in_1 [get_bd_pins reset_in] [get_bd_pins riscv_other_peripherals/reset_in]
+  connect_bd_net -net riscv_other_peripherals_PMOD1_1_LS1 [get_bd_pins PMOD1_1_LS1] [get_bd_pins riscv_other_peripherals/PMOD1_1_LS1]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets riscv_other_peripherals_PMOD1_1_LS1]
+  connect_bd_net -net sensors_blocks_PMOD1_2_LS [get_bd_pins PMOD1_2_LS] [get_bd_pins riscv_other_peripherals/PMOD1_2_LS]
+  connect_bd_net -net sensors_blocks_PMOD1_3_LS [get_bd_pins PMOD1_3_LS] [get_bd_pins riscv_other_peripherals/PMOD1_3_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_0 [get_bd_pins PMOD1_0_LS] [get_bd_pins riscv_other_peripherals/PMOD1_0_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_1 [get_bd_pins PMOD1_1_LS] [get_bd_pins riscv_other_peripherals/PMOD1_1_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_2 [get_bd_pins PMOD1_4_LS] [get_bd_pins riscv_other_peripherals/PMOD1_4_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_3 [get_bd_pins PMOD1_5_LS] [get_bd_pins riscv_other_peripherals/PMOD1_5_LS]
   connect_bd_net -net shift_register_0_addr [get_bd_pins bram_loader/addr] [get_bd_pins bram_logic/addrb]
   connect_bd_net -net shift_register_0_data [get_bd_pins bram_loader/data] [get_bd_pins bram_logic/dinb]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins interrupts] [get_bd_pins xlconcat_interrupts/dout]
   connect_bd_net -net xlslice_3_Dout [get_bd_pins bram_loader/Dout] [get_bd_pins bram_logic/web]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins s_axi_lite_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_smc/aclk] [get_bd_pins bram_loader/s_axi_aclk] [get_bd_pins bram_logic/clka] [get_bd_pins console_io/s_axi_lite_aclk] [get_bd_pins continuous_monitoring_system_blocks/aclk] [get_bd_pins smartconnect_1/aclk]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins s_axi_lite_aclk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_smc/aclk] [get_bd_pins bram_loader/s_axi_aclk] [get_bd_pins bram_logic/clka] [get_bd_pins console_io/s_axi_lite_aclk] [get_bd_pins continuous_monitoring_system_blocks/aclk] [get_bd_pins riscv_other_peripherals/s_axi_lite_aclk] [get_bd_pins smartconnect_1/aclk]
 
   # Restore current instance
   current_bd_instance $oldCurInst
@@ -1227,9 +1388,10 @@ proc create_root_design { parentCell } {
 
   # Create ports
   set PMOD1_0_LS [ create_bd_port -dir O -type data PMOD1_0_LS ]
-  set PMOD1_1_LS [ create_bd_port -dir O -type data PMOD1_1_LS ]
-  set PMOD1_4_LS [ create_bd_port -dir O -type data PMOD1_4_LS ]
-  set PMOD1_5_LS [ create_bd_port -dir O -type data PMOD1_5_LS ]
+  set PMOD1_1_LS [ create_bd_port -dir I PMOD1_1_LS ]
+  set PMOD1_2_LS [ create_bd_port -dir O PMOD1_2_LS ]
+  set PMOD1_3_LS [ create_bd_port -dir O PMOD1_3_LS ]
+  set PMOD1_4_LS [ create_bd_port -dir I PMOD1_4_LS ]
   set XADC_GPIO_0 [ create_bd_port -dir O -type data XADC_GPIO_0 ]
   set XADC_GPIO_1 [ create_bd_port -dir O -type data XADC_GPIO_1 ]
   set XADC_GPIO_2 [ create_bd_port -dir O -type data XADC_GPIO_2 ]
@@ -1665,63 +1827,68 @@ proc create_root_design { parentCell } {
   # Create instance: proc_sys_reset_0, and set properties
   set proc_sys_reset_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0 ]
 
-  # Create instance: sensors_blocks
-  create_hier_cell_sensors_blocks [current_bd_instance .] sensors_blocks
-
-  # Create instance: smartconnect_other_peripherals, and set properties
-  set smartconnect_other_peripherals [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_other_peripherals ]
-  set_property -dict [ list \
-   CONFIG.NUM_SI {1} \
- ] $smartconnect_other_peripherals
-
   # Create instance: xlconstant_0, and set properties
   set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net CHERI_RISCV_Flute_mkSoC_Top_core_dmem_post_fabric [get_bd_intf_pins CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_intf_pins smartconnect_other_peripherals/S00_AXI]
+  connect_bd_intf_net -intf_net CHERI_RISCV_Flute_mkSoC_Top_core_dmem_post_fabric [get_bd_intf_pins CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_intf_pins PYNQ_wrapper_blocks/S00_AXI1]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets CHERI_RISCV_Flute_mkSoC_Top_core_dmem_post_fabric]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins ZYNQ_ARM_processing_system/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins ZYNQ_ARM_processing_system/FIXED_IO]
   connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins PYNQ_wrapper_blocks/S00_AXI] [get_bd_intf_pins ZYNQ_ARM_processing_system/M_AXI_GP0]
-  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins sensors_blocks/S_AXI] [get_bd_intf_pins smartconnect_other_peripherals/M00_AXI]
-  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_intf_nets smartconnect_0_M00_AXI]
   connect_bd_intf_net -intf_net smartconnect_1_M00_AXI [get_bd_intf_pins PYNQ_wrapper_blocks/M00_AXI] [get_bd_intf_pins ZYNQ_ARM_processing_system/S_AXI_HP0]
 
   # Create port connections
-  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_registers [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_registers] [get_bd_pins PYNQ_wrapper_blocks/general_purpose_registers]
+  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_reg [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_gp_write_reg] [get_bd_pins PYNQ_wrapper_blocks/gpr_value]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_reg]
+  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_reg_name [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_gp_write_reg_name] [get_bd_pins PYNQ_wrapper_blocks/gpr_address]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_reg_name]
+  connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_valid [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_gp_write_valid] [get_bd_pins PYNQ_wrapper_blocks/gpr_write_enable]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_valid]
   connect_bd_net -net CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cpu_reset_completed] [get_bd_pins PYNQ_wrapper_blocks/cpu_reset_completed]
+  connect_bd_net -net PMOD1_4_LS_1 [get_bd_ports PMOD1_4_LS] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_4_LS1]
+  connect_bd_net -net PYNQ_wrapper_blocks_PMOD1_2_LS [get_bd_ports PMOD1_2_LS] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_2_LS]
+  connect_bd_net -net PYNQ_wrapper_blocks_PMOD1_3_LS [get_bd_ports PMOD1_3_LS] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_3_LS]
   connect_bd_net -net PYNQ_wrapper_blocks_halt_cpu [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_halt_cpu_state] [get_bd_pins PYNQ_wrapper_blocks/halt_cpu]
   connect_bd_net -net RDY_get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_get_to_console_get] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/RDY_get_to_console_get]
-  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_ports XADC_VAUX0N_R] [get_bd_pins sensors_blocks/XADC_VAUX0N_R]
-  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_ports XADC_VAUX0P_R] [get_bd_pins sensors_blocks/XADC_VAUX0P_R]
+  connect_bd_net -net XADC_VAUX0N_R_1 [get_bd_ports XADC_VAUX0N_R] [get_bd_pins PYNQ_wrapper_blocks/XADC_VAUX0N_R]
+  connect_bd_net -net XADC_VAUX0P_R_1 [get_bd_ports XADC_VAUX0P_R] [get_bd_pins PYNQ_wrapper_blocks/XADC_VAUX0P_R]
   connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/to_raw_mem_response_put] [get_bd_pins PYNQ_wrapper_blocks/memory_data_output]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets blk_mem_gen_0_douta]
   connect_bd_net -net console_io_dma_0_EN_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/EN_put_from_console_put]
   connect_bd_net -net console_io_dma_0_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/put_from_console_put]
   connect_bd_net -net get_to_console_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/get_to_console_get] [get_bd_pins PYNQ_wrapper_blocks/get_to_console_get]
-  connect_bd_net -net gpio_0_Dout [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_cms_ifc_halt_cpu] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RST_N] [get_bd_pins PYNQ_wrapper_blocks/rst_n] [get_bd_pins sensors_blocks/s_axi_aresetn] [get_bd_pins smartconnect_other_peripherals/aresetn]
+  connect_bd_net -net gpio_0_Dout [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_cms_ifc_halt_cpu] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RST_N] [get_bd_pins PYNQ_wrapper_blocks/rst_n]
   connect_bd_net -net memory_ready_net [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_to_raw_mem_response_put] [get_bd_pins PYNQ_wrapper_blocks/memory_ready]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets memory_ready_net]
   connect_bd_net -net mkCore_Synth_0_instr [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_instr] [get_bd_pins PYNQ_wrapper_blocks/instr]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkCore_Synth_0_instr]
   connect_bd_net -net mkCore_Synth_0_pc [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_pc] [get_bd_pins PYNQ_wrapper_blocks/pc]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkCore_Synth_0_pc]
   connect_bd_net -net mkSoC_Top_0_RDY_put_from_console_put [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_put_from_console_put] [get_bd_pins PYNQ_wrapper_blocks/RDY_put_from_console_put]
   connect_bd_net -net mkSoC_Top_0_RDY_to_raw_mem_request_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_to_raw_mem_request_get] [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/RDY_to_raw_mem_request_get] [get_bd_pins PYNQ_wrapper_blocks/RDY_to_raw_mem_request_get]
   set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkSoC_Top_0_RDY_to_raw_mem_request_get]
   connect_bd_net -net mkSoC_Top_1_cms_ifc_performance_events [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/cms_ifc_performance_events] [get_bd_pins PYNQ_wrapper_blocks/performance_events]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets mkSoC_Top_1_cms_ifc_performance_events]
+  connect_bd_net -net pmod_rx_1 [get_bd_ports PMOD1_1_LS] [get_bd_pins PYNQ_wrapper_blocks/PMOD_1_1_LS]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets pmod_rx_1]
+  connect_bd_net -net pmod_tx_0 [get_bd_ports PMOD1_0_LS] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_1_LS1]
+  set_property HDL_ATTRIBUTE.DEBUG {true} [get_bd_nets pmod_tx_0]
   connect_bd_net -net proc_sys_reset_0_peripheral_aresetn [get_bd_pins PYNQ_wrapper_blocks/axi_resetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
-  connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins sensors_blocks/reset_in]
+  connect_bd_net -net proc_sys_reset_0_peripheral_reset [get_bd_pins PYNQ_wrapper_blocks/reset_in] [get_bd_pins proc_sys_reset_0/peripheral_reset]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins ZYNQ_ARM_processing_system/FCLK_RESET0_N] [get_bd_pins proc_sys_reset_0/ext_reset_in]
-  connect_bd_net -net sensors_blocks_XADC_GPIO_0 [get_bd_ports PMOD1_0_LS] [get_bd_ports XADC_GPIO_0] [get_bd_pins sensors_blocks/XADC_GPIO_0]
-  connect_bd_net -net sensors_blocks_XADC_GPIO_1 [get_bd_ports PMOD1_1_LS] [get_bd_ports XADC_GPIO_1] [get_bd_pins sensors_blocks/XADC_GPIO_1]
-  connect_bd_net -net sensors_blocks_XADC_GPIO_2 [get_bd_ports PMOD1_4_LS] [get_bd_ports XADC_GPIO_2] [get_bd_pins sensors_blocks/XADC_GPIO_2]
-  connect_bd_net -net sensors_blocks_XADC_GPIO_3 [get_bd_ports PMOD1_5_LS] [get_bd_ports XADC_GPIO_3] [get_bd_pins sensors_blocks/XADC_GPIO_3]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_0 [get_bd_ports XADC_GPIO_0] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_0_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_1 [get_bd_ports XADC_GPIO_1] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_1_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_2 [get_bd_ports XADC_GPIO_2] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_4_LS]
+  connect_bd_net -net sensors_blocks_XADC_GPIO_3 [get_bd_ports XADC_GPIO_3] [get_bd_pins PYNQ_wrapper_blocks/PMOD1_5_LS]
   connect_bd_net -net to_raw_mem_request_get [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/to_raw_mem_request_get] [get_bd_pins PYNQ_wrapper_blocks/memory_request]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins PYNQ_wrapper_blocks/interrupts] [get_bd_pins ZYNQ_ARM_processing_system/IRQ_F2P]
   connect_bd_net -net xlconstant_0_dout [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/EN_ma_ddr4_ready] [get_bd_pins xlconstant_0/dout]
-  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/CLK] [get_bd_pins PYNQ_wrapper_blocks/s_axi_lite_aclk] [get_bd_pins ZYNQ_ARM_processing_system/FCLK_CLK0] [get_bd_pins ZYNQ_ARM_processing_system/M_AXI_GP0_ACLK] [get_bd_pins ZYNQ_ARM_processing_system/S_AXI_HP0_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins sensors_blocks/clkb] [get_bd_pins smartconnect_other_peripherals/aclk]
+  connect_bd_net -net zynq_ultra_ps_e_0_pl_clk0 [get_bd_pins CHERI_RISCV_Flute_mkSoC_Top/CLK] [get_bd_pins PYNQ_wrapper_blocks/s_axi_lite_aclk] [get_bd_pins ZYNQ_ARM_processing_system/FCLK_CLK0] [get_bd_pins ZYNQ_ARM_processing_system/M_AXI_GP0_ACLK] [get_bd_pins ZYNQ_ARM_processing_system/S_AXI_HP0_ACLK] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
 
   # Create address segments
-  assign_bd_address -offset 0xC0003000 -range 0x00001000 -target_address_space [get_bd_addr_spaces CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_addr_segs sensors_blocks/axi_bram_ctrl_sensors/S_AXI/Mem0] -force
+  assign_bd_address -offset 0xC0003000 -range 0x00001000 -target_address_space [get_bd_addr_spaces CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_addr_segs PYNQ_wrapper_blocks/riscv_other_peripherals/sensors_blocks/axi_bram_ctrl_sensors/S_AXI/Mem0] -force
+  assign_bd_address -offset 0xC0004000 -range 0x00001000 -target_address_space [get_bd_addr_spaces CHERI_RISCV_Flute_mkSoC_Top/core_dmem_post_fabric] [get_bd_addr_segs PYNQ_wrapper_blocks/riscv_other_peripherals/axi_uartlite_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x40400000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/continuous_monitoring_system_blocks/axi_dma_0/S_AXI_LITE/Reg] -force
   assign_bd_address -offset 0x40410000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/console_io/axi_dma_console_io/S_AXI_LITE/Reg] -force
   assign_bd_address -offset 0x41200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces ZYNQ_ARM_processing_system/Data] [get_bd_addr_segs PYNQ_wrapper_blocks/axi_gpio_0/S_AXI/Reg] -force
@@ -1735,6 +1902,7 @@ proc create_root_design { parentCell } {
   # Restore current instance
   current_bd_instance $oldCurInst
 
+  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -1746,6 +1914,4 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
-
-common::send_gid_msg -ssname BD::TCL -id 2053 -severity "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 
