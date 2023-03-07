@@ -58,7 +58,7 @@ LinePlot* Graph::add_plot(String name, LinePlot* line_plot) {
     line_plots[name] = line_plot;
     Serial.printf("Added plot with name %s\n", name);
     line_plot->set_graph(this);
-    draw_legend(BLACK);
+    draw_legend(DKGREY);
     return line_plot;
 }
 
@@ -98,9 +98,9 @@ void Graph::draw_plots(unsigned int color_override) {
 }
 
 void Graph::draw_legend(unsigned int background_color) {
-    const int legend_w = RESOLUTION_X * 0.2;
-    int legend_x = graph_x + graph_w + 1;
-    tft.fillRect(legend_x, graph_y + 1, legend_x + legend_w, graph_y + graph_h - 1, background_color);
+    const int legend_w = (int)(RESOLUTION_X * 0.15);
+    int legend_x = graph_x + graph_w + 5;
+    tft.fillRect(legend_x, graph_y + 1, legend_w, graph_h - 1, background_color);
     
     int legend_y = graph_y + 7;
     int offset_y = 0;
