@@ -4,15 +4,19 @@
 #include <WiFi.h>
 #include <map>
 #include <cJSON.h>
-#include <TAMC_GT911.h>
 
 // #include "drawing.h"
 #include "colours.h"
 #include "line_plot.h"
-#include "graph.h"
 #include "status_display.h"
+#include "gui.h"
+#include "gui_graph.h"
+#include "gui_button.h"
 
 #include "display_config.h" // resolution
+
+#include "touch.h"
+Touch touch;
 
 // Wifi credentials file contains 2 lines:
 // #ifndef MICHAL_WIFI_CREDENTIALS_H
@@ -44,14 +48,6 @@ WiFiClient client;
 // display object
 TFT_eSPI tft = TFT_eSPI(); 
 
-#define TOUCH_SDA  33
-#define TOUCH_SCL  32
-#define TOUCH_INT 36
-#define TOUCH_RST 25
-#define TOUCH_WIDTH  480
-#define TOUCH_HEIGHT 320
-TAMC_GT911 *touch; 
-
 // status display is a GUI component that covers bottom of the screen and can display status messages like "Connecting to WiFi"
 StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
 
@@ -59,8 +55,10 @@ int current_colour_id = 0;
 
 // graph without parameters will have default values (to cover most of the screen with space for status display)
 // see graph.cpp to see or change default values
-Graph graph(tft); 
-// Graph graph(graph_x, graph_y, graph_w, graph_h);
+// Graph graph(tft); 
+
+GUI *gui;
+Graph ecg_graph(&tft);
 
 double xlo = 0;
 // double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
@@ -68,7 +66,9 @@ double xlo = 0;
 double xhi = RESOLUTION_X*0.2; // this is pretty much setting how many values we want to display in the graph at once
 double ylo = 0; // line plot lower value bound
 double yhi = 1; // line plot upper value bound
-int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
+// int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
+int max_number_of_items = xhi - xlo;
+
 
 void init_wifi() {
     tft.setTextColor(WHITE);
@@ -105,10 +105,12 @@ void drawing_thread_func(void *parameter) {
         // Serial.printf("Queue size: %d, free space: %d, max size: %d\n", uxQueueMessagesWaiting(queue), uxQueueSpacesAvailable(queue), uxQueueMessagesWaiting(queue) + uxQueueSpacesAvailable(queue));
         while (uxQueueMessagesWaiting(queue) == 0) {
             delay(1);
+            handle_gui();
         }
         if ( xQueueReceive(queue, &line, portMAX_DELAY) ) {
             // Serial.printf("Drawing thread: received '%s'\n", (*line).c_str());
-            check_protocol(*line);
+            // check_protocol(*line);
+            parse_tcp_message(*line);
             delete line;
         }
     }
@@ -122,10 +124,7 @@ void init_display() {
 }
 
 void setup() {
-    touch = new TAMC_GT911(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT);
-    touch->reset();
-    touch->begin();
-    touch->setRotation(ROTATION_LEFT);
+    gui = new GUI(tft, &touch);
     delay(100);
 
     Serial.begin(115200);
@@ -134,10 +133,11 @@ void setup() {
     init_display();
     init_wifi();
 
-    static bool redraw_on_first_call_only_graph = true;
     delay(1000);
 
-    graph.draw(
+
+
+    ecg_graph.draw(
         2,                // decimal point precision for axis tick labels
         xlo,              // lower bound of axis x  (used to set x axis tick labels)
         xhi,              // upper bound of axis x  (used to set x axis tick labels)
@@ -163,6 +163,16 @@ void setup() {
 			0, /* Priority of the task */
 			&drawing_thread, /* Task handle. */
 			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
+
+
+    GUI_Button *btn = new GUI_Button(&tft, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
+         [](){Serial.println("Hello button was pressed");},
+         [](){Serial.println("Hello button was released");}
+    );
+    gui->add_element(btn, GUI_STATE_MAIN);
+
+    GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
+    gui->add_element(btn2, GUI_STATE_SECOND);
 }
 
 void swap(char &a, char &b) {
@@ -203,7 +213,8 @@ void handle_riscv_serial() {
             if (line.equals("Leads off")) {
                 // random float between 0.2 and 0.3
                 float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
-                String *formatted_msg = new String("add_point:Leads off," + String(random_value));
+                // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
+                String *formatted_msg = new String("{\"add_points\": {\"Leads off\": [" + String(random_value) + "]}}");
                 if (!add_string_to_queue(formatted_msg)) {
                     delete formatted_msg;
                 }
@@ -226,9 +237,16 @@ void handle_riscv_serial() {
             continue;
         } 
 
-        String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
-        // Serial.print("Sending to drawing thread: '");
-        // Serial.println(*formatted_msg);
+        // String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
+        // this needs to be a JSON string just like data received from server
+        String *formatted_msg = new String("{\"add_points\": {\"ECG\": [" + String(ecg_value) + "]}}");
+    // 
+    // {
+    //    add_points: {
+    //      "ECG": [0.1, 0.2, 0.1], 
+    //      "ANOTHER": [0.7, 0.6, 0.9]
+    //    },
+    // }
         if (!add_string_to_queue(formatted_msg)) {
             delete formatted_msg;
         }
@@ -242,7 +260,7 @@ void check_protocol(String line) {
 //        char plot_name[20];
 //        sscanf(line.c_str(), "create_plot:%s", plot_name);
 //        LinePlot *line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
-//        if (graph.add_plot(String(plot_name), line_plot)) {
+//        if (ecg_graph.add_plot(String(plot_name), line_plot)) {
 //            client.write("OK");
 //        } else {
 //            client.write("ERROR: Plot already exists.");
@@ -253,10 +271,10 @@ void check_protocol(String line) {
        char plot_name[20];
        double value;
        sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
-       LinePlot* line_plot = graph.get_plot(plot_name);
+       LinePlot* line_plot = ecg_graph.get_plot(plot_name);
        if (!line_plot) {
            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
-           line_plot = graph.add_plot(String(plot_name), create_new_line_plot());
+           line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
 
        }
        line_plot->draw(BLACK);
@@ -316,21 +334,43 @@ void parse_tcp_message(String line) {
         while(plot_name_obj) {
             Serial.println(plot_name_obj->string);
 
-            LinePlot* line_plot = graph.get_plot(plot_name_obj->string);
-            if (!line_plot) {
-                Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name_obj->string);
-                line_plot = graph.add_plot(String(plot_name_obj->string), create_new_line_plot());
-            }
             for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
                 cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
-                double value = plot_value->valuedouble;
-                Serial.print("Plot value: ");
-                Serial.println(value);
+                // Do something with new plot value
 
+                String plot_name = plot_name_obj->string;
+                double value = plot_value->valuedouble;
+                LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+                if (!line_plot) {
+                    Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
+                    line_plot = ecg_graph.add_plot(plot_name, create_new_line_plot());
+                }
                 line_plot->draw(BLACK);
                 line_plot->add_point(value);
                 line_plot->draw();
+                
+                // String *formatted_msg = new String("add_point:" + String(plot_name_obj->string) + "," + String(plot_value->valuedouble));
+                // add_string_to_queue(formatted_msg, true);
+                // if (!add_string_to_queue(formatted_msg)) {
+                //     delete formatted_msg;
+                // }
             }
+
+            // LinePlot* line_plot = ecg_graph.get_plot(plot_name_obj->string);
+            // if (!line_plot) {
+            //     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name_obj->string);
+            //     line_plot = ecg_graph.add_plot(String(plot_name_obj->string), create_new_line_plot());
+            // }
+            // for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
+            //     cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
+            //     double value = plot_value->valuedouble;
+            //     Serial.print("Plot value: ");
+            //     Serial.println(value);
+
+            //     line_plot->draw(BLACK);
+            //     line_plot->add_point(value);
+            //     line_plot->draw();
+            // }
             plot_name_obj = plot_name_obj->next;
         }
     }
@@ -373,6 +413,8 @@ void parse_tcp_message(String line) {
                     String program_name = program_name_obj->valuestring;
                     Serial.print("Program: ");
                     Serial.println(program_name);
+
+                    // make a button or something, maybe change gui state into program selection?
                 }
                 program_category_obj = program_category_obj->next;
             }
@@ -388,10 +430,10 @@ void parse_tcp_message(String line) {
 //        char plot_name[20];
 //        double value;
 //        sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
-//        LinePlot* line_plot = graph.get_plot(plot_name);
+//        LinePlot* line_plot = ecg_graph.get_plot(plot_name);
 //        if (!line_plot) {
 //            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
-//            line_plot = graph.add_plot(String(plot_name), create_new_line_plot());
+//            line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
 //        }
 //        line_plot->draw(BLACK);
 //        line_plot->add_point(value);
@@ -401,23 +443,14 @@ void parse_tcp_message(String line) {
     cJSON_Delete(root);
 }
 
-void handle_touch() {
-    touch->read();
-    if (touch->isTouched){
-        Serial.printf("Touch: x=%d, y=%d\n", touch->points[0].x, touch->points[0].y);
-        // for (int i=0; i<touch->touches; i++){
-        //     Serial.print("Touch ");Serial.print(i+1);Serial.print(": ");;
-        //     Serial.print("  x: ");Serial.print(touch->points[i].x);
-        //     Serial.print("  y: ");Serial.print(touch->points[i].y);
-        //     Serial.print("  size: ");Serial.println(touch->points[i].size);
-        //     Serial.println(' ');
-        // }
-    }
+void handle_gui() {
+    // status_display.update();
+    gui->update();
+    gui->draw();
 }
 
 void loop(void) {
     handle_riscv_serial();
-    handle_touch();
     static bool redraw_on_first_call_only_trace4 = true;
 
     Serial.println("Attempt to access server...");
@@ -427,7 +460,6 @@ void loop(void) {
         client.stop();
         for (int i=5; i>0; i--) {
             handle_riscv_serial();
-            handle_touch();
             // status_display.set_status("tcp_connection_status", "Retrying ZC706 TCP server (" + server_ip_str + ") connection in " + String(i) + " seconds...");
             delay(1000);
         }
@@ -482,16 +514,16 @@ void loop(void) {
     // client.print("run_program:ecg_baseline.bin");
     while (client.connected() || client.available()) {
         handle_riscv_serial();
-        handle_touch();
 
         while (client.available()) {
             // String *line = new String(client.readStringUntil('\n'));
-            String line = client.readStringUntil('\n');
+            String *line = new String(client.readStringUntil('\n'));
             // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')
             Serial.print("Received: '");
-            Serial.print(line);
+            Serial.print(*line);
             Serial.println("'");
-            parse_tcp_message(line);
+            // parse_tcp_message(line);
+            add_string_to_queue(line, true);
         }
     }
     Serial.println("Closing connection.");
