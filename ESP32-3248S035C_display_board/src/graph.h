@@ -36,6 +36,7 @@ public:
     int get_y();
     int get_width();
     int get_height();
+
 private:
     TFT_eSPI &tft;
     int graph_x, graph_y, graph_w, graph_h;

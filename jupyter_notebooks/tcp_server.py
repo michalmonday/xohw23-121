@@ -8,6 +8,7 @@ from pathlib import Path
 
 SEND_TO_ALL = -1
 
+
 # Each directory within PROGRAMS_DIR will contain a group of programs
 # each group of programs will have a baseline program and a set of variations
 # that are anomalous in some way. 
@@ -98,6 +99,7 @@ class TCP_Server:
         self.send_thread = threading.Thread(target=self.send_worker, daemon=True)
 
         self.protocol = {} # key = received_message, value = function to call that returns a string response message and/or does some action
+        self.rpcs = {} # key=func name, value=func
         # respond_thread checks if received messages match protocol and responds accordingly
         self.respond_thread = threading.Thread(target=self.respond_worker, daemon=True)
         
@@ -119,7 +121,12 @@ class TCP_Server:
         if received_message in self.protocol:
             print(f'received_message ("{received_message}") was already registered, overwriting it.')
         self.protocol[received_message] = response_function
-        
+    
+    def register_rpcs(self, rpcs):
+        for rpc in rpcs:
+            if rpc.__name__ in self.rpcs:
+                print(f'rpc name ("{rpc.name}") was already registered, overwriting it.')
+            self.rpcs[rpc.__name__] = rpc
 
     def data_available(self):
         return not self.received_queue.empty()
@@ -176,7 +183,11 @@ class TCP_Server:
                 self.connections[total_connections] = client
             client.start()
             total_connections += 1
-        
+
+    def is_request_rpc(self, data):
+        return 'RPC' in data and "function_name" in data['RPC']
+    
+
     def respond_worker(self):
         while True:
             if not self.data_available():
@@ -184,15 +195,44 @@ class TCP_Server:
                 continue
             for client_id, data_str in self.read_data(): 
                 print(f'client_id={client_id}, data_str={data_str}')
-                print(f'protocol.keys()={self.protocol.keys()}')
-                if any(data_str.startswith(s) for s in self.protocol):
-                    tokens = data_str.split(',')
-                    func = self.protocol[tokens[0]]
-                    protocol_entry = tokens[0]
-                    print(f'Calling {func} for the "{protocol_entry}" with args={tokens[1:]}')
-                    response = self.protocol[protocol_entry](*tokens[1:])
-                    print(f'response={response}')
+                try:
+                    data = json.loads(data_str)
+                except Exception as e:
+                    print(f'Error parsing json: {e}')
+                    continue
+                
+                if self.is_request_rpc(data):
+                    func_name = data['RPC']['function_name']
+                    if func_name not in self.rpcs:
+                        print(f'Error: RPC function_name "{func_name}" was not registered')
+                        continue
+                    args = [] if 'function_args' not in data['RPC'] else data['RPC']['function_args']
+                    print(f'Calling {func_name} with args={args}')
+                    try:
+                        rpc_ret = self.rpcs[func_name](*args)
+                        return_status = 'success'
+                    except Exception as e:
+                        rpc_ret = ''
+                        return_status = 'error'
+                        print(f'Error calling {func_name}: {e}')
+                        continue
+                    response = json.dumps({
+                        'RPC_return': {
+                            'function_name': func_name,
+                            'return_value': (rpc_ret if rpc_ret else ''),
+                            'return_status': return_status
+                            }
+                        })
                     self.send_to_client(client_id, response)
+
+                # if any(data_str.startswith(s) for s in self.protocol):
+                #     tokens = data_str.split(',')
+                #     func = self.protocol[tokens[0]]
+                #     protocol_entry = tokens[0]
+                #     print(f'Calling {func} for the "{protocol_entry}" with args={tokens[1:]}')
+                #     response = self.protocol[protocol_entry](*tokens[1:])
+                #     print(f'response={response}')
+                #     self.send_to_client(client_id, response)
     
     def end(self):
         self.end_queue.put(True)

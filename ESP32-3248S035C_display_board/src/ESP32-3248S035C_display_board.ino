@@ -64,8 +64,8 @@ Graph graph(tft);
 
 double xlo = 0;
 // double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
-double xhi = 100; // this is pretty much setting how many values we want to display in the graph at once
-
+// double xhi = 100; // this is pretty much setting how many values we want to display in the graph at once
+double xhi = RESOLUTION_X*0.2; // this is pretty much setting how many values we want to display in the graph at once
 double ylo = 0; // line plot lower value bound
 double yhi = 1; // line plot upper value bound
 int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
@@ -91,13 +91,12 @@ void init_wifi() {
     status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
-// LinePlot* create_new_line_plot() {
-//     unsigned int clr = colours[current_colour_id];
-//     current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
-//     Serial.printf("current_colour_id=%d\n", current_colour_id);
-//     return new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
-// }
-
+LinePlot* create_new_line_plot() {
+    unsigned int clr = colours[current_colour_id];
+    current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
+    Serial.printf("current_colour_id=%d\n", current_colour_id);
+    return new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+}
 
 
 void drawing_thread_func(void *parameter) {
@@ -172,16 +171,15 @@ void swap(char &a, char &b) {
     b = t;
 }
 
-bool add_string_to_queue(String *str) {
-    if (xQueueSendToBack(queue, &str, 0) == errQUEUE_FULL) {
-        // Serial.println("Queue is full, ignoring...");
-        return false;
+bool add_string_to_queue(String *str, bool blocking=false) {
+    if (blocking) {
+        while (xQueueSend(queue, &str, 0) == errQUEUE_FULL) {
+            // Serial.println("Queue is full, waiting...");
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+        return true;
     }
-    // while (xQueueSend(queue, &str, 0) == errQUEUE_FULL) {
-    //     Serial.println("Queue is full, waiting...");
-    //     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    // }
-    return true;
+    return xQueueSendToBack(queue, &str, 0) != errQUEUE_FULL;
 }
 
 bool contains_digits_only(String str) {
@@ -202,8 +200,18 @@ void handle_riscv_serial() {
         // Serial.println("'");
 
         if (!contains_digits_only(line)) {
+            if (line.equals("Leads off")) {
+                // random float between 0.2 and 0.3
+                float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
+                String *formatted_msg = new String("add_point:Leads off," + String(random_value));
+                if (!add_string_to_queue(formatted_msg)) {
+                    delete formatted_msg;
+                }
+                continue;
+            }
             Serial.println(line);
             Serial.println("Not a number");
+            // line may be: "Leads off"
             continue;
         }
 
@@ -227,8 +235,9 @@ void handle_riscv_serial() {
     }
 }
 
-//void check_protocol(String line) {
-//    // line is a string received from the ZC706 tcp server (currently using PYNQ)
+void check_protocol(String line) {
+    // line is a string received from the ZC706 tcp server (currently using PYNQ)
+
 //    if (line.startsWith("create_plot")) {
 //        char plot_name[20];
 //        sscanf(line.c_str(), "create_plot:%s", plot_name);
@@ -239,7 +248,142 @@ void handle_riscv_serial() {
 //            client.write("ERROR: Plot already exists.");
 //        }
 //    }
-//
+
+   if (line.startsWith("add_point")) {
+       char plot_name[20];
+       double value;
+       sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
+       LinePlot* line_plot = graph.get_plot(plot_name);
+       if (!line_plot) {
+           Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
+           line_plot = graph.add_plot(String(plot_name), create_new_line_plot());
+
+       }
+       line_plot->draw(BLACK);
+       line_plot->add_point(value);
+       line_plot->draw();
+   }
+}
+
+void parse_tcp_message(String line) {
+    cJSON *root = cJSON_Parse(line.c_str());
+    if (root == NULL) {
+        Serial.println("Failed to parse json");
+        return;
+    }
+
+    // // Parse string with the following json:
+    // // '{
+    // //    programs: {
+    // //      "ECG": ["ecg_info_leak.bin", "ecg_baseline.bin"], 
+    // //      "ANOTHER": ["another0.bin", "another1.bin"]
+    // //    },
+    // // }'
+    // if (cJSON_HasObjectItem(root, "programs")) {
+    //     cJSON *programs_obj = cJSON_GetObjectItem(root, "programs");
+    //     cJSON *program_category_obj = programs_obj->child;
+    //     while(program_category_obj) {
+    //         Serial.println(program_category_obj->string);
+    //         for (int i=0; i<cJSON_GetArraySize(program_category_obj); i++) {
+    //             cJSON *program_name_obj = cJSON_GetArrayItem(program_category_obj, i);
+    //             String program_name = program_name_obj->valuestring;
+    //             Serial.print("Program: ");
+    //             Serial.println(program_name);
+    //         }
+    //         program_category_obj = program_category_obj->next;
+    //     }
+    // }
+
+    // // Parse string with the following json:
+    // // { "status_update": "OK: Running program: ecg_info_leak.bin" }
+    // if (cJSON_HasObjectItem(root, "status_update")) {
+    //     cJSON *status_update_obj = cJSON_GetObjectItem(root, "status_update");
+    //     // Print response
+    //     Serial.print("Status update: ");
+    //     Serial.println(status_update_obj->valuestring);
+    // }
+
+    // Parse string with the following json:
+    // {
+    //    add_points: {
+    //      "ECG": [0.1, 0.2, 0.1], 
+    //      "ANOTHER": [0.7, 0.6, 0.9]
+    //    },
+    // }
+    if (cJSON_HasObjectItem(root, "add_points")) {
+        cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points");
+        cJSON *plot_name_obj = add_points_obj->child;
+        while(plot_name_obj) {
+            Serial.println(plot_name_obj->string);
+
+            LinePlot* line_plot = graph.get_plot(plot_name_obj->string);
+            if (!line_plot) {
+                Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name_obj->string);
+                line_plot = graph.add_plot(String(plot_name_obj->string), create_new_line_plot());
+            }
+            for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
+                cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
+                double value = plot_value->valuedouble;
+                Serial.print("Plot value: ");
+                Serial.println(value);
+
+                line_plot->draw(BLACK);
+                line_plot->add_point(value);
+                line_plot->draw();
+            }
+            plot_name_obj = plot_name_obj->next;
+        }
+    }
+
+
+// {
+//     "RPC_return" : {
+//         "function_name": "rpc_list_programs",
+//         "return_value": {
+//             "ECG" : ["ecg_baseline.bin", "ecg_info_leak.bin"],
+//             "ANOTHER_CATEGORY" : ["another_program_baseline.bin", "another_program_anomalous_version.bin"]
+//         }, 
+//         "return_status": "success" // alternative would be "error"
+//     }
+// }
+    // Parse string with the json above
+    if (cJSON_HasObjectItem(root, "RPC_return")) {
+        if (!cJSON_HasObjectItem(root, "RPC_return")) { Serial.println("Failed to parse RPC_return"); return; } 
+        cJSON *rpc_return_obj = cJSON_GetObjectItem(root, "RPC_return");
+        if (!cJSON_HasObjectItem(rpc_return_obj, "function_name")) { Serial.println("Failed to parse function_name"); return; }
+        if (!cJSON_HasObjectItem(rpc_return_obj, "return_value"))  { Serial.println("Failed to parse return_value");  return; }
+        if (!cJSON_HasObjectItem(rpc_return_obj, "return_status")) { Serial.println("Failed to parse return_status"); return; }
+        cJSON *function_name_obj = cJSON_GetObjectItem(rpc_return_obj, "function_name");
+        cJSON *return_value_obj = cJSON_GetObjectItem(rpc_return_obj, "return_value");
+        cJSON *return_status_obj = cJSON_GetObjectItem(rpc_return_obj, "return_status");
+        String function_name = function_name_obj->valuestring;
+        String return_status = return_status_obj->valuestring;
+        // Print response
+        Serial.print("RPC_return, function_name: ");
+        Serial.print(function_name);
+        Serial.print(", status: ");
+        Serial.print(return_status);
+        Serial.println(" return_value:");
+        if (function_name.equals("rpc_list_programs")) {
+            cJSON *program_category_obj = return_value_obj->child;
+            while(program_category_obj) {
+                Serial.println(program_category_obj->string);
+                for (int i=0; i<cJSON_GetArraySize(program_category_obj); i++) {
+                    cJSON *program_name_obj = cJSON_GetArrayItem(program_category_obj, i);
+                    String program_name = program_name_obj->valuestring;
+                    Serial.print("Program: ");
+                    Serial.println(program_name);
+                }
+                program_category_obj = program_category_obj->next;
+            }
+        }
+        if (function_name.equals("rpc_run_program")) {
+            String return_value = return_value_obj->valuestring;
+            Serial.print("Return value: ");
+            Serial.println(return_value);
+        }
+    }
+
 //    if (line.startsWith("add_point")) {
 //        char plot_name[20];
 //        double value;
@@ -248,44 +392,11 @@ void handle_riscv_serial() {
 //        if (!line_plot) {
 //            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
 //            line_plot = graph.add_plot(String(plot_name), create_new_line_plot());
-//
 //        }
 //        line_plot->draw(BLACK);
 //        line_plot->add_point(value);
 //        line_plot->draw();
 //    }
-//}
-
-void check_protocol(String line) {
-    cJSON *root = cJSON_Parse(line.c_str());
-    // Parse the following json string:
-    // '{"ECG": ["ecg_info_leak.bin", "ecg_baseline.bin"], "ANOTHER": ["another0.bin", "another1.bin"]}'
-    if (root == NULL) {
-        Serial.println("Failed to parse json");
-        return;
-    }
-    // check if ECG is present
-
-    if (cJSON_HasObjectItem(root, "programs")) {
-        cJSON *programs = cJSON_GetObjectItem(root, "programs");
-        cJSON *program_category = programs->child;
-        while(program_category) {
-            Serial.println(program_category->string);
-            for (int i=0; i<cJSON_GetArraySize(program_category); i++) {
-                cJSON *program = cJSON_GetArrayItem(program_category, i);
-                Serial.print("Program: ");
-                Serial.println(program->valuestring);
-            }
-            program_category = program_category->next;
-        }
-    }
-
-    if (cJSON_HasObjectItem(root, "status_update")) {
-        cJSON *status_update = cJSON_GetObjectItem(root, "status_update");
-        // Print response
-        Serial.print("Status update: ");
-        Serial.println(status_update->valuestring);
-    }
 
     cJSON_Delete(root);
 }
@@ -325,8 +436,48 @@ void loop(void) {
     // status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
 
     Serial.println("Access successful.");
-    client.println("list_programs");
-    client.println("run_program,ecg_baseline.bin");
+
+
+
+// {
+//     "RPC" : {
+//         "function_name": "rpc_list_programs"
+//     }
+// }
+    // Construct json string as JSON above
+    cJSON *root = cJSON_CreateObject();
+    cJSON *rpc_obj = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "RPC", rpc_obj);
+    cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_list_programs");
+    char *json_str = cJSON_PrintUnformatted(root);
+    Serial.print("Sending: '");
+    Serial.print(json_str);
+    client.println(json_str);
+    free(json_str);
+
+
+// {
+//     "RPC" : {
+//         "function_name": "rpc_run_program",
+//         "function_args": ["ecg_baseline.bin"]
+//     }
+// }
+    //Construct json string as JSON above
+    root = cJSON_CreateObject();
+    rpc_obj = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "RPC", rpc_obj);
+    cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_run_program");
+    // string array 
+    const char *string_array[1] = {"ecg_baseline.bin"};
+    cJSON *function_args_obj = cJSON_CreateStringArray(string_array, 1);
+    cJSON_AddItemToObject(rpc_obj, "function_args", function_args_obj);
+    json_str = cJSON_PrintUnformatted(root);
+    Serial.print("Sending: '");
+    Serial.print(json_str);
+    client.println(json_str);
+    free(json_str);
+
+    // client.println("run_program,ecg_baseline.bin");
 
     // client.print("run_program:ecg_baseline.bin");
     while (client.connected() || client.available()) {
@@ -340,7 +491,7 @@ void loop(void) {
             Serial.print("Received: '");
             Serial.print(line);
             Serial.println("'");
-            check_protocol(line);
+            parse_tcp_message(line);
         }
     }
     Serial.println("Closing connection.");
