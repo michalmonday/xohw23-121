@@ -2,7 +2,7 @@
 #include <SPI.h>
 
 #include "line_plot.h"
-#include "graph.h"
+#include "gui_graph.h"
 
 LinePlot::LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
 tft(tft), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),
@@ -55,11 +55,11 @@ void LinePlot::update_min_max_values() {
 
 int LinePlot::calculate_screen_ypos(double value) {
     // return (int)( (value - ylo) * (-graph->get_height()) / (yhi - ylo) + graph->get_y() );
-    return (int)( graph->get_y() + graph->get_height() * (yhi - value) / (yhi - ylo));
+    return (int)( graph->get_y() + graph->get_h() * (yhi - value) / (yhi - ylo));
 }
 
 int LinePlot::calculate_screen_xpos(int index) {
-    return (int)( graph->get_x() + graph->get_width() * index / max_number_of_items) + 1;
+    return (int)( graph->get_x() + graph->get_w() * index / max_number_of_items) + 1;
 }
 
 void LinePlot::add_point(double value) {
