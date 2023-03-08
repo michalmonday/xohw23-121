@@ -12,6 +12,7 @@
 #include "gui.h"
 #include "gui_graph.h"
 #include "gui_button.h"
+#include "gui_label.h"
 
 #include "display_config.h" // resolution
 
@@ -49,16 +50,18 @@ WiFiClient client;
 TFT_eSPI tft = TFT_eSPI(); 
 
 // status display is a GUI component that covers bottom of the screen and can display status messages like "Connecting to WiFi"
-StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
+// StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
 
 int current_colour_id = 0;
 
 // graph without parameters will have default values (to cover most of the screen with space for status display)
 // see graph.cpp to see or change default values
-// Graph graph(tft); 
+// GUI_Graph graph(tft); 
 
 GUI *gui;
-Graph ecg_graph(&tft);
+GUI_Graph ecg_graph(&tft);
+GUI_Label *label_ap_conn_status = new GUI_Label(&tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
+GUI_Label *label_tcp_conn_status = new GUI_Label(&tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9 + 15, 1, TL_DATUM, WHITE, BLACK);
 
 double xlo = 0;
 // double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
@@ -73,8 +76,11 @@ int max_number_of_items = xhi - xlo;
 void init_wifi() {
     tft.setTextColor(WHITE);
     //tft.setTextSize(2);
-    status_display.set_status("ap_connection_status", "Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
+    // status_display.set_status("ap_connection_status", "Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    // status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
+
+    label_ap_conn_status->set_text("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    label_tcp_conn_status->set_text("ZYNQ TCP server address is set to: " + server_ip_str);
 
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
@@ -82,13 +88,15 @@ void init_wifi() {
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
-        status_display.set_status("ap_connection_status", "Retrying connection...");
+        // status_display.set_status("ap_connection_status", "Retrying connection...");
+        label_ap_conn_status->set_text("Retrying connection...");
     }
 
     Serial.println("Connected");
     Serial.print("IP Address:");
     Serial.println(WiFi.localIP());
-    status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+    // status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+    label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
 LinePlot* create_new_line_plot() {
@@ -124,33 +132,37 @@ void init_display() {
 }
 
 void setup() {
-    gui = new GUI(tft, &touch);
-    delay(100);
-
     Serial.begin(115200);
     Serial.println();
+
+    gui = new GUI(tft, &touch);
+    gui->add_element(&ecg_graph, GUI_STATE_MAIN);
+    gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
+    gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
+
+    delay(100);
+
     serial_riscv.begin(115200);
     init_display();
     init_wifi();
 
     delay(1000);
 
-
-
-    ecg_graph.draw(
-        2,                // decimal point precision for axis tick labels
-        xlo,              // lower bound of axis x  (used to set x axis tick labels)
-        xhi,              // upper bound of axis x  (used to set x axis tick labels)
-        ylo,              // lower bound of axis y  (used to set y axis tick labels)
-        yhi,              // upper bound of axis y  (used to set y axis tick labels)
-        "title",          // title
-        "x label",        // x label
-        "y label",        // y label
-        DKBLUE,           // grid color
-        RED,              // axis color
-        WHITE,            // text color
-        BLACK             // background color
-        );
+    
+    // ecg_graph.draw(
+    //     2,                // decimal point precision for axis tick labels
+    //     xlo,              // lower bound of axis x  (used to set x axis tick labels)
+    //     xhi,              // upper bound of axis x  (used to set x axis tick labels)
+    //     ylo,              // lower bound of axis y  (used to set y axis tick labels)
+    //     yhi,              // upper bound of axis y  (used to set y axis tick labels)
+    //     "title",          // title
+    //     "x label",        // x label
+    //     "y label",        // y label
+    //     DKBLUE,           // grid color
+    //     RED,              // axis color
+    //     WHITE,            // text color
+    //     BLACK             // background color
+    //     );
 
     // producer (loop) allocates the string, consumer (drawing_thread_func) dealocates it
     // queue = xQueueCreate(1000, sizeof(String*));
@@ -165,14 +177,48 @@ void setup() {
 			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
 
 
-    GUI_Button *btn = new GUI_Button(&tft, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
-         [](){Serial.println("Hello button was pressed");},
-         [](){Serial.println("Hello button was released");}
-    );
-    gui->add_element(btn, GUI_STATE_MAIN);
+    // GUI_Button *btn = new GUI_Button(&tft, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
+    //      [](){Serial.println("Hello button was pressed");},
+    //      [](){Serial.println("Hello button was released");}
+    // );
+    // gui->add_element(btn, GUI_STATE_MAIN);
 
-    GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
-    gui->add_element(btn2, GUI_STATE_SECOND);
+    const int button_width = RESOLUTION_X * 0.2;
+    const int button_height = RESOLUTION_Y * 0.15;
+    const int button_x = RESOLUTION_X*0.48;
+    const int button_y_start = RESOLUTION_Y*0.1;
+    GUI_Button *btn_load_program = new GUI_Button(&tft, "Load program", button_x, button_y_start, button_width, button_height, 
+        WHITE,  // text colour
+        BLACK,  // background colour
+        [](){}, // function on press
+        [](){   // function on release
+            // change GUI state into program selection here or request the list of programs from the server
+            Serial.println("Load program button was released");
+        }
+    );
+    GUI_Button *btn_run_halt = new GUI_Button(&tft, "Run", button_x, button_y_start + button_height*1.3, button_width, button_height, WHITE,  BLACK); 
+    
+    btn_run_halt->set_on_release_callback(
+        [btn_run_halt](){   // function on release
+            // change GUI state into program selection here or request the list of programs from the server
+            Serial.println("Button run/halt was released");
+            btn_run_halt->set_text("Halt");
+        }
+    );
+    GUI_Button *btn_start_testing = new GUI_Button(&tft, "Start testing", button_x, button_y_start + (button_height*1.3) * 2, button_width, button_height, WHITE, BLACK);  
+    btn_start_testing->set_on_release_callback(
+        [btn_start_testing](){   // function on release
+            // change GUI state into program selection here or request the list of programs from the server
+            Serial.println("Button start testing was released");
+            btn_start_testing->set_text("-");
+        }
+    );
+    gui->add_element(btn_load_program, GUI_STATE_MAIN);
+    gui->add_element(btn_run_halt, GUI_STATE_MAIN);
+    gui->add_element(btn_start_testing, GUI_STATE_MAIN);
+
+    // GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
+    // gui->add_element(btn2, GUI_STATE_SECOND);
 }
 
 void swap(char &a, char &b) {
@@ -215,9 +261,9 @@ void handle_riscv_serial() {
                 float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
                 // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
                 String *formatted_msg = new String("{\"add_points\": {\"Leads off\": [" + String(random_value) + "]}}");
-                if (!add_string_to_queue(formatted_msg)) {
-                    delete formatted_msg;
-                }
+                // if (!add_string_to_queue(formatted_msg)) {
+                //     delete formatted_msg;
+                // }
                 continue;
             }
             Serial.println(line);
@@ -275,7 +321,6 @@ void check_protocol(String line) {
        if (!line_plot) {
            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
            line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
-
        }
        line_plot->draw(BLACK);
        line_plot->add_point(value);
@@ -388,6 +433,9 @@ void parse_tcp_message(String line) {
 // }
     // Parse string with the json above
     if (cJSON_HasObjectItem(root, "RPC_return")) {
+
+        gui->notify(line, 1500);
+
         if (!cJSON_HasObjectItem(root, "RPC_return")) { Serial.println("Failed to parse RPC_return"); return; } 
         cJSON *rpc_return_obj = cJSON_GetObjectItem(root, "RPC_return");
         if (!cJSON_HasObjectItem(rpc_return_obj, "function_name")) { Serial.println("Failed to parse function_name"); return; }

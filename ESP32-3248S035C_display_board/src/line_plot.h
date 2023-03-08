@@ -5,7 +5,7 @@
 #include <TFT_eSPI.h>
 
 // forward declaration (to avoid circular dependency)
-class Graph;
+class GUI_Graph;
 
 class LinePlot {
 public:
@@ -21,7 +21,7 @@ public:
     int get_min_value();
     int get_max_value();
     unsigned int get_color();
-    void set_graph(Graph *graph);
+    void set_graph(GUI_Graph *graph);
 private:
     TFT_eSPI &tft;
     int current_number_of_items, max_number_of_items;
@@ -38,7 +38,7 @@ private:
     // screen horizontal position (computed based on: xlo, xhi, graph_x, graph_w), this array is used to avoid unnecessary calculations when moving the plot to the left when new value arrives
     int *x_screen_pos; 
 
-    Graph *graph;
+    GUI_Graph *graph;
 
     void update_min_max_values();
     int calculate_screen_xpos(int index);

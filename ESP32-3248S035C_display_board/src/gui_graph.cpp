@@ -25,22 +25,24 @@ const int default_graph_h = (int)(RESOLUTION_Y * 0.7);
 int default_grid_x_segments = 1;
 int default_grid_y_segments = 4;
 
-Graph::Graph(TFT_eSPI *tft) 
-    : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments)
+GUI_Graph::GUI_Graph(TFT_eSPI *tft) 
+    : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
+        decimal_precision(2), xlo(0), xhi(100.0), ylo(0), yhi(1), title(""), xlabel(""), ylabel(""), grid_color(BLUE), axis_color(RED), text_color(WHITE), background_color(BLACK)
 {
 }
 
-Graph::Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments)
-    // : tft(tft), graph_x(graph_x), graph_y(graph_y), graph_w(graph_w), graph_h(graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments)
-    : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments)
+GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments,
+             byte decimal_precision, double xlo, double xhi, double ylo, double yhi, String title, String xlabel, String ylabel, unsigned int grid_color, unsigned int axis_color, unsigned int text_color, unsigned int background_color)
+    : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
+      decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel), ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color)
 {
 }
 
-Graph::~Graph() {
+GUI_Graph::~GUI_Graph() {
     remove_all();
 }
 
-void Graph::remove_all() {
+void GUI_Graph::remove_all() {
     // delete all plots from line_plots map
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) {
         delete it->second;
@@ -48,7 +50,7 @@ void Graph::remove_all() {
     line_plots.clear();
 }
 
-LinePlot* Graph::add_plot(String name, LinePlot* line_plot) {
+LinePlot* GUI_Graph::add_plot(String name, LinePlot* line_plot) {
     if (line_plots.find(name) != line_plots.end()) {
         Serial.printf("Plot with name %s already exists\n", name);
         return nullptr;
@@ -60,14 +62,14 @@ LinePlot* Graph::add_plot(String name, LinePlot* line_plot) {
     return line_plot;
 }
 
-void Graph::list_all() {
+void GUI_Graph::list_all() {
     Serial.println("Listing all plots:");
     for (auto const &x : line_plots) {
         Serial.printf("- %s\n", x.first);
     }
 }
 
-void Graph::remove_plot(String name) {
+void GUI_Graph::remove_plot(String name) {
     if (line_plots.find(name) == line_plots.end()) {
         Serial.printf("Plot with name %s does not exist\n", name);
         return;
@@ -77,7 +79,7 @@ void Graph::remove_plot(String name) {
     Serial.printf("Removed plot with name %s\n", name);
 }
 
-LinePlot* Graph::get_plot(String name) {
+LinePlot* GUI_Graph::get_plot(String name) {
     if (line_plots.find(name) == line_plots.end()) {
         Serial.printf("Plot with name %s does not exist\n", name);
         return nullptr;
@@ -85,17 +87,19 @@ LinePlot* Graph::get_plot(String name) {
     return line_plots[name];
 }
 
-void Graph::draw_plots() {
+void GUI_Graph::draw_plots() {
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) 
         it->second->draw();
 }
 
-void Graph::draw_plots(unsigned int color_override) {
+void GUI_Graph::draw_plots(unsigned int color_override) {
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) 
         it->second->draw(color_override);
 }
 
-void Graph::draw_legend(unsigned int background_color) {
+void GUI_Graph::draw_legend(unsigned int background_color) {
+    tft->setTextDatum(TL_DATUM);
+    tft->setTextSize(1);
     const int legend_w = (int)(RESOLUTION_X * 0.15);
     int legend_x = x + w + 5;
     tft->fillRect(legend_x, y + 1, legend_w, h - 1, background_color);
@@ -110,24 +114,28 @@ void Graph::draw_legend(unsigned int background_color) {
     }
 }
 
-void Graph::draw() {
-    draw_plots();
-    draw_legend(DKGREY); 
-}
+// void GUI_Graph::draw() {
+//     draw_plots();
+//     draw_legend(DKGREY); 
+// }
 
-void Graph::draw(byte decimal_precision,
-                 double xlo, double xhi,
-                 double ylo, double yhi,
-                 char *title, char *xlabel, char *ylabel,
-                 unsigned int grid_color, unsigned int axis_color,
-                 unsigned int text_color, unsigned int background_color)
-{
+// void GUI_Graph::draw(byte decimal_precision,
+//                  double xlo, double xhi,
+//                  double ylo, double yhi,
+//                  char *title, char *xlabel, char *ylabel,
+//                  unsigned int grid_color, unsigned int axis_color,
+//                  unsigned int text_color, unsigned int background_color)
+
+void GUI_Graph::draw() {
+    GUI_Element::draw();
+    Serial.println("Drawing graph...");
     // peserve old settings
     unsigned int old_text_color = tft->textcolor;
     int old_text_size = tft->textsize;
     uint8_t old_datum = tft->getTextDatum();
 
     tft->setTextDatum(MR_DATUM);
+    tft->setTextSize(1);
 
     double x_inc = (xhi - xlo) / (double)grid_x_segments;
     double y_dec = (yhi - ylo) / (double)grid_y_segments;
@@ -179,5 +187,7 @@ void Graph::draw(byte decimal_precision,
     tft->setTextColor(old_text_color);
     tft->setTextSize(old_text_size);
     tft->setTextDatum(old_datum);
+    draw_plots();
+    draw_legend(background_color);
 }
 

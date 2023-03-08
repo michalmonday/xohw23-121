@@ -9,7 +9,7 @@ GUI_Element::GUI_Element(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int
 
 void GUI_Element::draw() {
     tft->fillRect(x, y, w, h, background_colour);
-    tft->drawRect(x, y, w, h, TFT_WHITE); 
+    // tft->drawRect(x, y, w, h, TFT_WHITE); 
     needs_redraw = false;
 }
 

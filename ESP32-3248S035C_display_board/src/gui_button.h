@@ -8,14 +8,18 @@
 
 class GUI_Button : public GUI_Element {
 public:
-    GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int background_colour = BLACK, 
+    GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int text_colour, unsigned int background_colour = BLACK, 
         std::function<void()> on_press_callback = [](){},
         std::function<void()> on_release = [](){}
         );
     void draw();
+    void set_text(String text) { this->text = text; needs_redraw = true; }
     virtual void on_release() override;
+    virtual void on_press() override;
 private:
     String text;
+    unsigned int text_colour;
+    unsigned int original_background_colour;
 };
 
 #endif

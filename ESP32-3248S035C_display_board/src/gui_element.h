@@ -20,6 +20,9 @@ public:
     int get_w() { return w; }
     int get_h() { return h; }
 
+    void set_on_press_callback(std::function<void()> on_press_callback) { this->on_press_callback = on_press_callback; }
+    void set_on_release_callback(std::function<void()> on_release_callback) { this->on_release_callback = on_release_callback; }
+
     bool needs_redraw;
 
     std::function<void()> on_press_callback;
