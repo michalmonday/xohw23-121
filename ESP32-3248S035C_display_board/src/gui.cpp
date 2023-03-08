@@ -1,59 +1,16 @@
 #include "gui.h"
-
-
-// -------------------------------
-// ---------- GUI_State ----------
-
-GUI_State::GUI_State(TFT_eSPI *tft, Touch *touch) : tft(tft), touch(touch) {
-}
-
-void GUI_State::update() {
-    touch->update();
-    bool was_pressed = touch->was_pressed();
-    bool was_released = touch->was_released();
-    
-    if (was_pressed || was_released) {
-        int touch_x = touch->get_x();
-        int touch_y = touch->get_y();
-
-        for (GUI_Element *element : elements) {
-            if (element->contains_point(touch_x, touch_y)) {
-                if (was_pressed) 
-                    element->on_press();
-                if (was_released) 
-                    element->on_release();
-            }
-        }
-
-        if (was_pressed) 
-            touch->reset_last_press();
-        if (was_released) 
-            touch->reset_last_release();
-    }
-}
-
-void GUI_State::draw() {
-    for (GUI_Element *element : elements) {
-        if (element->needs_redraw)
-            element->draw();        
-    }
-}
-
-void GUI_State::reset() {
-    elements.clear();
-}
-
-void GUI_State::add_element(GUI_Element* element) {
-    elements.push_back(element);
-}
+#include "gui_state_notification.h"
 
 // -------------------------------
 // ----------    GUI    ----------
 
-GUI::GUI(TFT_eSPI &tft, Touch *touch) : tft(tft), touch(touch) {
+GUI::GUI(TFT_eSPI &tft, Touch *touch) : 
+    tft(tft), touch(touch), current_state_id(GUI_STATE_MAIN), previous_state_id(GUI_STATE_MAIN), current_state(nullptr)
+{
     touch->init();
-    states[GUI_STATE_MAIN] = new GUI_State(&tft, touch);
-    states[GUI_STATE_SECOND] = new GUI_State(&tft, touch);
+    states[GUI_STATE_MAIN] = new GUI_State(&tft, this, touch);
+    states[GUI_STATE_NOTIFICATION] = new GUI_State_Notification(&tft, this, touch);
+    Serial.println("GUI initialized");
     set_state(GUI_STATE_MAIN);
 }
 
@@ -66,12 +23,25 @@ void GUI::draw() {
 }
 
 void GUI::set_state(int state_id) {
-    // current_state->reset();
+    Serial.println("Setting state to " + String(state_id));
     tft.fillScreen(TFT_BLACK);
+    if (current_state) {
+        current_state->on_state_exit();
+        previous_state_id = current_state_id;
+    } else {
+        previous_state_id = state_id;
+    }
     current_state = states[state_id];
     current_state_id = state_id;
+    current_state->on_state_enter();
     update();
     draw();
+}
+
+void GUI::revert_state() {
+    Serial.println("Reverting state to " + String(previous_state_id));
+    set_state(previous_state_id);
+
 }
 
 void GUI::add_element(GUI_Element* element) {
@@ -80,7 +50,21 @@ void GUI::add_element(GUI_Element* element) {
 
 void GUI::add_element(GUI_Element* element, int state) {
     if (states.find(state) == states.end()) {
-        states[state] = new GUI_State(&tft, touch);
+        states[state] = new GUI_State(&tft, this, touch);
     }
     states[state]->add_element(element);
+}
+
+void GUI::notify(String text, int timeout) {
+    Serial.println("Notifying: " + text + " current_state_id: " + String(current_state_id) + " previous_state_id: " + String(previous_state_id));
+    GUI_State_Notification *notification_state = static_cast<GUI_State_Notification*>(states[GUI_STATE_NOTIFICATION]);
+    notification_state->set_timeout(timeout);
+    if (current_state_id == GUI_STATE_NOTIFICATION) {
+        notification_state->update_start_time(millis());
+        String old_text = notification_state->get_label()->get_text();
+        notification_state->set_text(old_text + "\n" + text);
+    } else {
+        notification_state->set_text(text);
+        set_state(GUI_STATE_NOTIFICATION);
+    }
 }

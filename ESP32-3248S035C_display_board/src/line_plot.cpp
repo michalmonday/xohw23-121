@@ -103,5 +103,5 @@ void LinePlot::print_all_values() {
 
 int LinePlot::get_current_number_of_items() { return current_number_of_items; }
 int LinePlot::get_max_number_of_items() { return max_number_of_items; }
-void LinePlot::set_graph(Graph *graph) { this->graph = graph; }
+void LinePlot::set_graph(GUI_Graph *graph) { this->graph = graph; }
 unsigned int LinePlot::get_color() { return color; }

@@ -62,7 +62,7 @@ void Touch::update() {
             pressed = true;
         }
         last_touch_time = millis();
-    } else if (touched && millis() - last_touch_time > 200) {
+    } else if (touched && millis() - last_touch_time > 50) {
         released = true;
         touched = false;
         pressed = false;
@@ -96,10 +96,8 @@ int Touch::get_y() {
 void Touch::reset_last_release() {
     released = false;
     last_touch_time = 0;
-    Serial.print("reset_last_release\n");
 }
 
 void Touch::reset_last_press() {
     pressed = false;
-    Serial.print("reset_last_press\n");
 }
