@@ -37,7 +37,7 @@ public:
     //           unsigned int grid_color, unsigned int axis_color,
     //           unsigned int text_color, unsigned int background_color);
 
-    void draw_legend(unsigned int background_color);
+    void draw_legend(unsigned int clr);
 
 private:
     int grid_x_segments, grid_y_segments;

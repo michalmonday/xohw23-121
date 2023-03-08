@@ -2,8 +2,8 @@
 
 // -------------------------------
 // ---------- GUI_Button ----------
-GUI_Button::GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback) :
-    GUI_Element(tft, x, y, w, h, background_colour, on_press_callback, on_release_callback), text(text), text_colour(text_colour), original_background_colour(background_colour)
+GUI_Button::GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int font_size, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback) :
+    GUI_Element(tft, x, y, w, h, background_colour, on_press_callback, on_release_callback), text(text), font_size(font_size), text_colour(text_colour), original_background_colour(background_colour)
 {
 }
 
@@ -28,7 +28,8 @@ void GUI_Button::draw() {
     // R_BASELINE = 11 = Right character baseline
     // tft->drawCentreString(text, x + w / 2, y + h / 2 , 2);
     tft->setTextColor(text_colour);
-    tft->drawString(text, x + w / 2, y + h / 2, 2);
+    tft->setTextSize(font_size);
+    tft->drawString(text, x + w / 2, y + h / 2);
 // - tft->fontHeight(2)/
 }
 

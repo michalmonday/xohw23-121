@@ -19,15 +19,26 @@
 
 const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
-// const int default_graph_w = (int)(RESOLUTION_X * 0.7); 
 const int default_graph_w = (int)(RESOLUTION_X * 0.2); 
 const int default_graph_h = (int)(RESOLUTION_Y * 0.7); 
-int default_grid_x_segments = 1;
-int default_grid_y_segments = 4;
+const int default_grid_x_segments = 1;
+const int default_grid_y_segments = 4;
+const int default_decimal_precision = 2;
+const int default_xlo = 0;
+const int default_xhi = 100;
+const int default_ylo = 0;
+const int default_yhi = 1;
+const String default_title = "";
+const String default_xlabel = "";
+const String default_ylabel = "";
+const unsigned int default_grid_color = BLUE;
+const unsigned int default_axis_color = RED;
+const unsigned int default_text_color = WHITE;
+const unsigned int default_background_color = BLACK;
 
 GUI_Graph::GUI_Graph(TFT_eSPI *tft) 
     : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
-        decimal_precision(2), xlo(0), xhi(100.0), ylo(0), yhi(1), title(""), xlabel(""), ylabel(""), grid_color(BLUE), axis_color(RED), text_color(WHITE), background_color(BLACK)
+        decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color)
 {
 }
 
@@ -58,7 +69,7 @@ LinePlot* GUI_Graph::add_plot(String name, LinePlot* line_plot) {
     line_plots[name] = line_plot;
     Serial.printf("Added plot with name %s\n", name);
     line_plot->set_graph(this);
-    draw_legend(DKGREY);
+    draw_legend(background_color);
     return line_plot;
 }
 
@@ -181,7 +192,9 @@ void GUI_Graph::draw() {
     }
 
     tft->setTextColor(text_color, background_color);
-    tft->drawString(title, x + w / 2, y - 10, 2);
+    tft->setTextDatum(BC_DATUM);
+    tft->setTextSize(1);
+    tft->drawString(title, x + w / 2, y - tft->fontHeight(2) / 2);
 
     // restore old settings
     tft->setTextColor(old_text_color);

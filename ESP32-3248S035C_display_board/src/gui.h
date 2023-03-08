@@ -22,6 +22,7 @@ public:
     void add_element(GUI_Element *element);
     void add_element(GUI_Element *element, int state);
     void notify(String text, int timeout=0);
+    GUI_State *get_state(int state) { return states[state]; }
 private:
     std::map<int, GUI_State*> states;
     GUI_State *current_state;
