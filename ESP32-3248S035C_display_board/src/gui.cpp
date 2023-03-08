@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "gui_state_notification.h"
+#include "gui_state_main.h"
 
 // -------------------------------
 // ----------    GUI    ----------
@@ -8,7 +9,7 @@ GUI::GUI(TFT_eSPI &tft, Touch *touch) :
     tft(tft), touch(touch), current_state_id(GUI_STATE_MAIN), previous_state_id(GUI_STATE_MAIN), current_state(nullptr)
 {
     touch->init();
-    states[GUI_STATE_MAIN] = new GUI_State(&tft, this, touch);
+    states[GUI_STATE_MAIN] = new GUI_State_Main(&tft, this, touch);
     states[GUI_STATE_NOTIFICATION] = new GUI_State_Notification(&tft, this, touch);
     Serial.println("GUI initialized");
     set_state(GUI_STATE_MAIN);

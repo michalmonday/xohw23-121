@@ -4,7 +4,6 @@ unsigned int colours[12] = {
     GREEN,
     YELLOW,
     CYAN,
-    PURPLE,
     RED,
     MAGENTA,
     ORANGE,
@@ -13,4 +12,5 @@ unsigned int colours[12] = {
     WHITE,
     BLUE,
     TEAL,
+    PURPLE
 };

@@ -13,6 +13,7 @@
 #include "gui_graph.h"
 #include "gui_button.h"
 #include "gui_label.h"
+#include "gui_state_main.h"
 
 #include "display_config.h" // resolution
 
@@ -59,9 +60,7 @@ int current_colour_id = 0;
 // GUI_Graph graph(tft); 
 
 GUI *gui;
-GUI_Graph ecg_graph(&tft);
-GUI_Label *label_ap_conn_status = new GUI_Label(&tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
-GUI_Label *label_tcp_conn_status = new GUI_Label(&tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9 + 15, 1, TL_DATUM, WHITE, BLACK);
+GUI_State_Main *gui_main_state;
 
 double xlo = 0;
 // double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
@@ -79,8 +78,10 @@ void init_wifi() {
     // status_display.set_status("ap_connection_status", "Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
     // status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
 
-    label_ap_conn_status->set_text("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    label_tcp_conn_status->set_text("ZYNQ TCP server address is set to: " + server_ip_str);
+    gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
+    // label_ap_conn_status->set_text("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    // label_tcp_conn_status->set_text("ZYNQ TCP server address is set to: " + server_ip_str);
 
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
@@ -89,14 +90,16 @@ void init_wifi() {
         delay(500);
         Serial.print(".");
         // status_display.set_status("ap_connection_status", "Retrying connection...");
-        label_ap_conn_status->set_text("Retrying connection...");
+        // label_ap_conn_status->set_text("Retrying connection...");
+        gui_main_state->set_ap_conn_status("Retrying connection...");
     }
 
     Serial.println("Connected");
     Serial.print("IP Address:");
     Serial.println(WiFi.localIP());
     // status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
-    label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+    gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+    // label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
 LinePlot* create_new_line_plot() {
@@ -136,9 +139,10 @@ void setup() {
     Serial.println();
 
     gui = new GUI(tft, &touch);
-    gui->add_element(&ecg_graph, GUI_STATE_MAIN);
-    gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
-    gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
+    gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
+    // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
+    // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
+    // gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
 
     delay(100);
 
@@ -183,39 +187,6 @@ void setup() {
     // );
     // gui->add_element(btn, GUI_STATE_MAIN);
 
-    const int button_width = RESOLUTION_X * 0.2;
-    const int button_height = RESOLUTION_Y * 0.15;
-    const int button_x = RESOLUTION_X*0.48;
-    const int button_y_start = RESOLUTION_Y*0.1;
-    GUI_Button *btn_load_program = new GUI_Button(&tft, "Load program", button_x, button_y_start, button_width, button_height, 
-        WHITE,  // text colour
-        BLACK,  // background colour
-        [](){}, // function on press
-        [](){   // function on release
-            // change GUI state into program selection here or request the list of programs from the server
-            Serial.println("Load program button was released");
-        }
-    );
-    GUI_Button *btn_run_halt = new GUI_Button(&tft, "Run", button_x, button_y_start + button_height*1.3, button_width, button_height, WHITE,  BLACK); 
-    
-    btn_run_halt->set_on_release_callback(
-        [btn_run_halt](){   // function on release
-            // change GUI state into program selection here or request the list of programs from the server
-            Serial.println("Button run/halt was released");
-            btn_run_halt->set_text("Halt");
-        }
-    );
-    GUI_Button *btn_start_testing = new GUI_Button(&tft, "Start testing", button_x, button_y_start + (button_height*1.3) * 2, button_width, button_height, WHITE, BLACK);  
-    btn_start_testing->set_on_release_callback(
-        [btn_start_testing](){   // function on release
-            // change GUI state into program selection here or request the list of programs from the server
-            Serial.println("Button start testing was released");
-            btn_start_testing->set_text("-");
-        }
-    );
-    gui->add_element(btn_load_program, GUI_STATE_MAIN);
-    gui->add_element(btn_run_halt, GUI_STATE_MAIN);
-    gui->add_element(btn_start_testing, GUI_STATE_MAIN);
 
     // GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
     // gui->add_element(btn2, GUI_STATE_SECOND);
@@ -260,7 +231,7 @@ void handle_riscv_serial() {
                 // random float between 0.2 and 0.3
                 float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
                 // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
-                String *formatted_msg = new String("{\"add_points\": {\"Leads off\": [" + String(random_value) + "]}}");
+                String *formatted_msg = new String("{\"add_points_risc_v\": {\"Leads off\": [" + String(random_value) + "]}}");
                 // if (!add_string_to_queue(formatted_msg)) {
                 //     delete formatted_msg;
                 // }
@@ -285,7 +256,7 @@ void handle_riscv_serial() {
 
         // String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
         // this needs to be a JSON string just like data received from server
-        String *formatted_msg = new String("{\"add_points\": {\"ECG\": [" + String(ecg_value) + "]}}");
+        String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
     // 
     // {
     //    add_points: {
@@ -299,34 +270,35 @@ void handle_riscv_serial() {
     }
 }
 
-void check_protocol(String line) {
-    // line is a string received from the ZC706 tcp server (currently using PYNQ)
-
-//    if (line.startsWith("create_plot")) {
+// void check_protocol(String line) {
+//     // line is a string received from the ZC706 tcp server (currently using PYNQ)
+// 
+// //    if (line.startsWith("create_plot")) {
+// //        char plot_name[20];
+// //        sscanf(line.c_str(), "create_plot:%s", plot_name);
+// //        LinePlot *line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
+// //        if (ecg_graph.add_plot(String(plot_name), line_plot)) {
+// //            client.write("OK");
+// //        } else {
+// //            client.write("ERROR: Plot already exists.");
+// //        }
+// //    }
+// 
+//    if (line.startsWith("add_point")) {
 //        char plot_name[20];
-//        sscanf(line.c_str(), "create_plot:%s", plot_name);
-//        LinePlot *line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
-//        if (ecg_graph.add_plot(String(plot_name), line_plot)) {
-//            client.write("OK");
-//        } else {
-//            client.write("ERROR: Plot already exists.");
+//        double value;
+//        sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
+//        LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+//         
+//        if (!line_plot) {
+//            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
+//            line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
 //        }
+//        line_plot->draw(BLACK);
+//        line_plot->add_point(value);
+//        line_plot->draw();
 //    }
-
-   if (line.startsWith("add_point")) {
-       char plot_name[20];
-       double value;
-       sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
-       LinePlot* line_plot = ecg_graph.get_plot(plot_name);
-       if (!line_plot) {
-           Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
-           line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
-       }
-       line_plot->draw(BLACK);
-       line_plot->add_point(value);
-       line_plot->draw();
-   }
-}
+// }
 
 void parse_tcp_message(String line) {
     cJSON *root = cJSON_Parse(line.c_str());
@@ -373,6 +345,8 @@ void parse_tcp_message(String line) {
     //      "ANOTHER": [0.7, 0.6, 0.9]
     //    },
     // }
+
+    // adding points to pynq plot
     if (cJSON_HasObjectItem(root, "add_points")) {
         cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points");
         cJSON *plot_name_obj = add_points_obj->child;
@@ -385,37 +359,45 @@ void parse_tcp_message(String line) {
 
                 String plot_name = plot_name_obj->string;
                 double value = plot_value->valuedouble;
-                LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+                // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+                GUI_Graph *pynq_graph = gui_main_state->get_pynq_graph();
+                LinePlot* line_plot = pynq_graph->get_plot(plot_name);
                 if (!line_plot) {
                     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
-                    line_plot = ecg_graph.add_plot(plot_name, create_new_line_plot());
+                    line_plot = pynq_graph->add_plot(plot_name, create_new_line_plot());
                 }
                 line_plot->draw(BLACK);
                 line_plot->add_point(value);
                 line_plot->draw();
-                
-                // String *formatted_msg = new String("add_point:" + String(plot_name_obj->string) + "," + String(plot_value->valuedouble));
-                // add_string_to_queue(formatted_msg, true);
-                // if (!add_string_to_queue(formatted_msg)) {
-                //     delete formatted_msg;
-                // }
             }
+            plot_name_obj = plot_name_obj->next;
+        }
+    }
 
-            // LinePlot* line_plot = ecg_graph.get_plot(plot_name_obj->string);
-            // if (!line_plot) {
-            //     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name_obj->string);
-            //     line_plot = ecg_graph.add_plot(String(plot_name_obj->string), create_new_line_plot());
-            // }
-            // for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
-            //     cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
-            //     double value = plot_value->valuedouble;
-            //     Serial.print("Plot value: ");
-            //     Serial.println(value);
+    // copy for the risc-v plot (ecg)
+    if (cJSON_HasObjectItem(root, "add_points_risc_v")) {
+        cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points_risc_v");
+        cJSON *plot_name_obj = add_points_obj->child;
+        while(plot_name_obj) {
+            Serial.println(plot_name_obj->string);
 
-            //     line_plot->draw(BLACK);
-            //     line_plot->add_point(value);
-            //     line_plot->draw();
-            // }
+            for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
+                cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
+                // Do something with new plot value
+
+                String plot_name = plot_name_obj->string;
+                double value = plot_value->valuedouble;
+                // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+                GUI_Graph *ecg_graph = gui_main_state->get_ecg_graph();
+                LinePlot* line_plot = ecg_graph->get_plot(plot_name);
+                if (!line_plot) {
+                    Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
+                    line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot());
+                }
+                line_plot->draw(BLACK);
+                line_plot->add_point(value);
+                line_plot->draw();
+            }
             plot_name_obj = plot_name_obj->next;
         }
     }
