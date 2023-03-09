@@ -11,7 +11,8 @@ GUI_State_Notification::GUI_State_Notification(TFT_eSPI *tft, GUI *gui, Touch *t
 void GUI_State_Notification::update() {
     GUI_State::update();
     if (timeout > 0 && millis() - switch_time > timeout) {
-        gui->revert_state();
+        // gui->revert_state();
+        gui->pop_state();
     }
 }
 

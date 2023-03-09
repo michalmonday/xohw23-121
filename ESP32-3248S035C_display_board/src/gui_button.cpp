@@ -33,6 +33,20 @@ void GUI_Button::draw() {
 // - tft->fontHeight(2)/
 }
 
+void GUI_Button::undraw() {
+    // paint over the label with the background colour
+    tft->setTextDatum(MC_DATUM);
+    tft->setTextColor(background_colour);
+    tft->setTextSize(font_size);
+    tft->drawString(text, x + w / 2, y + h / 2);
+}
+
+void GUI_Button::set_text(String text) {
+    undraw();
+    this->text = text;
+    needs_redraw = true;
+}
+
 void GUI_Button::on_release() {
     GUI_Element::on_release();
     background_colour = original_background_colour;

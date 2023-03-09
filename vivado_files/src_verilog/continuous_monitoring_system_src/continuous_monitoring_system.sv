@@ -113,7 +113,8 @@ module continuous_monitoring_system #(
 
     reg [63:0] tlast_interval = 0;
     reg halting_on_full_fifo_enabled = 1; // enabled by default
-    assign halt_cpu = halting_on_full_fifo_enabled & fifo_full;
+    reg arbitrary_halt = 0;
+    assign halt_cpu = (halting_on_full_fifo_enabled & fifo_full) || arbitrary_halt;
 
 
 
@@ -351,6 +352,9 @@ module continuous_monitoring_system #(
                     HALTING_ON_FULL_FIFO_ENABLED: begin
                         halting_on_full_fifo_enabled <= ctrl_wdata;
                     end 
+                    ARBITRARY_HALT: begin
+                        arbitrary_halt <= ctrl_wdata;
+                    end
                     // PROGRAM_START_ADDRESS: begin
                     //     program_start_address <= ctrl_wdata;
                     // end

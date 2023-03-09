@@ -12,24 +12,27 @@ void GUI_State::update() {
     bool was_pressed = touch->was_pressed();
     bool was_released = touch->was_released();
     
-    if (was_pressed || was_released) {
-        int touch_x = touch->get_x();
-        int touch_y = touch->get_y();
+    if (!was_pressed && !was_released)
+        return;
+    
+    int touch_x = touch->get_x();
+    int touch_y = touch->get_y();
 
-        for (GUI_Element *element : elements) {
-            if (element->contains_point(touch_x, touch_y)) {
-                if (was_pressed) 
-                    element->on_press();
-                if (was_released) 
-                    element->on_release();
-            }
-        }
+    for (GUI_Element *element : elements) {
+        if (!element->contains_point(touch_x, touch_y))
+            continue;
 
         if (was_pressed) 
-            touch->reset_last_press();
+            element->on_press();
         if (was_released) 
-            touch->reset_last_release();
+            element->on_release();
+        break;
     }
+
+    if (was_pressed) 
+        touch->reset_last_press();
+    if (was_released) 
+        touch->reset_last_release();
 }
 
 void GUI_State::draw() {
@@ -40,7 +43,8 @@ void GUI_State::draw() {
 }
 
 void GUI_State::reset() {
-    elements.clear();
+    // elements.clear();
+    schedule_redraw();
 }
 
 void GUI_State::add_element(GUI_Element* element) {
@@ -57,4 +61,17 @@ void GUI_State::on_state_enter() {
 }
 
 void GUI_State::on_state_exit() {
+}
+
+void GUI_State::destroy_and_clear_elements() {
+    for (GUI_Element *element : elements) {
+        delete element;
+    }
+    elements.clear();
+}
+
+void GUI_State::schedule_redraw() {
+    for (GUI_Element *element : elements) {
+        element->needs_redraw = true;
+    }
 }
