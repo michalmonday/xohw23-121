@@ -13,13 +13,18 @@ void GUI_Label::draw() {
     tft->setTextSize(font_size);
     tft->setTextDatum(datum);
     tft->setTextColor(text_color);
-    tft->drawString(text, x, y, font_size);
+    tft->drawString(text, x, y);
 }
 
 void GUI_Label::undraw() {
     // paint over the label with the background colour
     Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
-    tft->fillRect(x, y, w, h, background_colour);
+    tft->setTextSize(font_size);
+    tft->setTextDatum(datum);
+    tft->setTextColor(background_colour);
+    // tft->setTextColor(RED);
+    tft->drawString(text, x, y);
+    // tft->fillRect(x - w/2, y - h/2, w, h, background_colour);
 }
 
 void GUI_Label::set_text(String text) {

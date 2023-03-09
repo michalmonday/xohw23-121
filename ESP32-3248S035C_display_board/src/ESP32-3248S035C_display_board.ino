@@ -14,11 +14,14 @@
 #include "gui_button.h"
 #include "gui_label.h"
 #include "gui_state_main.h"
+#include "gui_state_select_program.h"
 
 #include "display_config.h" // resolution
 
 #include "touch.h"
 Touch touch;
+
+#include "communication_queues.h"
 
 // Wifi credentials file contains 2 lines:
 // #ifndef MICHAL_WIFI_CREDENTIALS_H
@@ -40,7 +43,6 @@ HardwareSerial serial_riscv(2);  // UART2 (GPIO17=TX, GPIO16=RX)
 
 // Thread used for drawing will be on separate thread from receiving/parsing data from tcp server
 TaskHandle_t drawing_thread;
-QueueHandle_t queue = NULL;
 
 const IPAddress server_ip(192, 168, 0, 104);
 const uint16_t server_port = 9093;
@@ -102,23 +104,26 @@ void init_wifi() {
     // label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
-LinePlot* create_new_line_plot() {
-    unsigned int clr = colours[current_colour_id];
-    current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
-    Serial.printf("current_colour_id=%d\n", current_colour_id);
+LinePlot* create_new_line_plot(int clr=-1) {
+    if (clr == -1) {
+        clr = colours[current_colour_id];
+        current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
+        Serial.printf("current_colour_id=%d\n", current_colour_id);
+    }
     return new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
 }
 
 
 void drawing_thread_func(void *parameter) {
+    gui->schedule_redraw_current_state(); // TODO: investigate why it's needed (otherwise main state is not fully drawn at the beginning, only status labels at the bottom are drawn)
     while (true) {
         String* line;
         // Serial.printf("Queue size: %d, free space: %d, max size: %d\n", uxQueueMessagesWaiting(queue), uxQueueSpacesAvailable(queue), uxQueueMessagesWaiting(queue) + uxQueueSpacesAvailable(queue));
-        while (uxQueueMessagesWaiting(queue) == 0) {
+        while (uxQueueMessagesWaiting(queue_received) == 0) {
             delay(1);
             handle_gui();
         }
-        if ( xQueueReceive(queue, &line, portMAX_DELAY) ) {
+        if ( xQueueReceive(queue_received, &line, portMAX_DELAY) ) {
             // Serial.printf("Drawing thread: received '%s'\n", (*line).c_str());
             // check_protocol(*line);
             parse_tcp_message(*line);
@@ -137,6 +142,8 @@ void init_display() {
 void setup() {
     Serial.begin(115200);
     Serial.println();
+
+    communication_queues_init();
 
     gui = new GUI(tft, &touch);
     gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
@@ -168,13 +175,10 @@ void setup() {
     //     BLACK             // background color
     //     );
 
-    // producer (loop) allocates the string, consumer (drawing_thread_func) dealocates it
-    // queue = xQueueCreate(1000, sizeof(String*));
-    queue = xQueueCreate(5, sizeof(String*));
 	xTaskCreatePinnedToCore(
 			drawing_thread_func, /* Function to implement the task */
 			"drawing_thread", /* Name of the task */
-			10000, /* Stack size in words */
+			20000, /* Stack size in words */
 			NULL, /* Task input parameter */
 			0, /* Priority of the task */
 			&drawing_thread, /* Task handle. */
@@ -198,17 +202,6 @@ void swap(char &a, char &b) {
     b = t;
 }
 
-bool add_string_to_queue(String *str, bool blocking=false) {
-    if (blocking) {
-        while (xQueueSend(queue, &str, 0) == errQUEUE_FULL) {
-            // Serial.println("Queue is full, waiting...");
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-        }
-        return true;
-    }
-    return xQueueSendToBack(queue, &str, 0) != errQUEUE_FULL;
-}
-
 bool contains_digits_only(String str) {
     for (int i = 0; i < str.length(); i++) {
         if (!isdigit(str[i])) {
@@ -219,6 +212,7 @@ bool contains_digits_only(String str) {
 }
 
 void handle_riscv_serial() {
+    // print free memory
     while (serial_riscv.available()) {
         // Serial.println("Received something from riscv");
         String line = serial_riscv.readStringUntil('\n');
@@ -228,11 +222,13 @@ void handle_riscv_serial() {
 
         if (!contains_digits_only(line)) {
             if (line.equals("Leads off")) {
+                // Serial.printf("Free memory: %d\n", ESP.getFreeHeap());
                 // random float between 0.2 and 0.3
                 float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
                 // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
-                String *formatted_msg = new String("{\"add_points_risc_v\": {\"Leads off\": [" + String(random_value) + "]}}");
-                // if (!add_string_to_queue(formatted_msg)) {
+
+                // String *formatted_msg = new String("{\"add_points_risc_v\": {\"Leads off\": [" + String(random_value) + "]}}");
+                // if (!add_string_to_queue(queue_received, formatted_msg)) {
                 //     delete formatted_msg;
                 // }
                 continue;
@@ -264,7 +260,7 @@ void handle_riscv_serial() {
     //      "ANOTHER": [0.7, 0.6, 0.9]
     //    },
     // }
-        if (!add_string_to_queue(formatted_msg)) {
+        if (!add_string_to_queue(queue_received, formatted_msg)) {
             delete formatted_msg;
         }
     }
@@ -392,7 +388,7 @@ void parse_tcp_message(String line) {
                 LinePlot* line_plot = ecg_graph->get_plot(plot_name);
                 if (!line_plot) {
                     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
-                    line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot());
+                    line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot(GREEN));
                 }
                 line_plot->draw(BLACK);
                 line_plot->add_point(value);
@@ -402,6 +398,32 @@ void parse_tcp_message(String line) {
         }
     }
 
+    // // Parse string with the following json:
+    // {
+    //     "status_update" : {
+    //         "program_finished": "ecg_baseline.bin",
+    //         "pynq_restarted" : true
+    //     }
+    // }
+    if (cJSON_HasObjectItem(root, "status_update")) {
+        cJSON *status_update_obj = cJSON_GetObjectItem(root, "status_update");
+        if (cJSON_HasObjectItem(status_update_obj, "program_finished")) {
+            cJSON *program_finished_obj = cJSON_GetObjectItem(status_update_obj, "program_finished");
+            String program = program_finished_obj->valuestring;
+            Serial.print("Program finished: ");
+            Serial.println(program);
+            gui->get_state_main()->set_run_status("Finished");
+        }
+
+        if (cJSON_HasObjectItem(status_update_obj, "pynq_restarted")) {
+            cJSON *pynq_restarted_obj = cJSON_GetObjectItem(status_update_obj, "pynq_restarted");
+            bool pynq_restarted = pynq_restarted_obj->valueint;
+            Serial.print("Pynq restarted: ");
+            Serial.println(pynq_restarted);
+            // gui->get_state_main()->set_run_status("Pynq restarted");
+            gui->get_state_main()->reset();
+        }
+    }
 
 // {
 //     "RPC_return" : {
@@ -416,16 +438,18 @@ void parse_tcp_message(String line) {
     // Parse string with the json above
     if (cJSON_HasObjectItem(root, "RPC_return")) {
 
-        gui->notify(line, 1500);
+        // gui->notify(line, 1500);
 
         if (!cJSON_HasObjectItem(root, "RPC_return")) { Serial.println("Failed to parse RPC_return"); return; } 
         cJSON *rpc_return_obj = cJSON_GetObjectItem(root, "RPC_return");
         if (!cJSON_HasObjectItem(rpc_return_obj, "function_name")) { Serial.println("Failed to parse function_name"); return; }
         if (!cJSON_HasObjectItem(rpc_return_obj, "return_value"))  { Serial.println("Failed to parse return_value");  return; }
         if (!cJSON_HasObjectItem(rpc_return_obj, "return_status")) { Serial.println("Failed to parse return_status"); return; }
+        if (!cJSON_HasObjectItem(rpc_return_obj, "function_args")) { Serial.println("Failed to parse function_args"); return; }
         cJSON *function_name_obj = cJSON_GetObjectItem(rpc_return_obj, "function_name");
         cJSON *return_value_obj = cJSON_GetObjectItem(rpc_return_obj, "return_value");
         cJSON *return_status_obj = cJSON_GetObjectItem(rpc_return_obj, "return_status");
+        cJSON *function_args_obj = cJSON_GetObjectItem(rpc_return_obj, "function_args");
         String function_name = function_name_obj->valuestring;
         String return_status = return_status_obj->valuestring;
         // Print response
@@ -434,25 +458,46 @@ void parse_tcp_message(String line) {
         Serial.print(", status: ");
         Serial.print(return_status);
         Serial.println(" return_value:");
+
+        if (!return_status.equals("success")) {
+            Serial.println("RPC call failed");
+            return;
+        }
+
+
+        if (function_name.equals("rpc_load_program")) {
+            String loaded_program = cJSON_GetArrayItem(function_args_obj, 0)->valuestring;
+            Serial.printf("rpc_load_program, loaded_program: %s\n", loaded_program.c_str());
+            gui->get_state_main()->set_loaded_program(loaded_program);
+        }
+
         if (function_name.equals("rpc_list_programs")) {
             cJSON *program_category_obj = return_value_obj->child;
             while(program_category_obj) {
-                Serial.println(program_category_obj->string);
+                String category = program_category_obj->string;
+                std::vector<String> programs;
+                Serial.println(category);
                 for (int i=0; i<cJSON_GetArraySize(program_category_obj); i++) {
                     cJSON *program_name_obj = cJSON_GetArrayItem(program_category_obj, i);
                     String program_name = program_name_obj->valuestring;
                     Serial.print("Program: ");
                     Serial.println(program_name);
+                    programs.push_back(program_name);
 
                     // make a button or something, maybe change gui state into program selection?
                 }
                 program_category_obj = program_category_obj->next;
+                gui->get_state_select_program()->add_programs(category, programs);
             }
         }
-        if (function_name.equals("rpc_run_program")) {
+
+        if (function_name.equals("rpc_run")) {
             String return_value = return_value_obj->valuestring;
-            Serial.print("Return value: ");
-            Serial.println(return_value);
+            gui->get_state_main()->set_run_status("Running");
+        }
+        if (function_name.equals("rpc_halt")) {
+            String return_value = return_value_obj->valuestring;
+            gui->get_state_main()->set_run_status("Halted");
         }
     }
 
@@ -501,49 +546,40 @@ void loop(void) {
 
 
 
-// {
-//     "RPC" : {
-//         "function_name": "rpc_list_programs"
-//     }
-// }
-    // Construct json string as JSON above
-    cJSON *root = cJSON_CreateObject();
-    cJSON *rpc_obj = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "RPC", rpc_obj);
-    cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_list_programs");
-    char *json_str = cJSON_PrintUnformatted(root);
-    Serial.print("Sending: '");
-    Serial.print(json_str);
-    client.println(json_str);
-    free(json_str);
 
 
-// {
-//     "RPC" : {
-//         "function_name": "rpc_run_program",
-//         "function_args": ["ecg_baseline.bin"]
-//     }
-// }
-    //Construct json string as JSON above
-    root = cJSON_CreateObject();
-    rpc_obj = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "RPC", rpc_obj);
-    cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_run_program");
-    // string array 
-    const char *string_array[1] = {"ecg_baseline.bin"};
-    cJSON *function_args_obj = cJSON_CreateStringArray(string_array, 1);
-    cJSON_AddItemToObject(rpc_obj, "function_args", function_args_obj);
-    json_str = cJSON_PrintUnformatted(root);
-    Serial.print("Sending: '");
-    Serial.print(json_str);
-    client.println(json_str);
-    free(json_str);
+// // {
+// //     "RPC" : {
+// //         "function_name": "rpc_run_program",
+// //         "function_args": ["ecg_baseline.bin"]
+// //     }
+// // }
+//     //Construct json string as JSON above
+//     cJSON *root = cJSON_CreateObject();
+//     cJSON *rpc_obj = cJSON_CreateObject();
+//     cJSON_AddItemToObject(root, "RPC", rpc_obj);
+//     cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_run_program");
+//     // string array 
+//     const char *string_array[1] = {"ecg_baseline.bin"};
+//     cJSON *function_args_obj = cJSON_CreateStringArray(string_array, 1);
+//     cJSON_AddItemToObject(rpc_obj, "function_args", function_args_obj);
+//     char *json_str = cJSON_PrintUnformatted(root);
+//     Serial.print("Sending: '");
+//     Serial.print(json_str);
+//     client.println(json_str);
+//     free(json_str);
 
     // client.println("run_program,ecg_baseline.bin");
 
     // client.print("run_program:ecg_baseline.bin");
     while (client.connected() || client.available()) {
         handle_riscv_serial();
+
+        String *line;
+        if ( xQueueReceive(queue_to_send, &line, 0) != errQUEUE_EMPTY ) {
+            client.println(*line);
+            delete line;
+        }
 
         while (client.available()) {
             // String *line = new String(client.readStringUntil('\n'));
@@ -553,7 +589,7 @@ void loop(void) {
             Serial.print(*line);
             Serial.println("'");
             // parse_tcp_message(line);
-            add_string_to_queue(line, true);
+            add_string_to_queue(queue_received, line, true);
         }
     }
     Serial.println("Closing connection.");

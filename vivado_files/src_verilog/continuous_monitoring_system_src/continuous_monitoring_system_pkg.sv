@@ -51,7 +51,8 @@ typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     CLK_COUNTER,
     LAST_WRITE_TIMESTAMP,
     TLAST_INTERVAL,
-    HALTING_ON_FULL_FIFO_ENABLED
+    HALTING_ON_FULL_FIFO_ENABLED,
+    ARBITRARY_HALT
     // PROGRAM_START_ADDRESS, // this allows to reset CLK_COUNTER to 0 when the program starts
     // RESET_CLK_COUNT_ON_PROGRAM_START_ENABLED
     } ctrl_addr_t;

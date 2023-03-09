@@ -2,6 +2,8 @@
 #include "display_config.h"
 #include "gui.h"
 #include "gui_button.h"
+#include "communication_queues.h"
+#include <cJSON.h>
 
 // const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 // const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
@@ -62,30 +64,73 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     const int button_x = RESOLUTION_X*0.48;
     const int button_y_start = RESOLUTION_Y*0.05;
     const int button_font_size = 2;
-    GUI_Button *btn_load_program = new GUI_Button(tft, "Load", button_x, button_y_start, button_width, button_height, button_font_size,
+    const int button_offset = button_height * 1.3;
+    int button_y = button_y_start;
+    btn_load_program = new GUI_Button(tft, "Load", button_x, button_y, button_width, button_height, button_font_size,
         WHITE,  // text colour
         BLACK,  // background colour
         [](){}, // function on press
-        [](){   // function on release
+        [gui](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Load program button was released");
+
+            // {
+            //     "RPC" : {
+            //         "function_name": "rpc_list_programs"
+            //     }
+            // }
+            // Construct json string as JSON above
+            cJSON *root = cJSON_CreateObject();
+            cJSON *rpc_obj = cJSON_CreateObject();
+            cJSON_AddItemToObject(root, "RPC", rpc_obj);
+            cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_list_programs");
+            char *json_str = cJSON_PrintUnformatted(root);
+            Serial.print("Sending: '");
+            Serial.println(json_str);
+            add_string_to_queue(queue_to_send, new String(json_str), true);
+            free(json_str);
+            gui->push_state(GUI_STATE_SELECT_PROGRAM);
         }
     );
-    GUI_Button *btn_run_halt = new GUI_Button(tft, "Run", button_x, button_y_start + button_height*1.3, button_width, button_height, button_font_size, WHITE,  BLACK); 
-    
-    btn_run_halt->set_on_release_callback(
-        [btn_run_halt](){   // function on release
+    button_y += button_offset;
+
+    btn_run_status = new GUI_Button(tft, "Run", button_x, button_y, button_width, button_height, button_font_size, WHITE,  BLACK); 
+    btn_run_status->set_on_release_callback(
+        [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Button run/halt was released");
-            if (btn_run_halt->get_text().equals("Halt")) 
-                btn_run_halt->set_text("Run");
-            else if (btn_run_halt->get_text().equals("Run"))
-                btn_run_halt->set_text("Halt");
+            if (btn_run_status->get_text().equals("Halt")) {
+                // btn_run_status->set_text("Resume");
+
+                cJSON *root = cJSON_CreateObject();
+                cJSON *rpc_obj = cJSON_CreateObject();
+                cJSON_AddItemToObject(root, "RPC", rpc_obj);
+                cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_halt");
+                char *json_str = cJSON_PrintUnformatted(root);
+                Serial.print("Sending: '");
+                Serial.println(json_str);
+                add_string_to_queue(queue_to_send, new String(json_str), true);
+                free(json_str);
+            }
+            else if (btn_run_status->get_text().equals("Run") || btn_run_status->get_text().equals("Resume")) {
+                // btn_run_status->set_text("Halt");
+
+                cJSON *root = cJSON_CreateObject();
+                cJSON *rpc_obj = cJSON_CreateObject();
+                cJSON_AddItemToObject(root, "RPC", rpc_obj);
+                cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_run");
+                char *json_str = cJSON_PrintUnformatted(root);
+                Serial.print("Sending: '");
+                Serial.println(json_str);
+                add_string_to_queue(queue_to_send, new String(json_str), true);
+                free(json_str);
+            }
         }
     );
-    GUI_Button *btn_train = new GUI_Button(tft, "Train", button_x, button_y_start + (button_height*1.3) * 2, button_width, button_height, button_font_size, WHITE, BLACK);  
+    button_y += button_offset;
+    btn_train = new GUI_Button(tft, "Train", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
     btn_train->set_on_release_callback(
-        [btn_train](){   // function on release
+        [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Button train/stop was released");
             if (btn_train->get_text().equals("Train"))
@@ -94,9 +139,10 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
                 btn_train->set_text("Train");
         }
     );
-    GUI_Button *btn_test = new GUI_Button(tft, "Test", button_x, button_y_start + (button_height*1.3) * 3, button_width, button_height, button_font_size, WHITE, BLACK);  
+    button_y += button_offset;
+    btn_test = new GUI_Button(tft, "Test", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
     btn_test->set_on_release_callback(
-        [btn_test](){   // function on release
+        [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Button test/stop was released");
             if (btn_test->get_text().equals("Test"))
@@ -105,15 +151,51 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
                 btn_test->set_text("Test");
         }
     );
+    button_y += button_offset;
     add_element(btn_load_program);
-    add_element(btn_run_halt);
+    add_element(btn_run_status);
     add_element(btn_train);
     add_element(btn_test);
+
+
+    const int label_x = button_x + button_width + RESOLUTION_X*0.04;
+    const int label_y_start = button_y_start + button_height/2;
+    const int label_font_size = 2;
+    int label_y = label_y_start;
+    // ---------------------------------
+    // -------- Status labels ----------
+    label_loaded_program = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK); label_y += button_offset;
+    label_run_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);        label_y += button_offset;
+    label_training_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);   label_y += button_offset;
+    label_testing_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);    label_y += button_offset;
+    add_element(label_loaded_program);
+    add_element(label_run_status);
+    add_element(label_training_status);
+    add_element(label_testing_status);
+}
+
+void GUI_State_Main::draw() {
+    GUI_State::draw();
 }
 
 void GUI_State_Main::update() {
     GUI_State::update();
+}
 
+void GUI_State_Main::reset() {
+    GUI_State::reset();
+    // label_ap_conn_status->set_text("-");
+    // label_tcp_conn_status->set_text("-");
+
+    label_loaded_program->set_text("-");
+    label_run_status->set_text("-");
+    label_training_status->set_text("-");
+    label_testing_status->set_text("-");
+
+    btn_load_program->set_text("Load");
+    btn_run_status->set_text("Run");
+    btn_train->set_text("Train");
+    btn_test->set_text("Test");
 }
 
 void GUI_State_Main::set_ap_conn_status(String text) {
@@ -122,6 +204,29 @@ void GUI_State_Main::set_ap_conn_status(String text) {
 
 void GUI_State_Main::set_tcp_conn_status(String text) {
     label_tcp_conn_status->set_text(text);
+}
+
+void GUI_State_Main::set_loaded_program(String text) {
+    label_loaded_program->set_text(text);
+    set_run_status("Loaded");
+}
+
+void GUI_State_Main::set_run_status(String text) {
+    label_run_status->set_text(text);
+    if (text.equals("Running"))
+        btn_run_status->set_text("Halt");
+    else if (text.equals("Halted"))
+        btn_run_status->set_text("Resume");
+    else if (text.equals("Finished") || text.equals("Loaded"))
+        btn_run_status->set_text("Run");
+}
+
+void GUI_State_Main::set_training_status(String text) {
+    label_training_status->set_text(text);
+}
+
+void GUI_State_Main::set_testing_status(String text) {
+    label_testing_status->set_text(text);
 }
 
 void GUI_State_Main::on_state_enter() {

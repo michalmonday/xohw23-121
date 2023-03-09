@@ -13,10 +13,11 @@ public:
         std::function<void()> on_release = [](){}
         );
     void draw();
-    void set_text(String text) { this->text = text; needs_redraw = true; }
+    void set_text(String text); 
     virtual void on_release() override;
     virtual void on_press() override;
     String get_text() { return text; }
+    void undraw();
 private:
     String text;
     unsigned int text_colour;
