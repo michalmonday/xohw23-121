@@ -16,6 +16,13 @@ in SystemVerilog. This is just a workaround.
 
 `define REGISTER_WIDTH 128
 
+`define DETERMINISTIC_DATA_WIDTH 512
+`define ATF_POS_BITS_BOUNDS_WIDTH 10
+`define ATF_NUM_OF_SEEDS 2
+`define ATF_SEED_ADDR_WIDTH 1
+`define ATF_RANGES_PER_SEED 3
+`define ATF_RANGE_ADDR_WIDTH 2
+
 
 module cms_ip_wrapper #(
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
@@ -72,7 +79,15 @@ module cms_ip_wrapper #(
     output wire [`PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
 
     output wire performance_counters_rst_n_probe,
-    output wire [63:0] item_counter_probe
+    output wire [63:0] item_counter_probe,
+
+
+    // output wire [9:0] atf_result_bit_counts_0_probe,
+    // output wire [9:0] atf_lower_bound_0_0_probe,
+    // output wire [9:0] atf_upper_bound_0_0_probe
+    output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_result_bit_counts_0_probe,
+    output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_lower_bound_0_0_probe,
+    output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_upper_bound_0_0_probe
 );
 
 continuous_monitoring_system #(
@@ -128,7 +143,11 @@ continuous_monitoring_system #(
     .data_pkt_auipc_counter_probe(data_pkt_auipc_counter_probe),
 
     .performance_counters_rst_n_probe(performance_counters_rst_n_probe),
-    .item_counter_probe(item_counter_probe)
+    .item_counter_probe(item_counter_probe),
+
+    .atf_result_bit_counts_0_probe(atf_result_bit_counts_0_probe),
+    .atf_lower_bound_0_0_probe(atf_lower_bound_0_0_probe),
+    .atf_upper_bound_0_0_probe(atf_upper_bound_0_0_probe)
 );
 
 endmodule

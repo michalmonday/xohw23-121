@@ -64,8 +64,27 @@ module continuous_monitoring_system #(
     output wire [PERFORMANCE_EVENT_MOD_COUNTER_WIDTH-1:0] data_pkt_auipc_counter_probe,
 
     output wire performance_counters_rst_n_probe,
-    output wire [63:0] item_counter_probe
+    output wire [63:0] item_counter_probe,
+
+    output wire [$clog2(DETERMINISTIC_DATA_WIDTH):0] atf_result_bit_counts_0_probe,
+    output wire [$clog2(DETERMINISTIC_DATA_WIDTH):0] atf_lower_bound_0_0_probe,
+    output wire [$clog2(DETERMINISTIC_DATA_WIDTH):0] atf_upper_bound_0_0_probe
 );
+
+    // ATF = advanced trace filter
+    reg [DETERMINISTIC_DATA_WIDTH-1:0] atf_seed_input = 0;
+    reg [$clog2(ATF_NUM_OF_SEEDS):0] atf_seed_input_address = 0;
+    reg atf_seed_write_enable = 0;
+    reg [$clog2(DETERMINISTIC_DATA_WIDTH):0] atf_lower_bound_input = 0;
+    reg [$clog2(DETERMINISTIC_DATA_WIDTH):0] atf_upper_bound_input = 0;
+    reg [$clog2(ATF_NUM_OF_SEEDS):0] atf_range_input_seed_address = 0;
+    reg [$clog2(ATF_RANGES_PER_SEED):0] atf_range_input_range_address = 0;
+    reg atf_range_write_enable = 0;
+    wire atf_drop_pkt;
+    wire atf_keep_pkt;
+    reg atf_active = 0;
+    wire [ATF_POS_BITS_BOUNDS_WIDTH:0] atf_bit_counts [ATF_NUM_OF_SEEDS-1:0];
+
     logic drop_instr;
     wire [REGISTER_WIDTH-1:0]shadow_general_purpose_registers[31:0];
 
@@ -115,7 +134,6 @@ module continuous_monitoring_system #(
     reg halting_on_full_fifo_enabled = 1; // enabled by default
     reg arbitrary_halt = 0;
     assign halt_cpu = (halting_on_full_fifo_enabled & fifo_full) || arbitrary_halt;
-
 
 
     shadow_general_purpose_registers_file #(
@@ -174,6 +192,13 @@ module continuous_monitoring_system #(
     // localparam A3_IN_GPR_LOCATION = 3 * REGISTER_WIDTH;
 
     wire [AXI_DATA_WIDTH - 1 : 0]data_pkt = {
+        // atf_bit_counts[1], // ATF_NUM_OF_SEEDS is 2 so 2 of these are passed here,
+        // atf_bit_counts[0], // these bit_counts will allow to examine frequencies and then
+        //                    // only extract items when these frequencies occur.
+        //                    // For that purpose, first ATF must be disabled, data collected,
+        //                    // examined, based on examined data, optimal seeds/ranges would be set,
+        //                    // and then ATF would be enabled, allowing to collect data with desired frequencies.
+
         shadow_general_purpose_registers[13][63:0],
         shadow_general_purpose_registers[12][63:0],
         shadow_general_purpose_registers[11][63:0],
@@ -204,6 +229,27 @@ module continuous_monitoring_system #(
         performance_event_counters[0]
         };
 
+    // "atf_data_pkt_deterministic" is pretty much a data_pkt without data that depends on previous state of the processor.
+    // That is to ensure that the decision to store data is the same regardless of when monitoring begins.
+    // Keeping this decision time-agnostic allows to avoid issues with issues arising from periodical data collection, 
+    // because the same issues occur to some extent when decision is based on counts of events that happened in the past.
+    // The DETERMINISTIC_DATA_WIDTH must be updated manually if the content of this packet changes.
+    wire [DETERMINISTIC_DATA_WIDTH-1:0] atf_data_pkt_deterministic = {
+        shadow_general_purpose_registers[13][63:0], // 64 bits
+        shadow_general_purpose_registers[12][63:0], // 64 bits
+        shadow_general_purpose_registers[11][63:0], // 64 bits
+        shadow_general_purpose_registers[10][63:0], // 64 bits
+
+        last_instr[1],
+        last_pc[1]
+
+        // data_pkt[INSTR_LOCATION + RISC_V_INSTRUCTION_WIDTH - 1 : INSTR_LOCATION], // 32 bits
+        // data_pkt[PC_LOCATION + XLEN - 1 : PC_LOCATION], // 64 bits
+
+        // performance_events // 39 bits, each for currently indicated event (these are not counters, as counters depend on previous state)
+    };
+
+
     assign data_pkt_instr_probe = data_pkt[INSTR_LOCATION + RISC_V_INSTRUCTION_WIDTH - 1 : INSTR_LOCATION];
     assign data_pkt_pc_probe = data_pkt[PC_LOCATION + XLEN - 1 : PC_LOCATION];
     localparam BRANCH_INDEX = 1;
@@ -213,15 +259,29 @@ module continuous_monitoring_system #(
     assign data_pkt_branch_counter_probe = data_pkt[PERFORMANCE_COUNTERS_LOCATION + PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*(BRANCH_INDEX+1) - 1 : PERFORMANCE_COUNTERS_LOCATION+PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*BRANCH_INDEX];
     assign data_pkt_auipc_counter_probe = data_pkt[PERFORMANCE_COUNTERS_LOCATION + PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*(AUIPC_INDEX+1) - 1 : PERFORMANCE_COUNTERS_LOCATION+PERFORMANCE_EVENT_MOD_COUNTER_WIDTH*AUIPC_INDEX];
 
-    wire data_to_axi_write_enable = en &
-                                    pc_valid_new &
-                                    ~drop_instr & 
-                                    (wfi_stop < WFI_STOP_THRESHOLD) & 
-                                    (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
-                                    (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
-                                    (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
-                                    (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
-                                    ;
+    // wire data_to_axi_write_enable = en &
+    //                                 pc_valid_new &
+    //                                 (~drop_instr | atf_active) & 
+    //                                 (atf_keep_pkt | ~atf_active) &
+    //                                 (wfi_stop < WFI_STOP_THRESHOLD) & 
+    //                                 (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+    //                                 (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+    //                                 (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+    //                                 (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+    //                                 ;
+    
+    wire atf_enable = en &
+                      pc_valid_new &
+                      ~drop_instr & 
+                      (wfi_stop < WFI_STOP_THRESHOLD) & 
+                      (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                      (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+                      (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                      (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
+                      ;
+
+    wire data_to_axi_write_enable = (atf_enable & ~atf_active) || (atf_keep_pkt & atf_active);
+
 
     wire performance_counters_rst_n = ~data_to_axi_write_enable & rst_n; // reset upon write to FIFO
     assign performance_counters_rst_n_probe = performance_counters_rst_n;
@@ -255,6 +315,36 @@ module continuous_monitoring_system #(
         .item_counter_probe(item_counter_probe)
     );
 
+    advanced_trace_filter # (
+        .DETERMINISTIC_DATA_WIDTH(DETERMINISTIC_DATA_WIDTH),
+        .NUM_OF_SEEDS(ATF_NUM_OF_SEEDS),
+        .RANGES_PER_SEED(ATF_RANGES_PER_SEED)
+    ) atf (
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(atf_enable),
+        .data_pkt_deterministic(atf_data_pkt_deterministic),
+
+        .seed_input(atf_seed_input),
+        .seed_input_address(atf_seed_input_address),
+        .seed_write_enable(atf_seed_write_enable),
+
+        .lower_bound_input(atf_lower_bound_input),
+        .upper_bound_input(atf_upper_bound_input),
+        .range_input_seed_address(atf_range_input_seed_address),
+        .range_input_range_address(atf_range_input_range_address),
+        .range_write_enable(atf_range_write_enable),
+
+        .drop_pkt(atf_drop_pkt),
+        .keep_pkt(atf_keep_pkt),
+        .result_bit_counts_0_probe(atf_result_bit_counts_0_probe),
+        .lower_bound_0_0_probe(atf_lower_bound_0_0_probe),
+        .upper_bound_0_0_probe(atf_upper_bound_0_0_probe),
+
+
+        .bit_counts(atf_bit_counts) 
+    );
+
     // control registers setting
     always @(posedge clk or negedge rst_n) begin
         if (rst_n == 0) begin
@@ -284,6 +374,9 @@ module continuous_monitoring_system #(
             fifo_full_ticks_count <= 0;
             // program_start_address <= 0;
             // reset_clk_count_on_program_start_enabled <= 0;
+
+            atf_seed_write_enable <= 0;
+            atf_range_write_enable <= 0;
         end
         else begin
             if (data_to_axi_write_enable || ~rst_n) begin
@@ -308,7 +401,9 @@ module continuous_monitoring_system #(
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin
                 case(ctrl_addr)
+                    // -------------------------------------------------------------------
                     // trace trigger enables and addresses (must match the current PC exactly to trigger)
+                    // -------------------------------------------------------------------
                     TRIGGER_TRACE_START_ADDRESS_ENABLED: begin
                         trigger_trace_start_address_enabled <= ctrl_wdata;
                     end 
@@ -322,7 +417,9 @@ module continuous_monitoring_system #(
                         trigger_trace_end_address <= ctrl_wdata;
                     end
 
+                    // -------------------------------------------------------------------
                     // monitored address range (must be within the range to collect trace)
+                    // -------------------------------------------------------------------
                     MONITORED_ADDRESS_RANGE_LOWER_BOUND_ENABLED: begin
                         monitored_address_range_lower_bound_enabled <= ctrl_wdata;
                     end
@@ -355,6 +452,41 @@ module continuous_monitoring_system #(
                     ARBITRARY_HALT: begin
                         arbitrary_halt <= ctrl_wdata;
                     end
+
+                    // -------------------------------------------------------------------
+                    // ------------   Advanced trace filter (ATF) control ----------------
+                    // -------------------------------------------------------------------
+                    ATF_SEED_INPUT: begin
+                        // The seed value may be very long (e.g. 512 bits), the ctrl_wdata is only 64 bits wide,
+                        // for that reason it must be supplied by writing multiple times to this address.
+                        atf_seed_input <= (atf_seed_input << 64) | ctrl_wdata;
+                    end
+                    ATF_SEED_INPUT_ADDRESS: begin
+                        atf_seed_input_address <= ctrl_wdata;
+                    end
+                    ATF_SEED_WRITE_ENABLE: begin
+                        // TODO: RESET ON ANY CLOCK CYCLE WHERE CONTROL IS NOT CALLED
+                        atf_seed_write_enable <= ctrl_wdata;
+                    end
+                    ATF_LOWER_BOUND_INPUT: begin
+                        atf_lower_bound_input <= ctrl_wdata;
+                    end
+                    ATF_UPPER_BOUND_INPUT: begin
+                        atf_upper_bound_input <= ctrl_wdata;
+                    end
+                    ATF_RANGE_INPUT_SEED_ADDRESS: begin
+                        atf_range_input_seed_address <= ctrl_wdata;
+                    end
+                    ATF_RANGE_INPUT_RANGE_ADDRESS: begin
+                        atf_range_input_range_address <= ctrl_wdata;
+                    end
+                    ATF_RANGE_WRITE_ENABLE: begin
+                        atf_range_write_enable <= ctrl_wdata;
+                    end
+                    ATF_ENABLED: begin
+                        atf_active <= ctrl_wdata;
+                    end
+
                     // PROGRAM_START_ADDRESS: begin
                     //     program_start_address <= ctrl_wdata;
                     // end
@@ -364,12 +496,16 @@ module continuous_monitoring_system #(
 
                     default: begin
                         // do nothing
+                        atf_seed_write_enable <= 0;
+                        atf_range_write_enable <= 0;
                     end
                 endcase
             end
             else begin
                 // signals that are also set by CMS control interface must be set here
                 // to avoid setting them twice 
+                atf_seed_write_enable <= 0;
+                atf_range_write_enable <= 0;
 
                 if (~cpu_rst_n) begin 
                     clk_counter <= 0;

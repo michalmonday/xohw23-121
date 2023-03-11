@@ -2,14 +2,15 @@
 
 def decode_riscv_instruction(instruction):
     opcode = instruction & 0x7F
+    rd = (instruction >> 7) & 0x1F
     funct3 = (instruction >> 12) & 0x7
     funct7 = (instruction >> 25) & 0x7F
-    return opcode, funct3, funct7
+    return opcode, rd, funct3, funct7
 
 def get_riscv_instruction_name(instruction):
     if instruction == 0x10500073:
         return 'WFI'
-    opcode, funct3, funct7 = decode_riscv_instruction(instruction)
+    opcode, rd, funct3, funct7 = decode_riscv_instruction(instruction)
     if opcode == 0x33:
         if funct3 == 0x0:
             if funct7 == 0x0:
@@ -76,6 +77,8 @@ def get_riscv_instruction_name(instruction):
     elif opcode == 0x17:
         return 'AUIPC'
     elif opcode == 0x6F:
+        if rd == 0x0:
+            return 'J'
         return 'JAL'
     elif opcode == 0x67:
         return 'JALR'
