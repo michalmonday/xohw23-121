@@ -57,8 +57,28 @@ Servers response:
 ```json
 {
     "RPC" : {
-        "function_name": "rpc_run_program",
+        "function_name": "rpc_load_program",
         "function_args": ["ecg_baseline.bin"]
+    }
+}
+```
+
+Servers response:
+```json
+{
+    "RPC_return" : {
+        "function_name": "rpc_load_program",
+        "return_value": "",
+        "return_status": "success"
+    } 
+}
+```
+
+### Client requests to run a program
+```json
+{
+    "RPC" : {
+        "function_name": "rpc_run"
     }
 }
 ```
@@ -66,12 +86,93 @@ Servers response:
 ```json
 {
     "RPC_return" : {
-        "function_name": "rpc_run_program",
+        "function_name": "rpc_run",
         "return_value": "",
         "return_status": "success"
     } 
 }
 ```
+
+### Client requests to halt a program
+```json
+{
+    "RPC" : {
+        "function_name": "rpc_halt"
+    }
+}
+```
+
+Servers response:
+```json
+{
+    "RPC_return" : {
+        "function_name": "rpc_halt",
+        "return_value": "",
+        "return_status": "success"
+    } 
+}
+```
+
+### Client requests to start training
+```json
+{
+    "RPC" : {
+        "function_name": "rpc_start_training"
+    }
+}
+```
+
+Servers response:
+```json
+{
+    "RPC_return" : {
+        "function_name": "rpc_start_training",
+        "return_value": "",
+        "return_status": "success"
+    } 
+}
+```
+
+### Client requests to stop training
+```json
+{
+    "RPC" : {
+        "function_name": "rpc_stop_training"
+    }
+}
+```
+
+Servers response:
+```json
+{
+    "RPC_return" : {
+        "function_name": "rpc_stop_training",
+        "return_value": "",
+        "return_status": "success"
+    } 
+}
+```
+
+### Client requests to start testing
+```json
+{
+    "RPC" : {
+        "function_name": "rpc_start_testing"
+    }
+}
+```
+
+Servers response:
+```json
+{
+    "RPC_return" : {
+        "function_name": "rpc_start_testing",
+        "return_value": "",
+        "return_status": "success"
+    } 
+}
+```
+
 
 # Security considerations
 The client shouldn't be able to execute any function on the server, the server needs to check if the requested RPC starts with "rpc" and only allow those to be executed.
