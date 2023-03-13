@@ -36,14 +36,16 @@
 */
 
 
-import continuous_monitoring_system_pkg::*;
-
 module advanced_trace_filter #(
-    // AXI_DATA_WIDTH = 1024,
-    DETERMINISTIC_DATA_WIDTH = 1024,// not all data_pkt values are deterministic in time 
-                                    // (any counts are probably not deterministic) so this width should not be equal to AXI TDATA (data_pkt) width
-    NUM_OF_SEEDS = 1, // should be a power of 2
-    RANGES_PER_SEED = 1
+    parameter DETERMINISTIC_DATA_WIDTH = 512,
+    parameter NUM_OF_SEEDS = 1, 
+    parameter RANGES_PER_SEED = 1,
+    // parameter SEEDS_ADDR_WIDTH = $clog2s(NUM_OF_SEEDS),
+    // parameter RANGES_ADDR_WIDTH = $clog2s(RANGES_PER_SEED),
+    // parameter BIT_COUNTS_WIDTH = $clog2s(DETERMINISTIC_DATA_WIDTH)
+    parameter SEEDS_ADDR_WIDTH = 1,
+    parameter RANGES_ADDR_WIDTH = 1,
+    parameter BIT_COUNTS_WIDTH = 10 // must be 1 bit more than the number of bits needed to store DETERMINISTIC_DATA_WIDTH number of values
 ) (
     input wire clk,
     input wire rst_n,
@@ -55,29 +57,28 @@ module advanced_trace_filter #(
     input wire [DETERMINISTIC_DATA_WIDTH-1:0] data_pkt_deterministic,
 
     input wire [DETERMINISTIC_DATA_WIDTH-1:0] seed_input,
-    input wire [ATF_SEED_ADDR_WIDTH-1:0] seed_input_address,
+    input wire [SEEDS_ADDR_WIDTH-1:0] seed_address,
     input wire seed_write_enable,
 
-    input wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] lower_bound_input,
-    input wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] upper_bound_input,
-    input wire [ATF_SEED_ADDR_WIDTH-1:0] range_input_seed_address,
-    input wire [ATF_RANGE_ADDR_WIDTH-1:0] range_input_range_address,
+    input wire [BIT_COUNTS_WIDTH-1:0] lower_bound_input,
+    input wire [BIT_COUNTS_WIDTH-1:0] upper_bound_input,
+    input wire [RANGES_ADDR_WIDTH-1:0] range_address,
     input wire range_write_enable,
 
     output reg drop_pkt = 1,
     output reg keep_pkt = 0,
 
-    output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] result_bit_counts_0_probe,
-    output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] lower_bound_0_0_probe,
-    output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] upper_bound_0_0_probe,
-    output wire [ATF_POS_BITS_BOUNDS_WIDTH:0] bit_counts [NUM_OF_SEEDS-1:0]
+    output wire [BIT_COUNTS_WIDTH-1:0] result_bit_counts_0_probe,
+    output wire [BIT_COUNTS_WIDTH-1:0] lower_bound_0_0_probe,
+    output wire [BIT_COUNTS_WIDTH-1:0] upper_bound_0_0_probe,
+    output wire [BIT_COUNTS_WIDTH-1:0] bit_counts [NUM_OF_SEEDS-1:0]
 );
     reg [DETERMINISTIC_DATA_WIDTH-1:0] seeds [NUM_OF_SEEDS-1:0] = '{ default: '0 };
-    reg [ATF_POS_BITS_BOUNDS_WIDTH-1:0] lower_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '0 };
-    reg [ATF_POS_BITS_BOUNDS_WIDTH-1:0] upper_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '1 };
+    reg [BIT_COUNTS_WIDTH-1:0] lower_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '0 };
+    reg [BIT_COUNTS_WIDTH-1:0] upper_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '1 };
 
     // wire [DETERMINISTIC_DATA_WIDTH-1:0] data_pkt_deterministic = { data_pkt } ;
-    wire [ATF_POS_BITS_BOUNDS_WIDTH:0] result_bit_counts [NUM_OF_SEEDS-1:0];// = '{ default: '0 };
+    wire [BIT_COUNTS_WIDTH-1:0] result_bit_counts [NUM_OF_SEEDS-1:0];// = '{ default: '0 };
     assign bit_counts = result_bit_counts;
 
     assign result_bit_counts_0_probe = result_bit_counts[0];
@@ -105,7 +106,7 @@ module advanced_trace_filter #(
             seeds <= '{ default: '0 };
         end else begin
             if (seed_write_enable) begin
-                seeds[seed_input_address] <= seed_input;
+                seeds[seed_address] <= seed_input;
             end
         end
 
@@ -123,8 +124,8 @@ module advanced_trace_filter #(
             // end
         end else begin
             if (range_write_enable) begin
-                lower_bounds[range_input_seed_address][range_input_range_address] <= lower_bound_input;
-                upper_bounds[range_input_seed_address][range_input_range_address] <= upper_bound_input;
+                lower_bounds[seed_address][range_address] <= lower_bound_input;
+                upper_bounds[seed_address][range_address] <= upper_bound_input;
             end
         end
     end
