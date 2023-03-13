@@ -16,13 +16,12 @@ in SystemVerilog. This is just a workaround.
 
 `define REGISTER_WIDTH 128
 
-`define DETERMINISTIC_DATA_WIDTH 512
-`define ATF_POS_BITS_BOUNDS_WIDTH 10
+`define DETERMINISTIC_DATA_WIDTH 1024
+`define ATF_POS_BITS_BOUNDS_WIDTH 11
 `define ATF_NUM_OF_SEEDS 2
 `define ATF_SEED_ADDR_WIDTH 1
 `define ATF_RANGES_PER_SEED 3
 `define ATF_RANGE_ADDR_WIDTH 2
-
 
 module cms_ip_wrapper #(
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
@@ -62,6 +61,8 @@ module cms_ip_wrapper #(
     input wire [`REGISTER_WIDTH-1:0] gpr_value,
     input wire [4:0] gpr_address,
     input wire gpr_write_enable,
+
+    input wire receive_transfer_request,
 
     output wire halt_cpu,
 
@@ -126,6 +127,8 @@ continuous_monitoring_system #(
     .gpr_value(gpr_value),
     .gpr_address(gpr_address),
     .gpr_write_enable(gpr_write_enable),
+
+    .receive_transfer_request(receive_transfer_request),
 
     .halt_cpu(halt_cpu),
 
