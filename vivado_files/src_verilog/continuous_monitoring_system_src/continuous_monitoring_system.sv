@@ -69,12 +69,17 @@ module continuous_monitoring_system #(
 
     output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_result_bit_counts_0_probe,
     output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_lower_bound_0_0_probe,
-    output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_upper_bound_0_0_probe
-);
+    output wire [ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_upper_bound_0_0_probe,
 
+    output wire [63:0] shadow_general_purpose_register_A0_probe,
+    output wire [63:0] shadow_general_purpose_register_A1_probe,
+    output wire [63:0] shadow_general_purpose_register_A2_probe,
+    output wire [63:0] shadow_general_purpose_register_A3_probe
+);
 
     // ATF = advanced trace filter
     reg [DETERMINISTIC_DATA_WIDTH-1:0] atf_seed_input = 0;
+    reg [DETERMINISTIC_DATA_WIDTH-1:0] atf_seed_mask_input = 0;
     reg [ATF_SEED_ADDR_WIDTH-1:0] atf_seed_address = 0;
     reg atf_seed_write_enable = 0;
     reg [ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_lower_bound_input = 0;
@@ -89,6 +94,11 @@ module continuous_monitoring_system #(
 
     logic drop_instr;
     wire [REGISTER_WIDTH-1:0]shadow_general_purpose_registers[31:0];
+
+    assign shadow_general_purpose_register_A0_probe = shadow_general_purpose_registers[10][63:0];
+    assign shadow_general_purpose_register_A1_probe = shadow_general_purpose_registers[11][63:0];
+    assign shadow_general_purpose_register_A2_probe = shadow_general_purpose_registers[12][63:0];
+    assign shadow_general_purpose_register_A3_probe = shadow_general_purpose_registers[13][63:0];
 
     // At the end of a program, a "wfi" (wait for interrupt) instruction is executed 
     // which stops the program from running. This is a good time to stop sending trace
@@ -291,24 +301,26 @@ module continuous_monitoring_system #(
         // shadow_general_purpose_registers[21][63:0], // 64 bits S5
         // shadow_general_purpose_registers[20][63:0], // 64 bits S4
         // shadow_general_purpose_registers[19][63:0], // 64 bits S3
-        // shadow_general_purpose_registers[18][63:0], // 64 bits S2
-        // shadow_general_purpose_registers[17][63:0], // 64 bits A7
-        // shadow_general_purpose_registers[16][63:0], // 64 bits A6
-        // shadow_general_purpose_registers[15][63:0], // 64 bits A5
-        // shadow_general_purpose_registers[14][63:0], // 64 bits A4
+        shadow_general_purpose_registers[18][63:0], // 64 bits S2
+        // shadow_general_purpose_registers[17][63:0],    // 64 bits A7
+        // shadow_general_purpose_registers[16][63:0],    // 64 bits A6
+        // shadow_general_purpose_registers[15][63:0],    // 64 bits A5
+        // shadow_general_purpose_registers[14][63:0],    // 64 bits A4
         shadow_general_purpose_registers[13][63:0],    // 64 bits A3
         shadow_general_purpose_registers[12][63:0],    // 64 bits A2
         shadow_general_purpose_registers[11][63:0],    // 64 bits A1
         shadow_general_purpose_registers[10][63:0],    // 64 bits A0
         shadow_general_purpose_registers[9][63:0],     // 64 bits S1
         shadow_general_purpose_registers[8][63:0],     // 64 bits S0 / Frame pointer
-        shadow_general_purpose_registers[7][63:0],     // 64 bits T2
+        // shadow_general_purpose_registers[7][63:0],     // 64 bits T2
         shadow_general_purpose_registers[6][63:0],     // 64 bits T1
         shadow_general_purpose_registers[5][63:0],     // 64 bits T0
         shadow_general_purpose_registers[4][63:0],     // 64 bits Thread pointer
         shadow_general_purpose_registers[3][63:0],     // 64 bits Global pointer
+
         shadow_general_purpose_registers[2][63:0],     // 64 bits Stack pointer
         shadow_general_purpose_registers[1][63:0],     // 64 bits Return address
+
         performance_events,                            // 39 bits, each for currently indicated event (these are not counters, as counters depend on previous state)
         last_instr[1],                                 // 32 bits
         last_pc[1]                                     // 64 bits
@@ -346,7 +358,14 @@ module continuous_monitoring_system #(
                                         (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
                                         (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled)
                                         ;
-    wire atf_enable = basic_trace_filter_keep_item;
+    // wire atf_enable = basic_trace_filter_keep_item;
+    wire atf_enable =   en &
+                        pc_valid_new &
+                        // ~drop_instr &  
+                        (trigger_trace_start_reached | ~trigger_trace_start_address_enabled) &
+                        (~trigger_trace_end_reached | ~trigger_trace_end_address_enabled) &
+                        (last_pc[1] >= monitored_address_range_lower_bound | ~monitored_address_range_lower_bound_enabled) &
+                        (last_pc[1] <= monitored_address_range_upper_bound | ~monitored_address_range_upper_bound_enabled);
 
     wire data_to_axi_write_enable = (basic_trace_filter_keep_item & (~atf_active || atf_mode == ATF_MODE_PATTERN_COLLECTION)) || // trace filter based
                                     (atf_keep_pkt & atf_active);  // advanced trace filter based
@@ -398,6 +417,7 @@ module continuous_monitoring_system #(
         .data_pkt_deterministic(atf_data_pkt_deterministic),
 
         .seed_input(atf_seed_input),
+        .seed_mask_input(atf_seed_mask_input),
         .seed_address(atf_seed_address),
         .seed_write_enable(atf_seed_write_enable),
 
@@ -541,6 +561,18 @@ module continuous_monitoring_system #(
                         // for that reason it must be supplied by writing multiple times to this address.
                         atf_seed_input <= (atf_seed_input << 64) | ctrl_wdata;
                     end
+                    ATF_SEED_MASK_INPUT: begin
+                        // allows to focus on specific values of deterministic_data_pkt, when seed portions are set 
+                        // to identical values that deterministic_data_pkt_has, we can use seed mask and bit counts to 
+                        // check if deterministic_data_pkt_has contains exact value (specified in seed) by checking if the number of 
+                        // positive bits is equal to the number of positive bits in seed mask
+
+                        // this provides convenient means to check if variable portions of deterministic_data_pkt equal specific values
+                        // which allows for example to check when specific function was called with specific arguments
+                        // and other more complex conditions like:
+                        // - if function "a" was called with parameter 0xFF and stack pointer was equal to 0x800000F0 and register s1 was equal to 0x12345678
+                        atf_seed_mask_input <= (atf_seed_mask_input << 64) | ctrl_wdata;
+                    end 
                     ATF_SEED_ADDRESS: begin
                         atf_seed_address <= ctrl_wdata;
                     end

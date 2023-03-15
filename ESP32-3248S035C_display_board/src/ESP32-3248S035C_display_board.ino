@@ -214,11 +214,11 @@ bool contains_digits_only(String str) {
 void handle_riscv_serial() {
     // print free memory
     while (serial_riscv.available()) {
-        // Serial.println("Received something from riscv");
+        Serial.println("Received something from riscv");
         String line = serial_riscv.readStringUntil('\n');
-        // Serial.print("Received from riscv: '");
-        // Serial.print(line);
-        // Serial.println("'");
+        Serial.print("Received from riscv: '");
+        Serial.print(line);
+        Serial.println("'");
 
         if (!contains_digits_only(line)) {
             if (line.equals("Leads off")) {

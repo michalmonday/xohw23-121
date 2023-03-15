@@ -18,10 +18,10 @@ in SystemVerilog. This is just a workaround.
 
 `define DETERMINISTIC_DATA_WIDTH 1024
 `define ATF_POS_BITS_BOUNDS_WIDTH 11
-`define ATF_NUM_OF_SEEDS 2
-`define ATF_SEED_ADDR_WIDTH 1
-`define ATF_RANGES_PER_SEED 3
-`define ATF_RANGE_ADDR_WIDTH 2
+`define ATF_NUM_OF_SEEDS 16
+`define ATF_SEED_ADDR_WIDTH 4
+`define ATF_RANGES_PER_SEED 8
+`define ATF_RANGE_ADDR_WIDTH 3
 
 module cms_ip_wrapper #(
     parameter CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED = 1 // 1 = write enable is pos edge triggered, 0 = write enable is level triggered
@@ -88,7 +88,12 @@ module cms_ip_wrapper #(
     // output wire [9:0] atf_upper_bound_0_0_probe
     output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_result_bit_counts_0_probe,
     output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_lower_bound_0_0_probe,
-    output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_upper_bound_0_0_probe
+    output wire [`ATF_POS_BITS_BOUNDS_WIDTH-1:0] atf_upper_bound_0_0_probe,
+
+    output wire [63:0] shadow_general_purpose_register_A0_probe,
+    output wire [63:0] shadow_general_purpose_register_A1_probe,
+    output wire [63:0] shadow_general_purpose_register_A2_probe,
+    output wire [63:0] shadow_general_purpose_register_A3_probe
 );
 
 continuous_monitoring_system #(
@@ -150,7 +155,13 @@ continuous_monitoring_system #(
 
     .atf_result_bit_counts_0_probe(atf_result_bit_counts_0_probe),
     .atf_lower_bound_0_0_probe(atf_lower_bound_0_0_probe),
-    .atf_upper_bound_0_0_probe(atf_upper_bound_0_0_probe)
+    .atf_upper_bound_0_0_probe(atf_upper_bound_0_0_probe),
+
+
+    .shadow_general_purpose_register_A0_probe(shadow_general_purpose_register_A0_probe),
+    .shadow_general_purpose_register_A1_probe(shadow_general_purpose_register_A1_probe),
+    .shadow_general_purpose_register_A2_probe(shadow_general_purpose_register_A2_probe),
+    .shadow_general_purpose_register_A3_probe(shadow_general_purpose_register_A3_probe)
 );
 
 endmodule
