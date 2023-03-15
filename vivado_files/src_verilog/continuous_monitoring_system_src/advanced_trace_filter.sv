@@ -57,6 +57,7 @@ module advanced_trace_filter #(
     input wire [DETERMINISTIC_DATA_WIDTH-1:0] data_pkt_deterministic,
 
     input wire [DETERMINISTIC_DATA_WIDTH-1:0] seed_input,
+    input wire [DETERMINISTIC_DATA_WIDTH-1:0] seed_mask_input,
     input wire [SEEDS_ADDR_WIDTH-1:0] seed_address,
     input wire seed_write_enable,
 
@@ -74,8 +75,9 @@ module advanced_trace_filter #(
     output wire [BIT_COUNTS_WIDTH-1:0] bit_counts [NUM_OF_SEEDS-1:0]
 );
     reg [DETERMINISTIC_DATA_WIDTH-1:0] seeds [NUM_OF_SEEDS-1:0] = '{ default: '0 };
-    reg [BIT_COUNTS_WIDTH-1:0] lower_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '0 };
-    reg [BIT_COUNTS_WIDTH-1:0] upper_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '1 };
+    reg [DETERMINISTIC_DATA_WIDTH-1:0] seed_masks [NUM_OF_SEEDS-1:0] = '{ default: '0 };
+    reg [BIT_COUNTS_WIDTH-1:0] lower_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '1 };
+    reg [BIT_COUNTS_WIDTH-1:0] upper_bounds [NUM_OF_SEEDS-1:0] [RANGES_PER_SEED-1:0] = '{ default: '0 };
 
     // wire [DETERMINISTIC_DATA_WIDTH-1:0] data_pkt_deterministic = { data_pkt } ;
     wire [BIT_COUNTS_WIDTH-1:0] result_bit_counts [NUM_OF_SEEDS-1:0];// = '{ default: '0 };
@@ -92,7 +94,7 @@ module advanced_trace_filter #(
         ) pos_bit_count_inst (
             .clk(clk),
             .rst_n(rst_n),
-            .data_in(~(data_pkt_deterministic ^ seeds[i])), // XNOR operation (outputs true if all inputs are the same, regardless if all are false or true)
+            .data_in(~(data_pkt_deterministic ^ seeds[i]) & seed_masks[i]), // XNOR operation (outputs true if all inputs are the same, regardless if all are false or true)
                                                             // the count of HIGH bits in the result indicates binary similarity of 2 values
             .pos_bit_count(result_bit_counts[i])
         );
@@ -104,9 +106,11 @@ module advanced_trace_filter #(
             //     seeds[i] <= 1'b0;
             // end
             seeds <= '{ default: '0 };
+            seed_masks <= '{ default: '0 };
         end else begin
             if (seed_write_enable) begin
                 seeds[seed_address] <= seed_input;
+                seed_masks[seed_address] <= seed_mask_input;
             end
         end
 
@@ -114,8 +118,8 @@ module advanced_trace_filter #(
 
     always @(posedge clk) begin
         if (rst_n == 1'b0) begin
-            lower_bounds <= '{ default: '0 };
-            upper_bounds <= '{ default: '1 };
+            lower_bounds <= '{ default: '1 };
+            upper_bounds <= '{ default: '0 };
             // for (int i = 0; i < NUM_OF_SEEDS; i++) begin
             //     for (int j = 0; j < RANGES_PER_SEED; j++) begin
             //         lower_bounds[i][j] <= 1'b0;
@@ -140,11 +144,11 @@ module advanced_trace_filter #(
                 drop_pkt <= 1'b1;
                 keep_pkt <= 1'b0;
             end else begin
-                temp_keep = 1;
+                temp_keep = 0;
                 for (int i = 0; i < NUM_OF_SEEDS; i++) begin
                     for (int j = 0; j < RANGES_PER_SEED; j++) begin
-                        if (result_bit_counts[i] < lower_bounds[i][j] || result_bit_counts[i] > upper_bounds[i][j]) begin
-                            temp_keep = 0;
+                        if (result_bit_counts[i] >= lower_bounds[i][j] && result_bit_counts[i] <= upper_bounds[i][j]) begin
+                            temp_keep = 1;
                         end
                     end
                 end

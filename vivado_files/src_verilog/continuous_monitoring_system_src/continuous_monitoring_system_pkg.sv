@@ -54,6 +54,7 @@ typedef enum logic [CTRL_ADDR_WIDTH - 1 : 0] { // control register addresses
     HALTING_ON_FULL_FIFO_ENABLED,
     ARBITRARY_HALT,
     ATF_SEED_INPUT,
+    ATF_SEED_MASK_INPUT,
     ATF_SEED_ADDRESS,
     ATF_SEED_WRITE_ENABLE,
     ATF_LOWER_BOUND_INPUT,
@@ -75,12 +76,12 @@ parameter PERFORMANCE_EVENT_MOD_COUNTER_WIDTH = 7;
 
 // advanced trace filter (ATF) parameters
 parameter DETERMINISTIC_DATA_WIDTH = 1024; // needs to be multiple of 32
-parameter ATF_NUM_OF_SEEDS = 2;
-parameter ATF_RANGES_PER_SEED = 3;
+parameter ATF_NUM_OF_SEEDS = 16;
+parameter ATF_RANGES_PER_SEED = 8;
 
 parameter ATF_POS_BITS_BOUNDS_WIDTH = 11; // should be $clog2(DETERMINISTIC_DATA_WIDTH)+1
-parameter ATF_SEED_ADDR_WIDTH = 1; // should be $clog2(ATF_NUM_OF_SEED), but Vivado turns them into 1 bit for some reason
-parameter ATF_RANGE_ADDR_WIDTH = 2; // should be $clog2(ATF_RANGES_PER_SEED), but Vivado turns them into 1 bit for some reason
+parameter ATF_SEED_ADDR_WIDTH = 4; // should be $clog2(ATF_NUM_OF_SEED), but Vivado turns them into 1 bit for some reason
+parameter ATF_RANGE_ADDR_WIDTH = 3; // should be $clog2(ATF_RANGES_PER_SEED), but Vivado turns them into 1 bit for some reason
 
 // typedef enum logic [4:0] {
 //     ATF_MODE_PATTERN_COLLECTION,

@@ -20,6 +20,82 @@ cms_ctrl.set_monitored_address_range_lower_bound_enabled(True)
 cms_ctrl.set_monitored_address_range_upper_bound_enabled(True)
 '''
 
+class ATF_MODE:
+    PATTERN_COLLECTION = 0
+    ANOMALY_DETECTION = 1
+
+# must match the atf_data_pkt_deterministic structure in "continuous_monitoring_system.sv" file
+atf_pkt_deterministic_structure = {
+    # from MSB to LSB
+    # 'bits T6': 64,
+    # 'bits T5': 64,
+    # 'bits T4': 64,
+    # 'bits T3': 64,
+    # 'bits S11': 64,
+    # 'bits S10': 64,
+    # 'bits S9': 64,
+    # 'bits S8': 64,
+    # 'bits S7': 64,
+    # 'bits S6': 64,
+    # 'bits S5': 64,
+    # 'bits S4': 64,
+    # 'bits S3': 64,
+    'S2': 64,
+    # 'bits A7': 64,
+    # 'bits A6': 64,
+    # 'bits A5': 64,
+    # 'bits A4': 64,
+    'A3': 64,
+    'A2': 64,
+    'A1': 64,
+    'A0': 64,
+    'S1': 64,
+    'S0 / Frame pointer': 64,
+    # 'bits T2': 64,
+    'T1': 64,
+    'T0': 64,
+    'Thread pointer': 64,
+    'Global pointer': 64,
+    'Stack pointer': 64,
+    'Return address': 64,
+    'performance_events' : 39,
+    'instr': 32,
+    'pc': 64
+}
+
+# helper functions
+def bits_in_int(n, bit_type, bit_size=1024):
+    count = 0
+    while n:
+        n &= n - 1
+        count += 1
+    if bit_type == 0:
+        return bit_size - count
+    return count
+
+def calculate_atf_pkt_deterministic_offset(key):
+    offset = 0
+    keys = list(atf_pkt_deterministic_structure.keys())
+    for k in reversed(keys):
+        if k == key:
+            return offset
+        offset += atf_pkt_deterministic_structure[k]
+
+def create_seed_mask_and_range_for_values(values_dict):
+    seed = 0
+    mask = 0
+    for k, v in values_dict.items():
+        mask_chunk = ((1 << atf_pkt_deterministic_structure[k]) - 1) << calculate_atf_pkt_deterministic_offset(k)
+        mask |= mask_chunk
+        seed |= (v << calculate_atf_pkt_deterministic_offset(k)) & mask_chunk
+    # range is a single number, it is equal to the number of bits in the mask
+    # this way the specified seed must match exactly the current atf_data_pkt_deterministic, resulting in the number
+    # of positive bits equal to range_
+    range_ = bits_in_int(mask, bit_type=1, bit_size=1024) 
+    return seed, mask, range_
+
+# print( create_seed_mask_and_range_for_values({'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}) )
+# exit()
 
 class ContinuousMonitoringSystemController:
     # Addresses match "continuous_monitoring_system.v" file. 
@@ -38,14 +114,15 @@ class ContinuousMonitoringSystemController:
     ADDR_HALTING_ON_FULL_FIFO_ENABLED = 12
     ADDR_ARBITRARY_HALT = 13
     ATF_SEED_INPUT = 14
-    ATF_SEED_INPUT_ADDRESS = 15
-    ATF_SEED_WRITE_ENABLE = 16
-    ATF_LOWER_BOUND_INPUT = 17
-    ATF_UPPER_BOUND_INPUT = 18
-    ATF_RANGE_INPUT_SEED_ADDRESS = 19
-    ATF_RANGE_INPUT_RANGE_ADDRESS = 20
+    ATF_SEED_MASK_INPUT = 15
+    ATF_SEED_ADDRESS = 16
+    ATF_SEED_WRITE_ENABLE = 17
+    ATF_LOWER_BOUND_INPUT = 18
+    ATF_UPPER_BOUND_INPUT = 19
+    ATF_RANGE_ADDRESS = 20
     ATF_RANGE_WRITE_ENABLE = 21
-    ATF_ENABLED = 22
+    ATF_ACTIVE = 22
+    ATF_MODE = 23
 
     def __init__(self, axi_gpio):
         # self.axi_gpio = axi_gpio
@@ -156,12 +233,76 @@ class ContinuousMonitoringSystemController:
         self.send_data_to_cms(0, __class__.ADDR_ARBITRARY_HALT)
 
     ###############################################
-    # advanced trace filter (ATF) configuration
-    def set_atf_seed_input(self, seed_value, seed_bit_width=512):
+    # Advanced trace filter (ATF) configuration
+
+    # Main functions to be used as public
+    def set_atf_mode(self, mode):
+        ''' ATF_MODE.PATTERN_COLLECTION: atf_data_pkt_deterministic collection mode
+                  (for recognizing infrequent patterns/events based on binary similarity to seed values)
+                  (this is done for the sake of slowing down data collection to a reasonable rate that will
+                   allow detecting anomalies in software and displaying collected metrics in real time on a display)
+            ATF_MODE.ANOMALY_DETECTION: data_pkt collection mode
+                  (for anomaly detection)
+                  
+        A typical workflow for using ATF modes:
+        - set gpio_rst_n to 0 to set processor in inactive state
+        - enable_aft()
+        - setting pattern collection mode to collect data_pkt_deterministic values
+        - calculate similarities to seed values and plot them with matplotlib
+        - examine the plot and decide which similarity value ranges to use
+        - set seeds and ranges using methods:
+                set_atf_seed_input,
+                set_atf_seed_address,
+                set_atf_seed_trigger_write_enable,
+                set_atf_lower_bound_input,
+                set_atf_upper_bound_input,
+                set_atf_range_address,
+                set_atf_range_trigger_write_enable
+        - set anomaly detection mode to collect data_pkt values
+        - data for anomaly detection (counter values) should arrive in fifo at reasonable rates
+        '''
+        self.send_data_to_cms(mode, __class__.ATF_MODE)
+
+    def set_atf_match_rule(self, seed_address, values_dict):
+        ''' takes one seed, the range is a number of positive bits in the mask 
+        this way it results in direct match of values specified in values_dict. 
+
+        Example use:
+            values_dict = {'pc': 0x80000000, 'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}
+            cms_ctrl.set_atf_match_rule(seed_address=0, values_dict)
+         '''
+        seed, mask, range_ = create_seed_mask_and_range_for_values(values_dict)
+        self.set_atf_seed(seed, seed_address, mask=mask)
+        self.set_atf_range(seed_address, range_address=0, lower_bound=range_, upper_bound=range_)
+
+    def set_atf_seed(self, seed_value, address, mask=None, seed_bit_width=1024):
+        self.set_atf_seed_address(address)
+        self.set_atf_seed_input(seed_value, mask=mask, seed_bit_width=seed_bit_width)
+        self.set_atf_seed_trigger_write_enable()
+
+    def set_atf_range(self, seed_address, range_address, lower_bound, upper_bound):
+        self.set_atf_seed_address(seed_address)
+        self.set_atf_lower_bound_input(lower_bound)
+        self.set_atf_upper_bound_input(upper_bound)
+        self.set_atf_range_address(range_address)
+        self.set_atf_range_trigger_write_enable()
+
+    def enable_atf(self):
+        ''' advanced trace filter is disabled by default '''
+        self.send_data_to_cms(1, __class__.ATF_ACTIVE)
+    
+    def disable_atf(self):
+        self.send_data_to_cms(0, __class__.ATF_ACTIVE)
+
+    # Internal functions
+    def set_atf_seed_input(self, seed_value, mask=None, seed_bit_width=1024):
         ''' The seed value may be very long (e.g. 512 bits), the ctrl_wdata is only 64 bits wide,
         for that reason it must be supplied by writing multiple times to this address.  '''
         assert type(seed_value) != str, "Seed value must be an integer, not a string."
         assert seed_bit_width % 64 == 0, "Seed bit width must be a multiple of 64."
+        # mask full of ones (full seed being used)
+        if mask is None:
+            mask = (1 << seed_bit_width) - 1
         # send MSB first
         first_i = None
         for i in reversed(range(0, seed_bit_width, 64)):
@@ -169,13 +310,15 @@ class ContinuousMonitoringSystemController:
                 first_i = i
             # send the MSB 64 bits of the seed value
             self.send_data_to_cms(seed_value >> first_i, __class__.ATF_SEED_INPUT)
+            self.send_data_to_cms(mask >> first_i, __class__.ATF_SEED_MASK_INPUT)
             seed_value <<= 64
+            mask <<= 64
 
-    def set_atf_input_address(self, address):
+    def set_atf_seed_address(self, address):
         ''' Address range depends on the number of maximum seeds allowed by ATF.
         It is a generic parameter of the ATF module (and possibly will be generic parameter
         of the cms_wrapper_ip). '''
-        self.send_data_to_cms(address, __class__.ATF_SEED_INPUT_ADDRESS)
+        self.send_data_to_cms(address, __class__.ATF_SEED_ADDRESS)
 
     def set_atf_seed_trigger_write_enable(self):
         ''' The write enable signal gets automatically cleared on the next clock cycle
@@ -188,21 +331,11 @@ class ContinuousMonitoringSystemController:
     def set_atf_upper_bound_input(self, upper_bound):
         self.send_data_to_cms(upper_bound, __class__.ATF_UPPER_BOUND_INPUT)
     
-    def set_atf_range_input_seed_address(self, address):
-        self.send_data_to_cms(address, __class__.ATF_RANGE_INPUT_SEED_ADDRESS)
-    
-    def set_atf_range_input_range_address(self, address):
+    def set_atf_range_address(self, address):
         ''' A single seed may be associated with multiple address ranges. '''
-        self.send_data_to_cms(address, __class__.ATF_RANGE_INPUT_RANGE_ADDRESS)
+        self.send_data_to_cms(address, __class__.ATF_RANGE_ADDRESS)
 
     def set_atf_range_trigger_write_enable(self):
         ''' The write enable signal gets automatically cleared on the next clock cycle
         after this function action is applied.  '''
         self.send_data_to_cms(1, __class__.ATF_RANGE_WRITE_ENABLE)
-
-    def enable_atf(self):
-        ''' advanced trace filter is disabled by default '''
-        self.send_data_to_cms(1, __class__.ATF_ENABLED)
-    
-    def disable_atf(self):
-        self.send_data_to_cms(0, __class__.ATF_ENABLED)
