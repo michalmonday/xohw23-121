@@ -221,6 +221,7 @@ class TCP_Server:
                     response = json.dumps({
                         'RPC_return': {
                             'function_name': func_name,
+                            'function_args': args,
                             'return_value': (rpc_ret if rpc_ret else ''),
                             'return_status': return_status
                             }
