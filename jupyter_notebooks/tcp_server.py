@@ -125,7 +125,7 @@ class TCP_Server:
     def register_rpcs(self, rpcs):
         for rpc in rpcs:
             if rpc.__name__ in self.rpcs:
-                print(f'rpc name ("{rpc.name}") was already registered, overwriting it.')
+                print(f'rpc name ("{rpc.__name__}") was already registered, overwriting it.')
             self.rpcs[rpc.__name__] = rpc
 
     def data_available(self):
@@ -141,6 +141,8 @@ class TCP_Server:
         return received_data_list
 
     def send_to_all(self, data):
+        if not data.endswith('\n'):
+            data += '\n'
         self.to_send_queue.put({'client_id': SEND_TO_ALL, 'data': data})
 
     def send_to_client(self, client_id, data):
