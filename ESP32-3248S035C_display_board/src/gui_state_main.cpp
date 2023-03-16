@@ -3,6 +3,7 @@
 #include "gui.h"
 #include "gui_button.h"
 #include "communication_queues.h"
+#include "rpc.h"
 #include <cJSON.h>
 
 // const int default_graph_x = (int)(RESOLUTION_X * 0.1);
@@ -23,6 +24,8 @@
 // const unsigned int default_axis_color = RED;
 // const unsigned int default_text_color = WHITE;
 // const unsigned int default_background_color = BLACK;
+
+
 
 GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) : 
     GUI_State(tft, gui, touch) {
@@ -79,16 +82,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
             //         "function_name": "rpc_list_programs"
             //     }
             // }
-            // Construct json string as JSON above
-            cJSON *root = cJSON_CreateObject();
-            cJSON *rpc_obj = cJSON_CreateObject();
-            cJSON_AddItemToObject(root, "RPC", rpc_obj);
-            cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_list_programs");
-            char *json_str = cJSON_PrintUnformatted(root);
-            Serial.print("Sending: '");
-            Serial.println(json_str);
-            add_string_to_queue(queue_to_send, new String(json_str), true);
-            free(json_str);
+            rpc_no_args("rpc_list_programs");
             gui->push_state(GUI_STATE_SELECT_PROGRAM);
         }
     );
@@ -102,28 +96,12 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
             if (btn_run_status->get_text().equals("Halt")) {
                 // btn_run_status->set_text("Resume");
 
-                cJSON *root = cJSON_CreateObject();
-                cJSON *rpc_obj = cJSON_CreateObject();
-                cJSON_AddItemToObject(root, "RPC", rpc_obj);
-                cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_halt");
-                char *json_str = cJSON_PrintUnformatted(root);
-                Serial.print("Sending: '");
-                Serial.println(json_str);
-                add_string_to_queue(queue_to_send, new String(json_str), true);
-                free(json_str);
+                rpc_no_args("rpc_halt");
             }
             else if (btn_run_status->get_text().equals("Run") || btn_run_status->get_text().equals("Resume")) {
                 // btn_run_status->set_text("Halt");
 
-                cJSON *root = cJSON_CreateObject();
-                cJSON *rpc_obj = cJSON_CreateObject();
-                cJSON_AddItemToObject(root, "RPC", rpc_obj);
-                cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_run");
-                char *json_str = cJSON_PrintUnformatted(root);
-                Serial.print("Sending: '");
-                Serial.println(json_str);
-                add_string_to_queue(queue_to_send, new String(json_str), true);
-                free(json_str);
+                rpc_no_args("rpc_run");
             }
         }
     );
@@ -133,10 +111,14 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Button train/stop was released");
-            if (btn_train->get_text().equals("Train"))
+            if (btn_train->get_text().equals("Train")) {
                 btn_train->set_text("Stop");
-            else if (btn_train->get_text().equals("Stop"))
+                rpc_no_args("rpc_enable_training");
+            }
+            else if (btn_train->get_text().equals("Stop")) {
                 btn_train->set_text("Train");
+                rpc_no_args("rpc_disable_training");
+            }
         }
     );
     button_y += button_offset;
@@ -145,10 +127,14 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
             Serial.println("Button test/stop was released");
-            if (btn_test->get_text().equals("Test"))
+            if (btn_test->get_text().equals("Test")) {
                 btn_test->set_text("Stop");
-            else if (btn_test->get_text().equals("Stop"))
+                rpc_no_args("rpc_enable_testing");
+            }
+            else if (btn_test->get_text().equals("Stop")) {
                 btn_test->set_text("Test");
+                rpc_no_args("rpc_disable_testing");
+            }
         }
     );
     button_y += button_offset;
