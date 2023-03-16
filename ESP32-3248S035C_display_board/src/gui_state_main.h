@@ -24,11 +24,14 @@ public:
     void set_run_status(String text);
     void set_training_status(String text);
     void set_testing_status(String text);
+    void set_dataset_size(int size);
     GUI_Graph *get_ecg_graph() { return ecg_graph; }
     GUI_Graph *get_pynq_graph() { return pynq_graph; }
     GUI_Label *get_label_ap_conn_status() { return label_ap_conn_status; }
     GUI_Label *get_label_tcp_conn_status() { return label_tcp_conn_status; }
+    int get_dataset_size() { return dataset_size; }
 private:
+    int dataset_size;
     GUI_Graph *ecg_graph;
     GUI_Graph *pynq_graph;
     GUI_Label *label_ap_conn_status;
@@ -38,11 +41,14 @@ private:
     GUI_Label *label_run_status;
     GUI_Label *label_training_status;
     GUI_Label *label_testing_status;
+    GUI_Label *label_dataset_size;
 
     GUI_Button *btn_load_program;
     GUI_Button *btn_run_status;
     GUI_Button *btn_train;
     GUI_Button *btn_test;
+    GUI_Button *btn_reset_dataset;
+
 };
 
 #endif

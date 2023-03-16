@@ -38,7 +38,11 @@ public:
     //           unsigned int text_color, unsigned int background_color);
 
     void draw_legend(unsigned int clr);
-
+    void hide_legend() { legend_enabled = false; }
+    void show_legend() { legend_enabled = true; }
+    void hide_grid() { grid_enabled = false; }
+    void show_grid() { grid_enabled = true; }
+    void draw_grid();
 private:
     int grid_x_segments, grid_y_segments;
     std::map<String, LinePlot *> line_plots;
@@ -55,6 +59,8 @@ private:
     unsigned int axis_color;
     unsigned int text_color;
     unsigned int background_color;
+    bool legend_enabled;
+    bool grid_enabled;
 };
 
 #endif
