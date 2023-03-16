@@ -209,10 +209,18 @@ void GUI_State_Main::set_run_status(String text) {
 
 void GUI_State_Main::set_training_status(String text) {
     label_training_status->set_text(text);
+    if (text.equals("Training"))
+        btn_train->set_text("Stop");
+    else if (text.equals("-"))
+        btn_train->set_text("Train");
 }
 
 void GUI_State_Main::set_testing_status(String text) {
     label_testing_status->set_text(text);
+    if (text.equals("Testing"))
+        btn_test->set_text("Stop");
+    else if (text.equals("-"))
+        btn_test->set_text("Test");
 }
 
 void GUI_State_Main::on_state_enter() {

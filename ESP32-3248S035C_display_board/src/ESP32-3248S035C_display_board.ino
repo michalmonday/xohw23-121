@@ -15,6 +15,7 @@
 #include "gui_label.h"
 #include "gui_state_main.h"
 #include "gui_state_select_program.h"
+#include "rpc.h"
 
 #include "display_config.h" // resolution
 
@@ -296,6 +297,19 @@ void handle_riscv_serial() {
 //    }
 // }
 
+void update_mode(int mode) {
+    if (mode & 0b1) {
+        gui->get_state_main()->set_training_status("Training");
+    } else {
+        gui->get_state_main()->set_training_status("-");
+    }
+    if (mode & 0b10) {
+        gui->get_state_main()->set_testing_status("Testing");
+    } else {
+        gui->get_state_main()->set_testing_status("-");
+    }
+}
+
 void parse_tcp_message(String line) {
     cJSON *root = cJSON_Parse(line.c_str());
     if (root == NULL) {
@@ -422,6 +436,17 @@ void parse_tcp_message(String line) {
             Serial.println(pynq_restarted);
             // gui->get_state_main()->set_run_status("Pynq restarted");
             gui->get_state_main()->reset();
+
+            rpc_no_args("rpc_update_status");
+        }
+
+        if (cJSON_HasObjectItem(status_update_obj, "mode")) {
+            cJSON *pynq_mode_obj = cJSON_GetObjectItem(status_update_obj, "mode");
+            int mode = pynq_mode_obj->valueint;
+            Serial.print("Mode: ");
+            Serial.println(mode);
+            update_mode(mode);
+            // gui->get_state_main()->set_run_status("Pynq restarted");
         }
     }
 
@@ -499,6 +524,65 @@ void parse_tcp_message(String line) {
             String return_value = return_value_obj->valuestring;
             gui->get_state_main()->set_run_status("Halted");
         }
+
+        if (function_name.equals("rpc_enable_training") || function_name.equals("rpc_disable_training") || function_name.equals("rpc_enable_testing") || function_name.equals("rpc_disable_testing")) {
+            int mode = 0;
+            if (function_name.equals("rpc_enable_training"))  mode = return_value_obj->valueint;
+            if (function_name.equals("rpc_disable_training")) mode = return_value_obj->valueint;
+            if (function_name.equals("rpc_enable_testing"))   mode = return_value_obj->valueint;
+            if (function_name.equals("rpc_disable_testing"))  mode = return_value_obj->valueint;
+            update_mode(mode);
+        }
+
+        if (function_name.equals("rpc_update_status")) {
+            if (cJSON_HasObjectItem(return_value_obj, "loaded_program")) {
+                cJSON *loaded_program_obj = cJSON_GetObjectItem(return_value_obj, "loaded_program");
+                String loaded_program = loaded_program_obj->valuestring;
+                gui->get_state_main()->set_loaded_program(loaded_program);
+            }
+            // 'dataset_size' : anomaly_detection.get_dataset_size(),
+            // 'mode' : mode,
+            // 'is_halted' : is_arbitrary_halt_active,
+            // 'loaded_program' : loaded_program},
+            // 'is_running' : is_running,
+            if (cJSON_HasObjectItem(return_value_obj, "dataset_size")) {
+                cJSON *dataset_size_obj = cJSON_GetObjectItem(return_value_obj, "dataset_size");
+                int dataset_size = dataset_size_obj->valueint;
+                // gui->get_state_main()->set_dataset_size(dataset_size);
+            }
+            if (cJSON_HasObjectItem(return_value_obj, "mode")) {
+                cJSON *mode_obj = cJSON_GetObjectItem(return_value_obj, "mode");
+                int mode = mode_obj->valueint;
+                if (mode & 0b1) {
+                    gui->get_state_main()->set_training_status("Training");
+                } else {
+                    gui->get_state_main()->set_training_status("-");
+                }
+                if (mode & 0b10) {
+                    gui->get_state_main()->set_testing_status("Testing");
+                } else {
+                    gui->get_state_main()->set_testing_status("-");
+                }
+            }
+            
+            bool is_running = false;
+            int is_halted = false;
+            if (cJSON_HasObjectItem(return_value_obj, "is_running")) {
+                cJSON *is_running_obj = cJSON_GetObjectItem(return_value_obj, "is_running");
+                is_running = is_running_obj->valueint;
+            }
+            if (cJSON_HasObjectItem(return_value_obj, "is_halted")) {
+                cJSON *is_halted_obj = cJSON_GetObjectItem(return_value_obj, "is_halted");
+                bool is_halted = is_halted_obj->valueint;
+            }
+            if (!is_running && !is_halted) {
+                gui->get_state_main()->set_run_status("-");
+            } else if (is_running) {
+                gui->get_state_main()->set_run_status("Running");
+            } else {
+                gui->get_state_main()->set_run_status("Halted");
+            }
+        }
     }
 
 //    if (line.startsWith("add_point")) {
@@ -543,6 +627,9 @@ void loop(void) {
     // status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
 
     Serial.println("Access successful.");
+
+
+    rpc_no_args("rpc_update_status");
 
 
 
