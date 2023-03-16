@@ -275,6 +275,13 @@ class ContinuousMonitoringSystemController:
         self.set_atf_seed(seed, seed_address, mask=mask)
         self.set_atf_range(seed_address, range_address=0, lower_bound=range_, upper_bound=range_)
 
+    def reset_atf(self, num_of_seeds=16, num_of_ranges=8):
+        # makes all seeds and ranges inactive
+        for i in range(num_of_seeds):
+            self.set_atf_seed(0, i, seed_bit_width=1024)
+            for j in range(num_of_ranges):
+                self.set_atf_range(seed_address=i, range_address=j, lower_bound=1023, upper_bound=0)
+
     def set_atf_seed(self, seed_value, address, mask=None, seed_bit_width=1024):
         self.set_atf_seed_address(address)
         self.set_atf_seed_input(seed_value, mask=mask, seed_bit_width=seed_bit_width)
