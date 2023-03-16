@@ -130,6 +130,7 @@ void drawing_thread_func(void *parameter) {
             parse_tcp_message(*line);
             delete line;
         }
+        handle_gui();
     }
 }
 
@@ -214,12 +215,12 @@ bool contains_digits_only(String str) {
 
 void handle_riscv_serial() {
     // print free memory
-    while (serial_riscv.available()) {
-        Serial.println("Received something from riscv");
+    if (serial_riscv.available()) {
+        // Serial.println("Received something from riscv");
         String line = serial_riscv.readStringUntil('\n');
-        Serial.print("Received from riscv: '");
-        Serial.print(line);
-        Serial.println("'");
+        // Serial.print("Received from riscv: '");
+        // Serial.print(line);
+        // Serial.println("'");
 
         if (!contains_digits_only(line)) {
             if (line.equals("Leads off")) {
@@ -232,12 +233,14 @@ void handle_riscv_serial() {
                 // if (!add_string_to_queue(queue_received, formatted_msg)) {
                 //     delete formatted_msg;
                 // }
-                continue;
+                // continue;
+                return;
             }
             Serial.println(line);
             Serial.println("Not a number");
             // line may be: "Leads off"
-            continue;
+            // continue;
+            return;
         }
 
         float ecg_value = atof(line.c_str()) / 60000.0f;
@@ -248,7 +251,8 @@ void handle_riscv_serial() {
             Serial.println(line);
             Serial.print("ecg_value=");
             Serial.println(ecg_value);
-            continue;
+            // continue;
+            return;
         } 
 
         // String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
@@ -376,9 +380,14 @@ void parse_tcp_message(String line) {
                     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
                     line_plot = pynq_graph->add_plot(plot_name, create_new_line_plot());
                 }
-                line_plot->draw(BLACK);
-                line_plot->add_point(value);
-                line_plot->draw();
+
+                if (gui->get_current_state_id() == GUI_STATE_MAIN) {
+                    line_plot->draw(BLACK);
+                    line_plot->add_point(value);
+                    line_plot->draw();
+                } else {
+                    line_plot->add_point(value);
+                }
             }
             plot_name_obj = plot_name_obj->next;
         }
@@ -404,9 +413,14 @@ void parse_tcp_message(String line) {
                     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
                     line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot(GREEN));
                 }
-                line_plot->draw(BLACK);
-                line_plot->add_point(value);
-                line_plot->draw();
+
+                if (gui->get_current_state_id() == GUI_STATE_MAIN) {
+                    line_plot->draw(BLACK);
+                    line_plot->add_point(value);
+                    line_plot->draw();
+                } else {
+                    line_plot->add_point(value);
+                }
             }
             plot_name_obj = plot_name_obj->next;
         }
@@ -441,11 +455,21 @@ void parse_tcp_message(String line) {
         }
 
         if (cJSON_HasObjectItem(status_update_obj, "mode")) {
-            cJSON *pynq_mode_obj = cJSON_GetObjectItem(status_update_obj, "mode");
-            int mode = pynq_mode_obj->valueint;
+            cJSON *mode_obj = cJSON_GetObjectItem(status_update_obj, "mode");
+            int mode = mode_obj->valueint;
             Serial.print("Mode: ");
             Serial.println(mode);
             update_mode(mode);
+            // gui->get_state_main()->set_run_status("Pynq restarted");
+        }
+
+        if (cJSON_HasObjectItem(status_update_obj, "dataset_size")) {
+            cJSON *dataset_size_obj = cJSON_GetObjectItem(status_update_obj, "dataset_size");
+            int size = dataset_size_obj->valueint;
+            Serial.print("Dataset size: ");
+            Serial.println(size);
+            gui->get_state_main()->set_dataset_size(size);
+            
             // gui->get_state_main()->set_run_status("Pynq restarted");
         }
     }
@@ -488,7 +512,6 @@ void parse_tcp_message(String line) {
             Serial.println("RPC call failed");
             return;
         }
-
 
         if (function_name.equals("rpc_load_program")) {
             String loaded_program = cJSON_GetArrayItem(function_args_obj, 0)->valuestring;
@@ -583,6 +606,10 @@ void parse_tcp_message(String line) {
                 gui->get_state_main()->set_run_status("Halted");
             }
         }
+
+        if (function_name.equals("rpc_reset_dataset")) {
+            gui->get_state_main()->set_dataset_size(0);
+        }
     }
 
 //    if (line.startsWith("add_point")) {
@@ -668,7 +695,7 @@ void loop(void) {
             delete line;
         }
 
-        while (client.available()) {
+        if (client.available()) {
             // String *line = new String(client.readStringUntil('\n'));
             String *line = new String(client.readStringUntil('\n'));
             // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')

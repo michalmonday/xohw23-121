@@ -38,14 +38,14 @@ const unsigned int default_background_color = BLACK;
 
 GUI_Graph::GUI_Graph(TFT_eSPI *tft) 
     : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
-        decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color)
+        decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color), legend_enabled(true), grid_enabled(true)
 {
 }
 
 GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments,
              byte decimal_precision, double xlo, double xhi, double ylo, double yhi, String title, String xlabel, String ylabel, unsigned int grid_color, unsigned int axis_color, unsigned int text_color, unsigned int background_color)
     : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
-      decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel), ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color)
+      decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel), ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color), legend_enabled(true), grid_enabled(true)
 {
 }
 
@@ -69,7 +69,8 @@ LinePlot* GUI_Graph::add_plot(String name, LinePlot* line_plot) {
     line_plots[name] = line_plot;
     Serial.printf("Added plot with name %s\n", name);
     line_plot->set_graph(this);
-    draw_legend(background_color);
+    if (legend_enabled)
+        draw_legend(background_color);
     return line_plot;
 }
 
@@ -99,11 +100,15 @@ LinePlot* GUI_Graph::get_plot(String name) {
 }
 
 void GUI_Graph::draw_plots() {
+    if (grid_enabled)
+        draw_grid();
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) 
         it->second->draw();
 }
 
 void GUI_Graph::draw_plots(unsigned int color_override) {
+    if (grid_enabled)
+        draw_grid();
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) 
         it->second->draw(color_override);
 }
@@ -148,6 +153,7 @@ void GUI_Graph::draw() {
     tft->setTextDatum(MR_DATUM);
     tft->setTextSize(1);
 
+
     double x_inc = (xhi - xlo) / (double)grid_x_segments;
     double y_dec = (yhi - ylo) / (double)grid_y_segments;
     double x_val = xlo;
@@ -156,7 +162,8 @@ void GUI_Graph::draw() {
     for (int i = 0; i <= grid_y_segments; i++) {
         int current_y = y + (i * h / grid_y_segments);
         // horizontal grid line
-        tft->drawLine(x, current_y, x + w, current_y, grid_color);
+        if (grid_enabled)
+            tft->drawLine(x, current_y, x + w, current_y, grid_color);
         Serial.printf("Drawing horizontal line at %d\n", current_y);
         // horizontal line label
         tft->setTextColor(text_color, background_color);
@@ -169,7 +176,8 @@ void GUI_Graph::draw() {
     for (int i = 0; i <= grid_x_segments; i++) {
         int current_x = x + (i * w / grid_x_segments);
         // vertical grid line
-        tft->drawLine(current_x, y, current_x, y + h, grid_color);
+        if (grid_enabled)
+            tft->drawLine(current_x, y, current_x, y + h, grid_color);
         // vertical line label
         tft->setTextColor(text_color, background_color);
         // precision is default Arduino--this could really use some format control
@@ -188,7 +196,7 @@ void GUI_Graph::draw() {
         tft->drawLine(x, zero_y, x + w, zero_y, axis_color);
     } else {
         // draw line at bottom
-        tft->drawLine(x, bottom, x + w, bottom, axis_color);
+        tft->drawLine(x, bottom+1, x + w, bottom+1, axis_color);
     }
 
     tft->setTextColor(text_color, background_color);
@@ -201,6 +209,41 @@ void GUI_Graph::draw() {
     tft->setTextSize(old_text_size);
     tft->setTextDatum(old_datum);
     draw_plots();
-    draw_legend(background_color);
+
+    if (legend_enabled)
+        draw_legend(background_color);
 }
 
+void GUI_Graph::draw_grid() {
+    double x_inc = (xhi - xlo) / (double)grid_x_segments;
+    double y_dec = (yhi - ylo) / (double)grid_y_segments;
+    double x_val = xlo;
+    double y_val = yhi;
+    // draw horizontal lines
+    for (int i = 0; i <= grid_y_segments; i++) {
+        int current_y = y + (i * h / grid_y_segments);
+        // horizontal grid line
+        tft->drawLine(x, current_y, x + w, current_y, grid_color);
+    }
+
+    // draw vertical lines
+    for (int i = 0; i <= grid_x_segments; i++) {
+        int current_x = x + (i * w / grid_x_segments);
+        // vertical grid line
+        tft->drawLine(current_x, y, current_x, y + h, grid_color);
+    }
+
+    // vertical axis line
+    tft->drawLine(x, y, x, y + h, axis_color);
+
+    // horizontal axis line (depends if y range contains 0)
+    int bottom = y + h;
+    if (ylo >= 0 && yhi <= 0) {
+        // draw line at 0
+        int zero_y = y + (yhi / (yhi - ylo)) * h;
+        tft->drawLine(x, zero_y, x + w, zero_y, axis_color);
+    } else {
+        // draw line at bottom
+        tft->drawLine(x, bottom, x + w, bottom, axis_color);
+    }
+}

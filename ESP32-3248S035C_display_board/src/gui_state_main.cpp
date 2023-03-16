@@ -28,13 +28,13 @@
 
 
 GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) : 
-    GUI_State(tft, gui, touch) {
+    GUI_State(tft, gui, touch), dataset_size(0) {
 
     // ------------------------------
     // -------- Graph elements ------
     ecg_graph = new GUI_Graph(tft, 
         RESOLUTION_X*0.1, RESOLUTION_Y*0.08,  // x, y
-        RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
+        RESOLUTION_X*0.32, RESOLUTION_Y*0.3,   // width, height
         1, 4,       // grid x, y segments
         2,          // decimal precision of tick labels
         0, 100,     // xlo, xhi (how many data points to show at once)
@@ -42,12 +42,17 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         "ECG (CHERI-RISC-V)", "", "", // title, xlabel, ylabel
         BLUE, RED, WHITE, BLACK // grid color, axis color, text color, background color
         );
+    ecg_graph->hide_legend();
+    ecg_graph->hide_grid();
+    
     pynq_graph = new GUI_Graph(tft, 
-        RESOLUTION_X*0.1, RESOLUTION_Y*0.52,  // x, y
-        RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
+        // RESOLUTION_X*0.1, RESOLUTION_Y*0.52,  // x, y
+        RESOLUTION_X*0.1, RESOLUTION_Y*0.58,  // x, y
+        // RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
+        RESOLUTION_X*0.7, RESOLUTION_Y*0.2,   // width, height
         1, 4,       // grid x, y segments
         2,          // decimal precision of tick labels
-        0, 100,     // xlo, xhi (how many data points to show at once)
+        0, 30,      // xlo, xhi (how many data points to show at once)
         0, 1,       // ylo, yhi (range of values)
         "Metrics (CMS)", "", "", // title, xlabel, ylabel
         BLUE, RED, WHITE, BLACK // grid, axis, text, background (colors)
@@ -63,10 +68,11 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     // ---------------------------------
     // ------------ Buttons  -----------
     const int button_width = RESOLUTION_X * 0.16;
-    const int button_height = RESOLUTION_Y * 0.15;
+    // const int button_height = RESOLUTION_Y * 0.15;
+    const int button_height = RESOLUTION_Y * 0.07;
     const int button_x = RESOLUTION_X*0.48;
     const int button_y_start = RESOLUTION_Y*0.05;
-    const int button_font_size = 2;
+    const int button_font_size = 1; //2;
     const int button_offset = button_height * 1.3;
     int button_y = button_y_start;
     btn_load_program = new GUI_Button(tft, "Load", button_x, button_y, button_width, button_height, button_font_size,
@@ -138,26 +144,40 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         }
     );
     button_y += button_offset;
+    btn_reset_dataset = new GUI_Button(tft, "Reset", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
+    btn_reset_dataset->set_on_release_callback(
+        [](){   // function on release
+            rpc_no_args("rpc_reset_dataset");
+        }
+    );
+    button_y += button_offset;
     add_element(btn_load_program);
     add_element(btn_run_status);
     add_element(btn_train);
     add_element(btn_test);
+    add_element(btn_reset_dataset);
 
 
     const int label_x = button_x + button_width + RESOLUTION_X*0.04;
     const int label_y_start = button_y_start + button_height/2;
-    const int label_font_size = 2;
+    const int label_font_size = button_font_size;
     int label_y = label_y_start;
     // ---------------------------------
     // -------- Status labels ----------
-    label_loaded_program = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK); label_y += button_offset;
-    label_run_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);        label_y += button_offset;
-    label_training_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);   label_y += button_offset;
-    label_testing_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);    label_y += button_offset;
+    label_loaded_program = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);  label_y += button_offset;
+    label_run_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);      label_y += button_offset;
+    label_training_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK); label_y += button_offset;
+    label_testing_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);  label_y += button_offset;
+    label_dataset_size = new GUI_Label(tft, "Dataset size: 0", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);    label_y += button_offset;
     add_element(label_loaded_program);
     add_element(label_run_status);
     add_element(label_training_status);
     add_element(label_testing_status);
+    add_element(label_dataset_size);
+
+    // label_y = label_y_start;
+    // -------------------------------------------
+    // ------ Status labels under buttons --------
 }
 
 void GUI_State_Main::draw() {
@@ -221,6 +241,12 @@ void GUI_State_Main::set_testing_status(String text) {
         btn_test->set_text("Stop");
     else if (text.equals("-"))
         btn_test->set_text("Test");
+}
+
+void GUI_State_Main::set_dataset_size(int size) {
+    if (size == dataset_size) return;
+    dataset_size = size;
+    label_dataset_size->set_text("Dataset size: " + String(size));
 }
 
 void GUI_State_Main::on_state_enter() {
