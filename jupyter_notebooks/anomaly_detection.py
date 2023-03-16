@@ -1,5 +1,5 @@
-import timeit
 import numpy as np
+from threading import Lock
 
 class Anomaly_Detection:
     ''' Multidimensional distance based detection. '''
@@ -7,12 +7,14 @@ class Anomaly_Detection:
         self.dataset = np.empty((0, n_features))
         self.n_features = n_features
         self.vectors_hashes = set()
+        self.dataset_lock = Lock()
 
     def reset_dataset(self):
-        del self.dataset
-        del self.vectors_hashes
-        self.dataset = np.empty((0, self.n_features))
-        self.vectors_hashes = set()
+        with self.dataset_lock:
+            del self.dataset
+            del self.vectors_hashes
+            self.dataset = np.empty((0, self.n_features))
+            self.vectors_hashes = set()
     
     def hash_vector(self, counters_vector):
         ''' Result may be different after each run for the same values. 
@@ -23,10 +25,12 @@ class Anomaly_Detection:
         vector_hash = self.hash_vector(counters_vector)
         if not self.is_vector_hash_in_dataset(vector_hash):
             self.vectors_hashes.add(vector_hash)
-            self.dataset = np.vstack([self.dataset, counters_vector])
+            with self.dataset_lock:
+                self.dataset = np.vstack([self.dataset, counters_vector])
 
     def is_vector_hash_in_dataset(self, vector_hash):
-        return vector_hash in self.vectors_hashes
+        with self.dataset_lock:
+            return vector_hash in self.vectors_hashes
 
     def get_max_cosine_similarity(self, counters_vector):
         if self.dataset.shape[0] == 0:
@@ -34,7 +38,8 @@ class Anomaly_Detection:
         vector_hash = self.hash_vector(counters_vector)
         if self.is_vector_hash_in_dataset(vector_hash): 
             return 1
-        return np.max(np.dot(self.dataset, counters_vector) / (np.linalg.norm(self.dataset, axis=1) * np.linalg.norm(counters_vector)))
+        with self.dataset_lock:
+            return np.max(np.dot(self.dataset, counters_vector) / (np.linalg.norm(self.dataset, axis=1) * np.linalg.norm(counters_vector)))
 
     # def get_min_distance(self, counters_vector):
     #     if self.dataset.shape[0] == 0: return -1
