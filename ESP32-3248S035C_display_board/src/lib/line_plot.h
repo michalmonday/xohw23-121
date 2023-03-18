@@ -44,6 +44,7 @@ private:
     int calculate_screen_xpos(int index);
     int calculate_screen_ypos(double value);
 
+    int dropped_value_screen_pos;
 };
 
 

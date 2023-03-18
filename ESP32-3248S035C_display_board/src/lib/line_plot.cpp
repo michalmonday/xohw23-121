@@ -6,7 +6,7 @@
 
 LinePlot::LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
 tft(tft), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),
-max_value(INT_MIN), min_value(INT_MAX)
+max_value(INT_MIN), min_value(INT_MAX), dropped_value_screen_pos(-1)
 {
     values = new double[max_number_of_items];
     values_screen_pos = new int[max_number_of_items];
@@ -36,6 +36,14 @@ void LinePlot::draw(unsigned int color_override) {
         int x2 = x_screen_pos[i+1];
         int y2 = values_screen_pos[i+1];
 
+        if (dropped_value_screen_pos != -1) {
+            // undraw the previous line
+            if (i == 0)
+                tft.drawLine(x1, dropped_value_screen_pos, x2, y1, TFT_BLACK);
+            else
+                tft.drawLine(x1, values_screen_pos[i-1], x2, y1, TFT_BLACK);
+        }
+
         // Serial.printf("x1: %d, y1: %d, x2: %d, y2: %d\n", x1, y1, x2, y2);
         // Serial.printf("values[i]: %f, values[i+1]: %f\n", values[i], values[i+1]);
         // Serial.printf("ylo: %f, yhi: %f\n", ylo, yhi);
@@ -62,6 +70,7 @@ int LinePlot::calculate_screen_xpos(int index) {
     return (int)( graph->get_x() + graph->get_w() * index / max_number_of_items) + 1;
 }
 
+
 void LinePlot::add_point(double value) {
     // man mix values update
     if (value > max_value)
@@ -77,6 +86,7 @@ void LinePlot::add_point(double value) {
         current_number_of_items++;
         return;
     }
+    dropped_value_screen_pos = values_screen_pos[0];
 
     // if the line plot is full, shift values to the left and add new value to the end
     // if the oldest value was min or max, then we need to update min or max after shifting
