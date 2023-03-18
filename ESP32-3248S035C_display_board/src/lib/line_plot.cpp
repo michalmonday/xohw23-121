@@ -1,8 +1,8 @@
 
 #include <SPI.h>
 
-#include "line_plot.h"
-#include "gui_graph.h"
+#include <line_plot.h>
+#include <gui_graph.h>
 
 LinePlot::LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
 tft(tft), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),

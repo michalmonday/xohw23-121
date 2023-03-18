@@ -2,10 +2,11 @@
 #define GUI_STATE_MAIN_H
 
 #include <Arduino.h>
-#include "gui_state.h"
-#include "gui_label.h"
-#include "gui_graph.h"
-#include "gui_button.h"
+
+#include <gui_state.h>
+#include <gui_label.h>
+#include <gui_graph.h>
+#include <gui_button.h>
 
 class GUI;
 class GUI_Button;

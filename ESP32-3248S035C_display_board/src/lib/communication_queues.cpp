@@ -1,4 +1,4 @@
-#include "communication_queues.h"
+#include <communication_queues.h>
 
 QueueHandle_t queue_received = NULL;
 QueueHandle_t queue_to_send = NULL;

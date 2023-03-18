@@ -1,6 +1,6 @@
-#include "gui_state_notification.h"
-#include "display_config.h"
-#include "gui.h"
+#include <gui_state_notification.h>
+#include <display_config.h>
+#include <gui.h>
 
 GUI_State_Notification::GUI_State_Notification(TFT_eSPI *tft, GUI *gui, Touch *touch, int timeout) : 
     GUI_State(tft, gui, touch), timeout(timeout) {

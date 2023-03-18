@@ -4,12 +4,8 @@
 #include <TFT_eSPI.h>
 #include <vector>
 
-#include "touch.h"
-#include "gui_element.h"
-
-#define GUI_STATE_MAIN 0
-#define GUI_STATE_NOTIFICATION 1
-#define GUI_STATE_SELECT_PROGRAM 2
+#include <touch.h>
+#include <gui_element.h>
 
 class GUI;
 

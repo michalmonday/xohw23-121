@@ -1,4 +1,4 @@
-#include "colours.h"
+#include <colours.h>
 
 unsigned int colours[12] = {
     GREEN,
