@@ -6,23 +6,23 @@
 #include <cJSON.h>
 
 // #include "drawing.h"
-#include "colours.h"
-#include "line_plot.h"
-#include "status_display.h"
-#include "gui.h"
-#include "gui_graph.h"
-#include "gui_button.h"
-#include "gui_label.h"
+#include <colours.h>
+#include <line_plot.h>
+#include <gui_cms.h>
+#include <gui_graph.h>
+#include <gui_button.h>
+#include <gui_label.h>
+#include <rpc.h>
 #include "gui_state_main.h"
 #include "gui_state_select_program.h"
-#include "rpc.h"
+#include "gui_cms_states.h"
 
-#include "display_config.h" // resolution
+#include <display_config.h> // resolution
 
-#include "touch.h"
+#include <touch.h>
 Touch touch;
 
-#include "communication_queues.h"
+#include <communication_queues.h>
 
 // Wifi credentials file contains 2 lines:
 // #ifndef MICHAL_WIFI_CREDENTIALS_H
@@ -32,7 +32,7 @@ Touch touch;
 // #endif
 //
 // It is added to .gitignore file, this way it's not shared
-#include "michal_wifi_credentials.h"
+#include <michal_wifi_credentials.h>
 
 
 // Serial is temporarily added to this file until I get 2nd display that
@@ -62,7 +62,7 @@ int current_colour_id = 0;
 // see graph.cpp to see or change default values
 // GUI_Graph graph(tft); 
 
-GUI *gui;
+GUI_CMS *gui;
 GUI_State_Main *gui_main_state;
 
 double xlo = 0;
@@ -74,6 +74,7 @@ double yhi = 1; // line plot upper value bound
 // int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
 int max_number_of_items = xhi - xlo;
 
+void parse_tcp_message(String line);
 
 void init_wifi() {
     tft.setTextColor(WHITE);
@@ -103,6 +104,12 @@ void init_wifi() {
     // status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
     gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
     // label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+}
+
+void handle_gui() {
+    // status_display.update();
+    gui->update();
+    gui->draw();
 }
 
 LinePlot* create_new_line_plot(int clr=-1) {
@@ -147,7 +154,7 @@ void setup() {
 
     communication_queues_init();
 
-    gui = new GUI(tft, &touch);
+    gui = new GUI_CMS(tft, &touch);
     gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
     // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
     // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
@@ -629,11 +636,6 @@ void parse_tcp_message(String line) {
     cJSON_Delete(root);
 }
 
-void handle_gui() {
-    // status_display.update();
-    gui->update();
-    gui->draw();
-}
 
 void loop(void) {
     handle_riscv_serial();

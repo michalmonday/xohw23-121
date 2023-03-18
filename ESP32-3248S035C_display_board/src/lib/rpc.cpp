@@ -1,5 +1,5 @@
-#include "rpc.h"
-#include "communication_queues.h"
+#include <rpc.h>
+#include <communication_queues.h>
 #include <cJSON.h>
 
 void rpc_no_args(String function_name) { 

@@ -5,8 +5,8 @@
 #include <TFT_eSPI.h>
 #include <map>
 
-#include "gui_element.h"
-#include "display_config.h"
+#include <gui_element.h>
+#include <display_config.h>
 
 // forward declaration (to avoid circular dependency)
 class LinePlot;
@@ -38,10 +38,12 @@ public:
     //           unsigned int text_color, unsigned int background_color);
 
     void draw_legend(unsigned int clr);
-    void hide_legend() { legend_enabled = false; }
-    void show_legend() { legend_enabled = true; }
-    void hide_grid() { grid_enabled = false; }
-    void show_grid() { grid_enabled = true; }
+    void hide_legend() { legend_enabled = false; needs_redraw = true; }
+    void show_legend() { legend_enabled = true;  needs_redraw = true; }
+    void hide_grid()   { grid_enabled = false;   needs_redraw = true; }
+    void show_grid()   { grid_enabled = true;    needs_redraw = true; }
+    void hide_axes()   { axes_enabled = false;   needs_redraw = true; }
+    void show_axes()   { axes_enabled = true;    needs_redraw = true; }
     void draw_grid();
 private:
     int grid_x_segments, grid_y_segments;
@@ -61,6 +63,7 @@ private:
     unsigned int background_color;
     bool legend_enabled;
     bool grid_enabled;
+    bool axes_enabled;
 };
 
 #endif

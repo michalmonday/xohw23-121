@@ -1,4 +1,4 @@
-#include "gui_label.h"
+#include <gui_label.h>
 
 
 // -------------------------------

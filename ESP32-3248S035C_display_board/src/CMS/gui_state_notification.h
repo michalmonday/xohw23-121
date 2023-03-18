@@ -2,8 +2,9 @@
 #define GUI_STATE_NOTIFICATION_H
 
 #include <Arduino.h>
-#include "gui_state.h"
-#include "gui_label.h"
+
+#include <gui_state.h>
+#include <gui_label.h>
 
 class GUI;
 

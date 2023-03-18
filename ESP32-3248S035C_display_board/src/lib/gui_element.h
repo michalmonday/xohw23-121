@@ -2,7 +2,7 @@
 #define GUI_ELEMENT_ESP32_H
 
 #include <TFT_eSPI.h>
-#include "colours.h"
+#include <colours.h>
 
 class GUI_Element {
 public:

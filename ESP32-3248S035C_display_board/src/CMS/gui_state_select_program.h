@@ -3,9 +3,10 @@
 
 #include <Arduino.h>
 #include <vector>
-#include "gui_state.h"
-#include "gui_label.h"
-#include "gui_graph.h"
+
+#include <gui_state.h>
+#include <gui_label.h>
+#include <gui_graph.h>
 
 class GUI;
 

@@ -1,8 +1,8 @@
-#include "gui_state_select_program.h"
-#include "display_config.h"
-#include "gui.h"
-#include "gui_button.h"
-#include "communication_queues.h"
+#include <gui_state_select_program.h>
+#include <display_config.h>
+#include <gui.h>
+#include <gui_button.h>
+#include <communication_queues.h>
 
 #include <cJSON.h>
 
