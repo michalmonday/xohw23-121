@@ -1,9 +1,6 @@
 
 #include <TFT_eSPI.h> // Hardware-specific library (requires "User_Setup.h" to be replaced with the one for specific display)
 #include <SPI.h>
-#include <WiFi.h>
-#include <map>
-#include <cJSON.h>
 
 // #include "drawing.h"
 #include <colours.h>
@@ -50,13 +47,16 @@ double yhi = 1; // line plot upper value bound
 // int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
 int max_number_of_items = xhi - xlo;
 
+
+unsigned long last_eletrodes_off_time = 0;
+
 void handle_gui() {
     // status_display.update();
     gui->update();
     gui->draw();
 }
 
-void parse_tcp_message(String line);
+void parse_riscv_message(String line);
 
 LinePlot* create_new_line_plot(int clr=-1) {
     if (clr == -1) {
@@ -79,7 +79,7 @@ void drawing_thread_func(void *parameter) {
         if ( xQueueReceive(queue_received, &line, portMAX_DELAY) ) {
             // Serial.printf("Drawing thread: received '%s'\n", (*line).c_str());
             // check_protocol(*line);
-            parse_tcp_message(*line);
+            parse_riscv_message(*line);
             delete line;
         }
         handle_gui();
@@ -96,38 +96,13 @@ void init_display() {
 void setup() {
     Serial.begin(115200);
     Serial.println();
-
     communication_queues_init();
-
     gui = new GUI_ECG(tft, &touch);
     gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
-    // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
-    // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
-    // gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
-
     delay(100);
-
     serial_riscv.begin(115200);
     init_display();
-
     delay(1000);
-
-    
-    // ecg_graph.draw(
-    //     2,                // decimal point precision for axis tick labels
-    //     xlo,              // lower bound of axis x  (used to set x axis tick labels)
-    //     xhi,              // upper bound of axis x  (used to set x axis tick labels)
-    //     ylo,              // lower bound of axis y  (used to set y axis tick labels)
-    //     yhi,              // upper bound of axis y  (used to set y axis tick labels)
-    //     "title",          // title
-    //     "x label",        // x label
-    //     "y label",        // y label
-    //     DKBLUE,           // grid color
-    //     RED,              // axis color
-    //     WHITE,            // text color
-    //     BLACK             // background color
-    //     );
-
 	xTaskCreatePinnedToCore(
 			drawing_thread_func, /* Function to implement the task */
 			"drawing_thread", /* Name of the task */
@@ -136,15 +111,6 @@ void setup() {
 			0, /* Priority of the task */
 			&drawing_thread, /* Task handle. */
 			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
-
-    // GUI_Button *btn = new GUI_Button(&tft, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
-    //      [](){Serial.println("Hello button was pressed");},
-    //      [](){Serial.println("Hello button was released");}
-    // );
-    // gui->add_element(btn, GUI_STATE_MAIN);
-
-    // GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
-    // gui->add_element(btn2, GUI_STATE_SECOND);
 }
 
 void swap(char &a, char &b) {
@@ -162,116 +128,67 @@ bool contains_digits_only(String str) {
     return true;
 }
 
-void handle_riscv_serial() {
-    // print free memory
-    if (serial_riscv.available()) {
-        // Serial.println("Received something from riscv");
-        String line = serial_riscv.readStringUntil('\n');
-        // Serial.print("Received from riscv: '");
-        // Serial.print(line);
-        // Serial.println("'");
 
-        if (!contains_digits_only(line)) {
-            if (line.equals("Leads off")) {
-                gui_main_state->set_electrodes_status(false);
-                return;
-            }
-            Serial.println(line);
-            Serial.println("Not a number");
-            return;
-        }
-
-        float ecg_value = atof(line.c_str()) / 60000.0f;
-
-        if (ecg_value < 0.0 || ecg_value > 1.0) {
-            Serial.println(line);
-            Serial.print("ecg_value=");
-            Serial.println(ecg_value);
-            return;
-        } 
-        gui_main_state->set_electrodes_status(true);
-
-        String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
-
-        if (!add_string_to_queue(queue_received, formatted_msg)) {
-            delete formatted_msg;
-        }
+void parse_riscv_message(String line) {
+    if (millis() - last_eletrodes_off_time < 100) {
+        // If electrodes were turned off recently (last 100ms), ignore the reading. 
+        // It stops "Electrodes off" disappearing immediately after it appears.
+        // This is equivalent to debouncing a button, but in this case it's debouncing electrodes.
+        return;
     }
-}
-
-// void check_protocol(String line) {
-//     // line is a string received from the ZC706 tcp server (currently using PYNQ)
-// 
-// //    if (line.startsWith("create_plot")) {
-// //        char plot_name[20];
-// //        sscanf(line.c_str(), "create_plot:%s", plot_name);
-// //        LinePlot *line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
-// //        if (ecg_graph.add_plot(String(plot_name), line_plot)) {
-// //            client.write("OK");
-// //        } else {
-// //            client.write("ERROR: Plot already exists.");
-// //        }
-// //    }
-// 
-//    if (line.startsWith("add_point")) {
-//        char plot_name[20];
-//        double value;
-//        sscanf(line.c_str(), "add_point:%[^,],%lf", plot_name, &value);
-//        LinePlot* line_plot = ecg_graph.get_plot(plot_name);
-//         
-//        if (!line_plot) {
-//            Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name);
-//            line_plot = ecg_graph.add_plot(String(plot_name), create_new_line_plot());
-//        }
-//        line_plot->draw(BLACK);
-//        line_plot->add_point(value);
-//        line_plot->draw();
-//    }
-// }
-
-void parse_tcp_message(String line) {
-    cJSON *root = cJSON_Parse(line.c_str());
-    if (root == NULL) {
-        Serial.println("Failed to parse json");
+    if (!contains_digits_only(line)) {
+        if (line.equals("Leads off")) {
+            gui_main_state->set_electrodes_status(false);
+            last_eletrodes_off_time = millis();
+            return;
+        }
+        // ignore message if it contains non-digits
+        Serial.printf("Message with non-digits received: '%s'. Ignoring it.\n", line.c_str());
         return;
     }
 
-    // copy for the risc-v plot (ecg)
-    if (cJSON_HasObjectItem(root, "add_points_risc_v")) {
-        cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points_risc_v");
-        cJSON *plot_name_obj = add_points_obj->child;
-        while(plot_name_obj) {
-            Serial.println(plot_name_obj->string);
+    // range of analog sensors raw readings is around 60000
+    float ecg_value = atof(line.c_str()) / 60000.0f;
 
-            for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
-                cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
-                // Do something with new plot value
+    if (ecg_value < 0.05 || ecg_value > 0.95) {
+        Serial.printf("Unusual ecg_value was received: %f. Ignoring it.\n", ecg_value);
+        Serial.printf("line='%s'\n", line.c_str());
+        return;
+    } 
+    Serial.println("time since last electrodes off: " + String(millis() - last_eletrodes_off_time) + "ms");
+    gui_main_state->set_electrodes_status(true);
 
-                String plot_name = plot_name_obj->string;
-                double value = plot_value->valuedouble;
-                // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
-                GUI_Graph *ecg_graph = gui_main_state->get_ecg_graph();
-                LinePlot* line_plot = ecg_graph->get_plot(plot_name);
-                if (!line_plot) {
-                    Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
-                    line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot(GREEN));
-                }
-
-                if (gui->get_current_state_id() == GUI_STATE_MAIN) {
-                    line_plot->draw(BLACK);
-                    line_plot->add_point(value);
-                    line_plot->draw();
-                } else {
-                    line_plot->add_point(value);
-                }
-            }
-            plot_name_obj = plot_name_obj->next;
-        }
+    GUI_Graph *ecg_graph = gui_main_state->get_ecg_graph();
+    LinePlot* line_plot = ecg_graph->get_plot("ECG");
+    if (!line_plot) {
+        Serial.printf("ECG plot does not exist. Creating it now.\n");
+        line_plot = ecg_graph->add_plot("ECG", create_new_line_plot(GREEN));
     }
-    cJSON_Delete(root);
+
+    line_plot->add_point(ecg_value); 
+    if (gui->get_current_state_id() == GUI_STATE_MAIN) {
+        // line_plot->draw(BLACK);
+        // line_plot->add_point(ecg_value);
+        // line_plot->draw();
+
+        // instead of undrawing it whole at once (by drawing it with black), we can undraw and draw one point at the time
+        // for each new/moved line/point we can draw old one with black and new one with green,
+        // this way the effect will be much smoother, and no visible flickering will be seen (without much performance penalty if any)
+        line_plot->draw();
+    }
 }
 
 
 void loop(void) {
-    handle_riscv_serial();
+    if (serial_riscv.available()) {
+        String line = serial_riscv.readStringUntil('\n');
+        // Serial.print("Received from riscv: '");
+        // Serial.print(line);
+        // Serial.println("'");
+        // String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
+        String *msg = new String(line);
+        if (!add_string_to_queue(queue_received, msg)) {
+            delete msg;
+        }
+    }
 }
