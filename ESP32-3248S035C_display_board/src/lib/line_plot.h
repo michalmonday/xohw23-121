@@ -14,7 +14,11 @@ public:
     ~LinePlot();
     void draw();
     void draw(unsigned int color_override);
+    void draw_line(int i);
+    void undraw_line(int i);
     void add_point(double value);
+    int get_newest_y_screen_pos();
+    double get_newest_value();
     void print_all_values();
     int get_current_number_of_items();
     int get_max_number_of_items();
@@ -22,6 +26,9 @@ public:
     int get_max_value();
     unsigned int get_color();
     void set_graph(GUI_Graph *graph);
+    void set_top_margin(double top_margin);
+
+    void record_last_painted_screen_positions();
 private:
     TFT_eSPI &tft;
     int current_number_of_items, max_number_of_items;
@@ -29,6 +36,7 @@ private:
     int graph_x, graph_y, graph_w, graph_h;
     double xlo, xhi, ylo, yhi;
     unsigned int color;
+    double static_ylo;
 
     // ------- dynamically allocated arrays ------- //
     // raw values to plot
@@ -37,14 +45,21 @@ private:
     int *values_screen_pos; 
     // screen horizontal position (computed based on: xlo, xhi, graph_x, graph_w), this array is used to avoid unnecessary calculations when moving the plot to the left when new value arrives
     int *x_screen_pos; 
-
+    // stays the same regardless of new scaling allowing to undraw the last painted line
+    int *last_painted_values_screen_pos; 
+    bool *was_line_drawn;
     GUI_Graph *graph;
+    int dropped_value_screen_pos;
+    // top_margin determines how to scale the graph (will leave some space on top of the graph above the highest value)
+    // if top_margin is 0.1 then 10% of the graph will be left empty above the highest value
+    double top_margin;
 
     void update_min_max_values();
     int calculate_screen_xpos(int index);
     int calculate_screen_ypos(double value);
 
-    int dropped_value_screen_pos;
+
+    void rescale();
 };
 
 

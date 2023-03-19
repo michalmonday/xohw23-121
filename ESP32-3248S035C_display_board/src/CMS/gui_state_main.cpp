@@ -31,26 +31,26 @@
 GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) : 
     GUI_State(tft, gui, touch), dataset_size(0) {
 
-    // ------------------------------
-    // -------- Graph elements ------
-    ecg_graph = new GUI_Graph(tft, 
-        RESOLUTION_X*0.1, RESOLUTION_Y*0.08,  // x, y
-        RESOLUTION_X*0.32, RESOLUTION_Y*0.3,   // width, height
-        1, 4,       // grid x, y segments
-        2,          // decimal precision of tick labels
-        0, 100,     // xlo, xhi (how many data points to show at once)
-        0, 1,       // ylo, yhi (range of values)
-        "ECG (CHERI-RISC-V)", "", "", // title, xlabel, ylabel
-        BLUE, RED, WHITE, BLACK // grid color, axis color, text color, background color
-        );
-    ecg_graph->hide_legend();
-    ecg_graph->hide_grid();
+    // // ------------------------------
+    // // -------- Graph elements ------
+    // ecg_graph = new GUI_Graph(tft, 
+    //     RESOLUTION_X*0.1, RESOLUTION_Y*0.08,  // x, y
+    //     RESOLUTION_X*0.32, RESOLUTION_Y*0.3,   // width, height
+    //     1, 4,       // grid x, y segments
+    //     2,          // decimal precision of tick labels
+    //     0, 100,     // xlo, xhi (how many data points to show at once)
+    //     0, 1,       // ylo, yhi (range of values)
+    //     "ECG (CHERI-RISC-V)", "", "", // title, xlabel, ylabel
+    //     BLUE, RED, WHITE, BLACK // grid color, axis color, text color, background color
+    //     );
+    // ecg_graph->hide_legend();
+    // ecg_graph->hide_grid();
     
     pynq_graph = new GUI_Graph(tft, 
         // RESOLUTION_X*0.1, RESOLUTION_Y*0.52,  // x, y
         RESOLUTION_X*0.1, RESOLUTION_Y*0.58,  // x, y
         // RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
-        RESOLUTION_X*0.7, RESOLUTION_Y*0.2,   // width, height
+        RESOLUTION_X*0.6, RESOLUTION_Y*0.2,   // width, height
         1, 4,       // grid x, y segments
         2,          // decimal precision of tick labels
         0, 30,      // xlo, xhi (how many data points to show at once)
@@ -58,10 +58,15 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         "Metrics (CMS)", "", "", // title, xlabel, ylabel
         BLUE, RED, WHITE, BLACK // grid, axis, text, background (colors)
         );
+    pynq_graph->show_current_value_display();
+    // pynq_graph->hide_axes();
+    pynq_graph->hide_grid();
+
+
     label_ap_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
     label_tcp_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9 + 15, 1, TL_DATUM, WHITE, BLACK);
 
-    add_element(ecg_graph);
+    // add_element(ecg_graph);
     add_element(pynq_graph);
     add_element(label_ap_conn_status);
     add_element(label_tcp_conn_status);

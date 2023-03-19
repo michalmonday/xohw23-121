@@ -13,8 +13,9 @@ public:
         std::function<void()> on_press_callback = [](){},
         std::function<void()> on_release = [](){}
         );
-    void draw();
-    void undraw();
+    void draw() override;
+    void undraw() override;
+    void set_y(int y) override;
     void set_text(String text); 
     virtual void on_release() override;
     virtual void on_press() override;
