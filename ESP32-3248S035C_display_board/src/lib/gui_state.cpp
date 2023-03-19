@@ -19,7 +19,14 @@ void GUI_State::update() {
     int touch_y = touch->get_y();
 
     for (GUI_Element *element : elements) {
-        if (!element->contains_point(touch_x, touch_y))
+        GUI_Element* child_element = element->get_child_element_containing_point(touch_x, touch_y);
+        if (child_element) {
+            if (was_pressed) 
+                child_element->on_press();
+            if (was_released) 
+                child_element->on_release();
+        }
+        if (!element->contains_point(touch_x, touch_y)) 
             continue;
 
         if (was_pressed) 

@@ -45,6 +45,8 @@ public:
     void show_grid()   { grid_enabled = true;    needs_redraw = true; }
     void hide_axes()   { axes_enabled = false;   needs_redraw = true; }
     void show_axes()   { axes_enabled = true;    needs_redraw = true; }
+    void hide_axis_labels() { axis_labels_enabled = false; needs_redraw = true; }
+    void show_axis_labels() { axis_labels_enabled = true;  needs_redraw = true; }
     void show_current_value_display() { current_value_display_enabled = true; needs_redraw = true; }
     void hide_current_value_display() { current_value_display_enabled = false; needs_redraw = true; }
 
@@ -70,6 +72,7 @@ private:
     bool legend_enabled;
     bool grid_enabled;
     bool axes_enabled;
+    bool axis_labels_enabled;
     bool current_value_display_enabled;
 
     int current_value_display_width;

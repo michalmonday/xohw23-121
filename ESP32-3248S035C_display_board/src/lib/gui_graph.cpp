@@ -44,7 +44,7 @@ GUI_Graph::GUI_Graph(TFT_eSPI *tft)
     : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
         decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), 
         ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color),
-        legend_enabled(true), grid_enabled(true), axes_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
+        legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
 {
 }
 
@@ -53,7 +53,7 @@ GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int g
     : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
       decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel),
       ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color), 
-      legend_enabled(true), grid_enabled(true), axes_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
+      legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
 {
 }
 
@@ -257,7 +257,7 @@ void GUI_Graph::draw() {
         if (grid_enabled)
             tft->drawLine(x, current_y, x + w, current_y, grid_color);
 
-        if (axes_enabled) {
+        if (axes_enabled && axis_labels_enabled) {
             Serial.printf("Drawing horizontal line at %d\n", current_y);
             // horizontal line label
             tft->setTextColor(text_color, background_color);
@@ -273,7 +273,7 @@ void GUI_Graph::draw() {
         // vertical grid line
         if (grid_enabled)
             tft->drawLine(current_x, y, current_x, y + h, grid_color);
-        if (axes_enabled) {
+        if (axes_enabled && axis_labels_enabled) {
             // vertical line label
             tft->setTextColor(text_color, background_color);
             // precision is default Arduino--this could really use some format control

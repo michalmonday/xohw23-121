@@ -2,6 +2,7 @@
 #include <display_config.h>
 #include <gui.h>
 #include <gui_button.h>
+#include <gui_checkbox.h>
 #include <communication_queues.h>
 #include <rpc.h>
 #include <cJSON.h>
@@ -48,7 +49,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     
     pynq_graph = new GUI_Graph(tft, 
         // RESOLUTION_X*0.1, RESOLUTION_Y*0.52,  // x, y
-        RESOLUTION_X*0.1, RESOLUTION_Y*0.58,  // x, y
+        RESOLUTION_X*0.04, RESOLUTION_Y*0.58,  // x, y
         // RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
         RESOLUTION_X*0.6, RESOLUTION_Y*0.2,   // width, height
         1, 4,       // grid x, y segments
@@ -61,6 +62,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     pynq_graph->show_current_value_display();
     // pynq_graph->hide_axes();
     pynq_graph->hide_grid();
+    pynq_graph->hide_axis_labels();
 
 
     label_ap_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
@@ -182,8 +184,41 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     add_element(label_dataset_size);
 
     // label_y = label_y_start;
-    // -------------------------------------------
-    // ------ Status labels under buttons --------
+
+    // ---------------------------------
+    // -------- Rules section  ---------
+    const int rules_x = pynq_graph->get_x();
+    int rules_y = button_y_start;
+    label_rules = new GUI_Label(tft, "Rules:", rules_x, rules_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
+    btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x + label_rules->get_w()*1.2, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
+    btn_add_new_rule->set_on_release_callback(
+        [](){   
+            // push rule selection state
+            Serial.println("Add new rule button was released");
+        }
+    );
+    add_element(label_rules);
+    add_element(btn_add_new_rule);
+
+
+
+// GUI_Checkbox::GUI_Checkbox(TFT_eSPI *tft, bool initial_is_checked, int x, int y, int w, int h, unsigned int font_size, unsigned int colour, unsigned int background_colour, 
+//                            std::function<void()> on_press_callback, std::function<void()> on_release_callback,
+//                            std::function<void()> on_checked, std::function<void()> on_unchecked) :
+    GUI_Checkbox* checkbox = new GUI_Checkbox(tft, true, rules_x, rules_y, button_height, button_height, 1, GREEN, BLACK, 
+        [](){}, // on press
+        [](){}, // on release
+        [](){
+            Serial.println("Checkbox was checked");
+        }, // on checked
+        [](){
+            Serial.println("Checkbox was unchecked");
+        }  // on unchecked
+    ); 
+    
+    rules_y += button_offset;
+
+    add_element(checkbox);
 }
 
 void GUI_State_Main::draw() {
