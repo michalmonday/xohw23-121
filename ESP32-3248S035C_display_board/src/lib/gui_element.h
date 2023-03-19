@@ -15,6 +15,7 @@ public:
     virtual void draw();
     virtual void undraw();
     virtual bool contains_point(int point_x, int point_y) { return (point_x > x && point_x < x + w && point_y > y && point_y < y + h); }
+    virtual GUI_Element* get_child_element_containing_point(int point_x, int point_y);
     virtual void on_press();
     virtual void on_release();
 
@@ -39,15 +40,14 @@ public:
 
     std::function<void()> on_press_callback;
     std::function<void()> on_release_callback;
+
+    std::vector<GUI_Element *> &get_child_elements() { return child_elements; }
 protected:
     int x,y,w,h;
     TFT_eSPI *tft;
     unsigned int background_colour;
     bool background_enabled;
 
-    // child_elements are not clickable (becuase they are not added to GUI_State which handles touch)
-    // but can be used to create some additional visual elements to items without the need to couple GUI_State into GUI_Element class
-    // which would be required if we wanted to add child_elements to GUI_State 
     std::vector<GUI_Element *> child_elements;
     void add_child_element(GUI_Element *child_element);
 };

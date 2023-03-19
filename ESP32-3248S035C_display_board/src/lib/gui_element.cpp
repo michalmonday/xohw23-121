@@ -49,3 +49,10 @@ void GUI_Element::add_child_element(GUI_Element *child_element) {
         child_elements.push_back(child_element);
     }
 }
+
+GUI_Element* GUI_Element::get_child_element_containing_point(int point_x, int point_y) {
+    for (auto child_element : child_elements)
+        if (child_element->contains_point(point_x, point_y))
+            return child_element;
+    return nullptr;
+}

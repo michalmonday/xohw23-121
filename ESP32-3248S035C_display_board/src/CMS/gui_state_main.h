@@ -50,6 +50,9 @@ private:
     GUI_Button *btn_test;
     GUI_Button *btn_reset_dataset;
 
+    // rules section
+    GUI_Label *label_rules;
+    GUI_Button *btn_add_new_rule;
 };
 
 #endif
