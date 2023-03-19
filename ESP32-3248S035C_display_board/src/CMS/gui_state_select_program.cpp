@@ -23,16 +23,30 @@ void GUI_State_Select_Program::add_programs(String category, std::vector<String>
     } else {
         Serial.printf("Program category '%s' already exists\n", category.c_str());
     }
+
+
     // ---------------------------------
     // ------------ Buttons  -----------
-    const int button_width = RESOLUTION_X * 0.3;
-    const int button_height = RESOLUTION_Y * 0.15;
-    int button_x = (RESOLUTION_X*0.05) + (button_width + RESOLUTION_X*0.05) * (categories.size()-1);
+    const int button_height = RESOLUTION_Y * 0.07;
     const int button_y_start = RESOLUTION_Y*0.05;
     const int button_font_size = 1;
     const int button_offset = button_height * 1.3;
     int button_y = button_y_start;
     int i;
+
+    // longest program name width
+    int longest_program_name_width = 0;
+    for (String program : programs) {
+        int program_name_width = tft->textWidth(program.c_str(), button_font_size);
+        if (program_name_width > longest_program_name_width) {
+            longest_program_name_width = program_name_width;
+        }
+    }
+
+    // const int button_width = RESOLUTION_X * 0.3;
+    int button_width = longest_program_name_width * 1.27;
+    int button_x = (RESOLUTION_X*0.05) + (button_width + RESOLUTION_X*0.05) * (categories.size()-1);
+
     for (String program : programs) {
         if (button_y + button_height > RESOLUTION_Y) {
             button_y = button_y_start;

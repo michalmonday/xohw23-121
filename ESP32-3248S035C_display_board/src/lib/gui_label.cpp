@@ -17,6 +17,7 @@ void GUI_Label::draw() {
 }
 
 void GUI_Label::undraw() {
+    GUI_Element::undraw();
     // paint over the label with the background colour
     Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
     tft->setTextSize(font_size);
@@ -25,6 +26,11 @@ void GUI_Label::undraw() {
     // tft->setTextColor(RED);
     tft->drawString(text, x, y);
     // tft->fillRect(x - w/2, y - h/2, w, h, background_colour);
+}
+
+void GUI_Label::set_y(int y) {
+    undraw();
+    GUI_Element::set_y(y);
 }
 
 void GUI_Label::set_text(String text) {

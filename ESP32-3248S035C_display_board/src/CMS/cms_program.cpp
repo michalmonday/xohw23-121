@@ -57,6 +57,7 @@ TFT_eSPI tft = TFT_eSPI();
 // StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
 
 int current_colour_id = 0;
+double current_top_margin = 0.0;
 
 // graph without parameters will have default values (to cover most of the screen with space for status display)
 // see graph.cpp to see or change default values
@@ -68,7 +69,7 @@ GUI_State_Main *gui_main_state;
 double xlo = 0;
 // double xhi = 25; // this is pretty much setting how many values we want to display in the graph at once
 // double xhi = 100; // this is pretty much setting how many values we want to display in the graph at once
-double xhi = RESOLUTION_X*0.2; // this is pretty much setting how many values we want to display in the graph at once
+double xhi = 30;//RESOLUTION_X*0.2; // this is pretty much setting how many values we want to display in the graph at once
 double ylo = 0; // line plot lower value bound
 double yhi = 1; // line plot upper value bound
 // int max_number_of_items = min((int)(xhi - xlo), (int)graph.get_width());
@@ -118,7 +119,10 @@ LinePlot* create_new_line_plot(int clr=-1) {
         current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
         Serial.printf("current_colour_id=%d\n", current_colour_id);
     }
-    return new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    LinePlot* line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    line_plot->set_top_margin(current_top_margin);
+    current_top_margin += 0.15;  // top margin is used to separate line plots from each other (so they don't overlap)
+    return line_plot;
 }
 
 
@@ -220,63 +224,63 @@ bool contains_digits_only(String str) {
     return true;
 }
 
-void handle_riscv_serial() {
-    // print free memory
-    if (serial_riscv.available()) {
-        // Serial.println("Received something from riscv");
-        String line = serial_riscv.readStringUntil('\n');
-        // Serial.print("Received from riscv: '");
-        // Serial.print(line);
-        // Serial.println("'");
-
-        if (!contains_digits_only(line)) {
-            if (line.equals("Leads off")) {
-                // Serial.printf("Free memory: %d\n", ESP.getFreeHeap());
-                // random float between 0.2 and 0.3
-                float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
-                // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
-
-                // String *formatted_msg = new String("{\"add_points_risc_v\": {\"Leads off\": [" + String(random_value) + "]}}");
-                // if (!add_string_to_queue(queue_received, formatted_msg)) {
-                //     delete formatted_msg;
-                // }
-                // continue;
-                return;
-            }
-            Serial.println(line);
-            Serial.println("Not a number");
-            // line may be: "Leads off"
-            // continue;
-            return;
-        }
-
-        float ecg_value = atof(line.c_str()) / 60000.0f;
-        // Serial.print("ecg_value=");
-        // Serial.println(ecg_value);
-
-        if (ecg_value < 0.0 || ecg_value > 1.0) {
-            Serial.println(line);
-            Serial.print("ecg_value=");
-            Serial.println(ecg_value);
-            // continue;
-            return;
-        } 
-
-        // String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
-        // this needs to be a JSON string just like data received from server
-        String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
-    // 
-    // {
-    //    add_points: {
-    //      "ECG": [0.1, 0.2, 0.1], 
-    //      "ANOTHER": [0.7, 0.6, 0.9]
-    //    },
-    // }
-        if (!add_string_to_queue(queue_received, formatted_msg)) {
-            delete formatted_msg;
-        }
-    }
-}
+// void handle_riscv_serial() {
+//     // print free memory
+//     if (serial_riscv.available()) {
+//         // Serial.println("Received something from riscv");
+//         String line = serial_riscv.readStringUntil('\n');
+//         // Serial.print("Received from riscv: '");
+//         // Serial.print(line);
+//         // Serial.println("'");
+// 
+//         if (!contains_digits_only(line)) {
+//             if (line.equals("Leads off")) {
+//                 // Serial.printf("Free memory: %d\n", ESP.getFreeHeap());
+//                 // random float between 0.2 and 0.3
+//                 float random_value = 0.2 + (0.3 - 0.2) * ((float) rand() / (float) RAND_MAX);
+//                 // String *formatted_msg = new String("add_point:Leads off," + String(random_value));
+// 
+//                 // String *formatted_msg = new String("{\"add_points_risc_v\": {\"Leads off\": [" + String(random_value) + "]}}");
+//                 // if (!add_string_to_queue(queue_received, formatted_msg)) {
+//                 //     delete formatted_msg;
+//                 // }
+//                 // continue;
+//                 return;
+//             }
+//             Serial.println(line);
+//             Serial.println("Not a number");
+//             // line may be: "Leads off"
+//             // continue;
+//             return;
+//         }
+// 
+//         float ecg_value = atof(line.c_str()) / 60000.0f;
+//         // Serial.print("ecg_value=");
+//         // Serial.println(ecg_value);
+// 
+//         if (ecg_value < 0.0 || ecg_value > 1.0) {
+//             Serial.println(line);
+//             Serial.print("ecg_value=");
+//             Serial.println(ecg_value);
+//             // continue;
+//             return;
+//         } 
+// 
+//         // String *formatted_msg = new String("add_point:ECG," + String(ecg_value));
+//         // this needs to be a JSON string just like data received from server
+//         String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
+//     // 
+//     // {
+//     //    add_points: {
+//     //      "ECG": [0.1, 0.2, 0.1], 
+//     //      "ANOTHER": [0.7, 0.6, 0.9]
+//     //    },
+//     // }
+//         if (!add_string_to_queue(queue_received, formatted_msg)) {
+//             delete formatted_msg;
+//         }
+//     }
+// }
 
 // void check_protocol(String line) {
 //     // line is a string received from the ZC706 tcp server (currently using PYNQ)
@@ -371,8 +375,10 @@ void parse_tcp_message(String line) {
     if (cJSON_HasObjectItem(root, "add_points")) {
         cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points");
         cJSON *plot_name_obj = add_points_obj->child;
+
+        GUI_Graph *pynq_graph = gui_main_state->get_pynq_graph();
         while(plot_name_obj) {
-            Serial.println(plot_name_obj->string);
+            // Serial.println('add_points for ' + plot_name_obj->string);
 
             for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
                 cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
@@ -381,57 +387,61 @@ void parse_tcp_message(String line) {
                 String plot_name = plot_name_obj->string;
                 double value = plot_value->valuedouble;
                 // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
-                GUI_Graph *pynq_graph = gui_main_state->get_pynq_graph();
                 LinePlot* line_plot = pynq_graph->get_plot(plot_name);
                 if (!line_plot) {
                     Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
                     line_plot = pynq_graph->add_plot(plot_name, create_new_line_plot());
                 }
 
-                if (gui->get_current_state_id() == GUI_STATE_MAIN) {
-                    line_plot->draw(BLACK);
-                    line_plot->add_point(value);
-                    line_plot->draw();
-                } else {
-                    line_plot->add_point(value);
-                }
+                line_plot->add_point(value);
+
+                // if (gui->get_current_state_id() == GUI_STATE_MAIN) {
+                //     line_plot->draw(BLACK);
+                //     line_plot->add_point(value);
+                //     line_plot->draw();
+                // } else {
+                //     line_plot->add_point(value);
+                // }
             }
             plot_name_obj = plot_name_obj->next;
         }
+
+        if (gui->get_current_state_id() == GUI_STATE_MAIN) 
+            pynq_graph->draw_plots();
     }
 
-    // copy for the risc-v plot (ecg)
-    if (cJSON_HasObjectItem(root, "add_points_risc_v")) {
-        cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points_risc_v");
-        cJSON *plot_name_obj = add_points_obj->child;
-        while(plot_name_obj) {
-            Serial.println(plot_name_obj->string);
+    // // copy for the risc-v plot (ecg)
+    // if (cJSON_HasObjectItem(root, "add_points_risc_v")) {
+    //     cJSON *add_points_obj = cJSON_GetObjectItem(root, "add_points_risc_v");
+    //     cJSON *plot_name_obj = add_points_obj->child;
+    //     while(plot_name_obj) {
+    //         Serial.println(plot_name_obj->string);
 
-            for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
-                cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
-                // Do something with new plot value
+    //         for (int i=0; i<cJSON_GetArraySize(plot_name_obj); i++) {
+    //             cJSON *plot_value = cJSON_GetArrayItem(plot_name_obj, i);
+    //             // Do something with new plot value
 
-                String plot_name = plot_name_obj->string;
-                double value = plot_value->valuedouble;
-                // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
-                GUI_Graph *ecg_graph = gui_main_state->get_ecg_graph();
-                LinePlot* line_plot = ecg_graph->get_plot(plot_name);
-                if (!line_plot) {
-                    Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
-                    line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot(GREEN));
-                }
+    //             String plot_name = plot_name_obj->string;
+    //             double value = plot_value->valuedouble;
+    //             // LinePlot* line_plot = ecg_graph.get_plot(plot_name);
+    //             GUI_Graph *ecg_graph = gui_main_state->get_ecg_graph();
+    //             LinePlot* line_plot = ecg_graph->get_plot(plot_name);
+    //             if (!line_plot) {
+    //                 Serial.printf("add_point was used but plot %s does not exist. Creating it now.\n", plot_name.c_str());
+    //                 line_plot = ecg_graph->add_plot(plot_name, create_new_line_plot(GREEN));
+    //             }
 
-                if (gui->get_current_state_id() == GUI_STATE_MAIN) {
-                    line_plot->draw(BLACK);
-                    line_plot->add_point(value);
-                    line_plot->draw();
-                } else {
-                    line_plot->add_point(value);
-                }
-            }
-            plot_name_obj = plot_name_obj->next;
-        }
-    }
+    //             if (gui->get_current_state_id() == GUI_STATE_MAIN) {
+    //                 line_plot->draw(BLACK);
+    //                 line_plot->add_point(value);
+    //                 line_plot->draw();
+    //             } else {
+    //                 line_plot->add_point(value);
+    //             }
+    //         }
+    //         plot_name_obj = plot_name_obj->next;
+    //     }
+    // }
 
     // // Parse string with the following json:
     // {
@@ -473,8 +483,8 @@ void parse_tcp_message(String line) {
         if (cJSON_HasObjectItem(status_update_obj, "dataset_size")) {
             cJSON *dataset_size_obj = cJSON_GetObjectItem(status_update_obj, "dataset_size");
             int size = dataset_size_obj->valueint;
-            Serial.print("Dataset size: ");
-            Serial.println(size);
+            // Serial.print("Dataset size: ");
+            // Serial.println(size);
             gui->get_state_main()->set_dataset_size(size);
             
             // gui->get_state_main()->set_run_status("Pynq restarted");
@@ -638,7 +648,7 @@ void parse_tcp_message(String line) {
 
 
 void loop(void) {
-    handle_riscv_serial();
+    // handle_riscv_serial();
     static bool redraw_on_first_call_only_trace4 = true;
 
     Serial.println("Attempt to access server...");
@@ -647,7 +657,7 @@ void loop(void) {
         Serial.println("Access failed.");
         client.stop();
         for (int i=5; i>0; i--) {
-            handle_riscv_serial();
+            // handle_riscv_serial();
             // status_display.set_status("tcp_connection_status", "Retrying ZC706 TCP server (" + server_ip_str + ") connection in " + String(i) + " seconds...");
             delay(1000);
         }
@@ -689,7 +699,7 @@ void loop(void) {
 
     // client.print("run_program:ecg_baseline.bin");
     while (client.connected() || client.available()) {
-        handle_riscv_serial();
+        // handle_riscv_serial();
 
         String *line;
         if ( xQueueReceive(queue_to_send, &line, 0) != errQUEUE_EMPTY ) {
@@ -704,7 +714,6 @@ void loop(void) {
             Serial.print("Received: '");
             Serial.print(*line);
             Serial.println("'");
-            // parse_tcp_message(line);
             add_string_to_queue(queue_received, line, true);
         }
     }

@@ -6,6 +6,7 @@
 #include <map>
 
 #include <gui_element.h>
+#include <gui_label.h>
 #include <display_config.h>
 
 // forward declaration (to avoid circular dependency)
@@ -27,7 +28,7 @@ public:
     void list_all();
     LinePlot* get_plot(String name);
     void draw_plots();
-    void draw_plots(unsigned int color_override);
+    // void draw_plots(unsigned int color_override);
 
     void draw() override;
     // void draw(byte decimal_precision,
@@ -44,7 +45,12 @@ public:
     void show_grid()   { grid_enabled = true;    needs_redraw = true; }
     void hide_axes()   { axes_enabled = false;   needs_redraw = true; }
     void show_axes()   { axes_enabled = true;    needs_redraw = true; }
+    void show_current_value_display() { current_value_display_enabled = true; needs_redraw = true; }
+    void hide_current_value_display() { current_value_display_enabled = false; needs_redraw = true; }
+
     void draw_grid();
+
+    unsigned int get_background_color() { return background_color; }
 private:
     int grid_x_segments, grid_y_segments;
     std::map<String, LinePlot *> line_plots;
@@ -64,6 +70,12 @@ private:
     bool legend_enabled;
     bool grid_enabled;
     bool axes_enabled;
+    bool current_value_display_enabled;
+
+    int current_value_display_width;
+    int current_value_diplay_font_size;
+    std::map<LinePlot *, GUI_Label *> current_value_labels;
+    void draw_current_values();
 };
 
 #endif
