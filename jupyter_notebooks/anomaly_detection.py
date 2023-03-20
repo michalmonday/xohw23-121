@@ -24,8 +24,8 @@ class Anomaly_Detection:
     def update_dataset(self, counters_vector):
         vector_hash = self.hash_vector(counters_vector)
         if not self.is_vector_hash_in_dataset(vector_hash):
-            self.vectors_hashes.add(vector_hash)
             with self.dataset_lock:
+                self.vectors_hashes.add(vector_hash)
                 self.dataset = np.vstack([self.dataset, counters_vector])
 
     def is_vector_hash_in_dataset(self, vector_hash):

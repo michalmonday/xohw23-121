@@ -160,11 +160,15 @@ class TCP_Server:
                 client_id = d['client_id']
                 data = d['data'].encode('utf-8')
                 with self.connections_lock: 
-                    if client_id == SEND_TO_ALL:
-                        for client in self.connections.values():
-                            client.socket.send(data)
-                    else:
-                        self.connections[client_id].socket.send(data)
+                    try:
+                        if client_id == SEND_TO_ALL:
+                            for client in self.connections.values():
+                                client.socket.send(data)
+                        else:
+                            self.connections[client_id].socket.send(data)
+                    except Exception as e:
+                        print(f'Error sending data to client {client_id}: {e}')
+                        self.connections.pop(client_id)
             time.sleep(0.01)
 
     #Wait for new connections
