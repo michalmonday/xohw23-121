@@ -21,6 +21,7 @@ public:
     GUI_State *get_state(int state_id);
     void schedule_redraw();
 protected:
+    unsigned long last_state_enter_time;
     std::vector<GUI_Element*> elements;
     TFT_eSPI *tft;
     Touch *touch;

@@ -4,11 +4,16 @@
 // -------------------------------
 // ---------- GUI_State ----------
 
-GUI_State::GUI_State(TFT_eSPI *tft, GUI *gui, Touch *touch) : tft(tft), gui(gui), touch(touch) {
+GUI_State::GUI_State(TFT_eSPI *tft, GUI *gui, Touch *touch) : tft(tft), gui(gui), touch(touch), last_state_enter_time(0) {
 }
 
 void GUI_State::update() {
     touch->update();
+    if (millis() - last_state_enter_time < 300) {
+        touch->reset_last_press();
+        touch->reset_last_release();
+        return;
+    }
     bool was_pressed = touch->was_pressed();
     bool was_released = touch->was_released();
     
@@ -65,6 +70,7 @@ void GUI_State::add_element(GUI_Element* element) {
 }
 
 void GUI_State::on_state_enter() {
+    last_state_enter_time = millis();
     Serial.println("State entered");
     for (GUI_Element *element : elements) {
         Serial.println("Redrawing element");
