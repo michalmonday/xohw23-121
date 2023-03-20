@@ -46,6 +46,11 @@ void GUI_State::draw() {
     for (GUI_Element *element : elements) {
         if (element->needs_redraw)
             element->draw();
+
+        for (auto child_element : element->get_child_elements()) {
+            if (child_element->needs_redraw)
+                child_element->draw();
+        }
     }
 }
 
@@ -64,6 +69,9 @@ void GUI_State::on_state_enter() {
     for (GUI_Element *element : elements) {
         Serial.println("Redrawing element");
         element->needs_redraw = true;
+        for (auto child_element : element->get_child_elements()) {
+            child_element->needs_redraw = true;
+        }
     }
 }
 
@@ -80,5 +88,8 @@ void GUI_State::destroy_and_clear_elements() {
 void GUI_State::schedule_redraw() {
     for (GUI_Element *element : elements) {
         element->needs_redraw = true;
+        for (auto child_element : element->get_child_elements()) {
+            child_element->needs_redraw = true;
+        }
     }
 }

@@ -3,17 +3,19 @@
 
 #include <Arduino.h>
 
+
 #include <gui_state.h>
 #include <gui_label.h>
 #include <gui_graph.h>
 #include <gui_button.h>
+#include "rule.h"
 
-class GUI;
+class GUI_CMS;
 class GUI_Button;
 
 class GUI_State_Main : public GUI_State {
 public:
-    GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch);
+    GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
     virtual void update() override;
     virtual void reset() override;
     virtual void draw() override;
@@ -51,8 +53,10 @@ private:
     GUI_Button *btn_reset_dataset;
 
     // rules section
-    GUI_Label *label_rules;
+    // GUI_Label *label_rules;
     GUI_Button *btn_add_new_rule;
+
+    std::vector<Rule*> rules;
 };
 
 #endif

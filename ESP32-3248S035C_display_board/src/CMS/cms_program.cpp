@@ -16,6 +16,7 @@
 #include "gui_state_main.h"
 #include "gui_state_select_program.h"
 #include "gui_cms_states.h"
+#include "rule.h"
 
 #include <display_config.h> // resolution
 
