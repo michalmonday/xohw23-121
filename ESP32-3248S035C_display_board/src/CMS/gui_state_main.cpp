@@ -1,12 +1,13 @@
 #include <gui_state_main.h>
 #include <display_config.h>
-#include <gui.h>
+#include <gui_cms.h>
 #include <gui_button.h>
 #include <gui_checkbox.h>
 #include <communication_queues.h>
 #include <rpc.h>
 #include <cJSON.h>
 #include "gui_cms_states.h"
+#include "rule.h"
 
 // const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 // const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
@@ -29,7 +30,7 @@
 
 
 
-GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) : 
+GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) : 
     GUI_State(tft, gui, touch), dataset_size(0) {
 
     // // ------------------------------
@@ -189,15 +190,38 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
     // -------- Rules section  ---------
     const int rules_x = pynq_graph->get_x();
     int rules_y = button_y_start;
-    label_rules = new GUI_Label(tft, "Rules:", rules_x, rules_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
-    btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x + label_rules->get_w()*1.2, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
+    // label_rules = new GUI_Label(tft, "Rules:", rules_x, rules_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
+    // btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x + label_rules->get_w()*1.2, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
+    btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
     btn_add_new_rule->set_on_release_callback(
-        [](){   
+        [this, gui, tft](){   
             // push rule selection state
             Serial.println("Add new rule button was released");
+            int rule_x = pynq_graph->get_x();
+            int rule_y = button_y_start + (1 + rules.size()) * button_offset;
+            Rule *rule = new Rule(tft, rule_x, rule_y, button_height, button_height, WHITE);
+            rule->set_on_label_released_callback(
+                [gui, rule](){
+                    Serial.println("Rule label was released");
+                    gui->get_state_edit_rule()->set_rule_to_edit(rule);
+                    gui->push_state(GUI_STATE_EDIT_RULE);
+                }
+            );
+            rule->set_on_checked_callback(
+                [this, rule](){
+                    Serial.println("Rule checkbox was checked");
+                }
+            );
+            rule->set_on_unchecked_callback(
+                [this, rule](){
+                    Serial.println("Rule checkbox was unchecked");
+                }
+            );
+            add_element(rule);
+            rules.push_back(rule);
         }
     );
-    add_element(label_rules);
+    // add_element(label_rules);
     add_element(btn_add_new_rule);
 
 
@@ -205,20 +229,17 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
 // GUI_Checkbox::GUI_Checkbox(TFT_eSPI *tft, bool initial_is_checked, int x, int y, int w, int h, unsigned int font_size, unsigned int colour, unsigned int background_colour, 
 //                            std::function<void()> on_press_callback, std::function<void()> on_release_callback,
 //                            std::function<void()> on_checked, std::function<void()> on_unchecked) :
-    GUI_Checkbox* checkbox = new GUI_Checkbox(tft, true, rules_x, rules_y, button_height, button_height, 1, GREEN, BLACK, 
-        [](){}, // on press
-        [](){}, // on release
-        [](){
-            Serial.println("Checkbox was checked");
-        }, // on checked
-        [](){
-            Serial.println("Checkbox was unchecked");
-        }  // on unchecked
-    ); 
-    
-    rules_y += button_offset;
 
-    add_element(checkbox);
+    // GUI_Checkbox* checkbox = new GUI_Checkbox(tft, true, rules_x, rules_y, button_height, button_height, 1, GREEN, BLACK, 
+    //     [](){
+    //         Serial.println("Checkbox was checked");
+    //     }, // on checked
+    //     [](){
+    //         Serial.println("Checkbox was unchecked");
+    //     }  // on unchecked
+    // ); 
+    // rules_y += button_offset;
+    // add_element(checkbox);
 }
 
 void GUI_State_Main::draw() {

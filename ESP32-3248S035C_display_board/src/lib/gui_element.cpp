@@ -18,16 +18,13 @@ void GUI_Element::draw() {
         tft->fillRect(x, y, w, h, background_colour);
     // tft->drawRect(x, y, w, h, TFT_WHITE); 
     needs_redraw = false;
-
-    for (auto child_element : child_elements) {
-        child_element->draw();
-    }
 }
 
 void GUI_Element::undraw() {
     needs_redraw = true;
     for (auto child_element : child_elements) {
         child_element->undraw();
+        child_element->needs_redraw = true;
     }
 }
 
@@ -47,6 +44,7 @@ void GUI_Element::add_child_element(GUI_Element *child_element) {
     // add element if it doesn't already exist
     if (std::find(child_elements.begin(), child_elements.end(), child_element) == child_elements.end()) {
         child_elements.push_back(child_element);
+        child_element->needs_redraw = true;
     }
 }
 
