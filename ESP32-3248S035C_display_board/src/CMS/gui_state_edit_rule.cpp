@@ -6,6 +6,15 @@
 
 #include <cJSON.h>
 
+void Attribute::edit_attribute() {
+    Serial.println("Attribute label released");
+    gui->push_state(GUI_STATE_SELECT_NUMBER);
+    gui->get_state_select_number()->set_on_number_selected_callback([this](long long value){
+        set_value(value);
+        gui->pop_state();
+    });
+}
+
 std::vector<std::pair<String, long long>> GUI_State_Edit_Rule::default_attributes = {
         {"A3", 0},
         {"A2", 0},
@@ -85,7 +94,7 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
         String name = entry.first;
         long long value = entry.second;
         Serial.println("Adding attribute: " + name + " with value: " + value);
-        Attribute *attr = new Attribute(tft, name, 0, attribute_x, attribute_y);
+        Attribute *attr = new Attribute(tft, gui, name, 0, attribute_x, attribute_y);
         attributes[name] = attr;
         attribute_y += attribute_height;
         if (attribute_y > RESOLUTION_Y*0.95) {
@@ -111,7 +120,7 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
             this->latch_attribute_values_to_rule();
             gui->pop_state();
             // TODO send rule to CMS (rpc)
-            Serial.println("Rule should be saved, main state should be updated, and CMS rpc shoudl be called");
+            Serial.println("Rule should be saved, main state should be updated, and CMS rpc should be called");
         }
     );
     add_element(btn_ok);

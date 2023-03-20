@@ -9,6 +9,8 @@
 #include <gui_graph.h>
 #include <gui_checkbox.h>
 #include <gui_button.h>
+#include <gui_state_select_number.h>
+#include <gui_cms_states.h>
 
 #include <rule.h>
 
@@ -22,19 +24,37 @@ struct Attribute {
     GUI_Label *label;
     GUI_Checkbox *checkbox_is_active;
     const static int font_size = 2;
+    GUI_CMS *gui;
 
-    Attribute(TFT_eSPI *tft, String name, long long value, int x, int y) : name(name), value(value) {
+    Attribute(TFT_eSPI *tft, GUI_CMS* gui, String name, long long value, int x, int y) : name(name), value(value), gui(gui) {
         int font_height = tft->fontHeight(font_size);
         checkbox_is_active = new GUI_Checkbox(tft, false, x, y, font_height, font_height, 1, GREEN, BLACK, [](){}, [](){});
         // convert long to hex string using ltoa
         label = new GUI_Label(tft, "-", x + font_height * 1.2, y+font_height/2, font_size, ML_DATUM, WHITE, BLACK);
-        label->set_on_release_callback([](){
-            // this should activate attribute editing mode and allow to set numeric value
-            // the state may be generic and be called something like "numeric value selection state" 
-            Serial.println("Attribute label released");
-        });
+        // convert this->test to std::function<void()> and pass it to set_on_release_callback, and resolve the problem with invalid use of incomplete type 'class GUI_CMS'
+        label->set_on_release_callback(std::bind(&Attribute::edit_attribute, this));
+        // label->set_on_release_callback([gui, this](){
+        //     // this should activate attribute editing mode and allow to set numeric value
+        //     // the state may be generic and be called something like "numeric value selection state" 
+        //     Serial.println("Attribute label released");
+        //     this->gui->push_state(GUI_STATE_SELECT_NUMBER);
+        //     this->gui->get_state_select_number()->set_on_number_selected_callback([gui, this](long long value){
+        //         set_value(value);
+        //         gui->pop_state();
+        //     });
+        // });
         set_value(value);
     }
+    void edit_attribute();
+
+    // void test() {
+    //     Serial.println("Attribute label released");
+    //     this->gui->push_state(GUI_STATE_SELECT_NUMBER);
+    //     this->gui->get_state_select_number()->set_on_number_selected_callback([this](long long value){
+    //         set_value(value);
+    //         gui->pop_state();
+    //     });
+    // }
     void set_value(long long value) {
         this->value = value;
         char hex_str[30];
