@@ -20,79 +20,8 @@ cms_ctrl.set_monitored_address_range_lower_bound_enabled(True)
 cms_ctrl.set_monitored_address_range_upper_bound_enabled(True)
 '''
 
-class ATF_MODE:
-    PATTERN_COLLECTION = 0
-    ANOMALY_DETECTION = 1
-
-# must match the atf_data_pkt_deterministic structure in "continuous_monitoring_system.sv" file
-atf_pkt_deterministic_structure = {
-    # from MSB to LSB
-    # 'bits T6': 64,
-    # 'bits T5': 64,
-    # 'bits T4': 64,
-    # 'bits T3': 64,
-    # 'bits S11': 64,
-    # 'bits S10': 64,
-    # 'bits S9': 64,
-    # 'bits S8': 64,
-    # 'bits S7': 64,
-    # 'bits S6': 64,
-    # 'bits S5': 64,
-    # 'bits S4': 64,
-    # 'bits S3': 64,
-    'S2': 64,
-    # 'bits A7': 64,
-    # 'bits A6': 64,
-    # 'bits A5': 64,
-    # 'bits A4': 64,
-    'A3': 64,
-    'A2': 64,
-    'A1': 64,
-    'A0': 64,
-    'S1': 64,
-    'S0 / Frame pointer': 64,
-    # 'bits T2': 64,
-    'T1': 64,
-    'T0': 64,
-    'Thread pointer': 64,
-    'Global pointer': 64,
-    'Stack pointer': 64,
-    'Return address': 64,
-    'performance_events' : 39,
-    'instr': 32,
-    'pc': 64
-}
-
-# helper functions
-def bits_in_int(n, bit_type, bit_size=1024):
-    count = 0
-    while n:
-        n &= n - 1
-        count += 1
-    if bit_type == 0:
-        return bit_size - count
-    return count
-
-def calculate_atf_pkt_deterministic_offset(key):
-    offset = 0
-    keys = list(atf_pkt_deterministic_structure.keys())
-    for k in reversed(keys):
-        if k == key:
-            return offset
-        offset += atf_pkt_deterministic_structure[k]
-
-def create_seed_mask_and_range_for_values(values_dict):
-    seed = 0
-    mask = 0
-    for k, v in values_dict.items():
-        mask_chunk = ((1 << atf_pkt_deterministic_structure[k]) - 1) << calculate_atf_pkt_deterministic_offset(k)
-        mask |= mask_chunk
-        seed |= (v << calculate_atf_pkt_deterministic_offset(k)) & mask_chunk
-    # range is a single number, it is equal to the number of bits in the mask
-    # this way the specified seed must match exactly the current atf_data_pkt_deterministic, resulting in the number
-    # of positive bits equal to range_
-    range_ = bits_in_int(mask, bit_type=1, bit_size=1024) 
-    return seed, mask, range_
+# from advanced_trace_filter import create_seed_mask_and_range_for_values, calculate_atf_pkt_deterministic_offset, ATF_Mode, atf_pkt_deterministic_structure, bits_in_int
+import advanced_trace_filter as atf
 
 # print( create_seed_mask_and_range_for_values({'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}) )
 # exit()
@@ -271,9 +200,14 @@ class ContinuousMonitoringSystemController:
             values_dict = {'pc': 0x80000000, 'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}
             cms_ctrl.set_atf_match_rule(seed_address=0, values_dict)
          '''
-        seed, mask, range_ = create_seed_mask_and_range_for_values(values_dict)
+        seed, mask, range_ = atf.create_seed_mask_and_range_for_values(values_dict)
         self.set_atf_seed(seed, seed_address, mask=mask)
         self.set_atf_range(seed_address, range_address=0, lower_bound=range_, upper_bound=range_)
+    
+    def reset_atf_match_rule(self, seed_address, num_of_ranges=8):
+        self.set_atf_seed(0, seed_address, seed_bit_width=1024)
+        for i in range(num_of_ranges):
+            self.set_atf_range(seed_address, range_address=i, lower_bound=1023, upper_bound=0)
 
     def reset_atf(self, num_of_seeds=16, num_of_ranges=8):
         # makes all seeds and ranges inactive
