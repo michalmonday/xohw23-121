@@ -1,4 +1,5 @@
 #include <gui_state_edit_rule.h>
+#include <gui_state_select_number.h>
 #include <display_config.h>
 #include <gui_cms.h>
 #include <gui_button.h>
@@ -8,6 +9,7 @@
 
 void Attribute::edit_attribute() {
     Serial.println("Attribute label released");
+    gui->get_state_select_number()->set_number(value);
     gui->push_state(GUI_STATE_SELECT_NUMBER);
     gui->get_state_select_number()->set_on_number_selected_callback([this](long long value){
         set_value(value);
@@ -121,6 +123,11 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
             gui->pop_state();
             // TODO send rule to CMS (rpc)
             Serial.println("Rule should be saved, main state should be updated, and CMS rpc should be called");
+            if (rule != nullptr) {
+                rule->push_to_pynq();
+            } else {
+                Serial.println("Rule is null");
+            }
         }
     );
     add_element(btn_ok);

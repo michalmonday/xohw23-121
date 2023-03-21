@@ -30,7 +30,7 @@ public:
     String get_text() { return text; }
     void set_padding_x(double padding_x);
     void set_padding_y(double padding_y);
-
+    void set_text_colour(unsigned int text_colour) { this->text_color = text_colour; needs_redraw = true; }
 private:
     // these have correction based on datum and are appropriate for "contains_point" and background drawing (unlike original x and y)
     int left_x, top_y; 

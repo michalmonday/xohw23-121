@@ -10,7 +10,7 @@
 
 class Rule : public GUI_Element {
 public:
-    Rule(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
+    Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
     virtual void draw() override;
     virtual void undraw() override;
 
@@ -20,14 +20,18 @@ public:
     long get_attribute(String attribute) { return attributes[attribute]; }
     String get_attribute_as_hex_string(String attribute) { return "0x" + String(attributes[attribute], HEX); }
     bool has_attribute(String attribute) { return attributes.find(attribute) != attributes.end(); }
-    // String get_attributes_as_JSON_string();
+    char * get_attributes_as_JSON_string();
 
     void set_text(String text) { label->set_text(text); }
 
     void set_on_label_released_callback(std::function<void()> func) { label->set_on_release_callback(func); }
     void set_on_checked_callback(std::function<void()> func) { checkbox_is_active->set_on_checked_callback(func); }
     void set_on_unchecked_callback(std::function<void()> func) { checkbox_is_active->set_on_unchecked_callback(func); }
+    bool is_active() { return checkbox_is_active->is_checked(); }
+    void set_active(bool active) { checkbox_is_active->set_is_checked(active); }
+    void set_index(int index) { this->index = index; }
 
+    void push_to_pynq();
 private:
     std::map<String, long long> attributes;
     // Attribues can be any values from the atf_pkt_deterministic_structure in continouos_monitoring_system_controller.py
@@ -57,6 +61,7 @@ private:
     // GUI_Button *button_edit;
     GUI_Label *label;
     unsigned int colour;
+    int index;
 };
 
 

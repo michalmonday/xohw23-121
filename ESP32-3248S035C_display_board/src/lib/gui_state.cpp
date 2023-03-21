@@ -69,6 +69,10 @@ void GUI_State::add_element(GUI_Element* element) {
     element->needs_redraw = true;
 }
 
+void GUI_State::remove_element(GUI_Element* element) {
+    elements.erase(std::remove(elements.begin(), elements.end(), element), elements.end());
+}
+
 void GUI_State::on_state_enter() {
     last_state_enter_time = millis();
     Serial.println("State entered");

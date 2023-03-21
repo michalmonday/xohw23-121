@@ -33,6 +33,9 @@ public:
     GUI_Label *get_label_ap_conn_status() { return label_ap_conn_status; }
     GUI_Label *get_label_tcp_conn_status() { return label_tcp_conn_status; }
     int get_dataset_size() { return dataset_size; }
+
+    Rule* add_atf_rule();
+    void clear_atf_rules();
 private:
     int dataset_size;
     // GUI_Graph *ecg_graph;
@@ -57,6 +60,14 @@ private:
     GUI_Button *btn_add_new_rule;
 
     std::vector<Rule*> rules;
+
+    const int button_width = RESOLUTION_X * 0.16;
+    // const int button_height = RESOLUTION_Y * 0.15;
+    const int button_height = RESOLUTION_Y * 0.07;
+    const int button_x = RESOLUTION_X*0.48;
+    const int button_y_start = RESOLUTION_Y*0.05;
+    const int button_font_size = 1; //2;
+    const int button_offset = button_height * 1.3;
 };
 
 #endif

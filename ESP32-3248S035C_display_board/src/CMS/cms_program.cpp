@@ -490,6 +490,7 @@ void parse_tcp_message(String line) {
             
             // gui->get_state_main()->set_run_status("Pynq restarted");
         }
+
     }
 
 // {
@@ -622,6 +623,49 @@ void parse_tcp_message(String line) {
                 gui->get_state_main()->set_run_status("Running");
             } else {
                 gui->get_state_main()->set_run_status("Halted");
+            }
+
+// {"atf_rules": {"-1": {"active": false, "attributes": {}}, "0": {"active": true, "attributes": {"PC": 2147485676}}, "1": {"active": false, "attributes": {}}, "2": {"active": false, "attributes": {}}}
+            if (cJSON_HasObjectItem(return_value_obj, "atf_rules")) {
+                // clear old rules
+                gui->get_state_main()->clear_atf_rules();
+                cJSON *atf_rules_obj = cJSON_GetObjectItem(return_value_obj, "atf_rules");
+                for (int i=0; i<cJSON_GetArraySize(atf_rules_obj); i++) {
+                    cJSON *rule_obj = cJSON_GetArrayItem(atf_rules_obj, i);
+                    // Do something with new plot value
+
+                    int rule_id = atoi(rule_obj->string);
+                    Serial.print("Rule id: ");
+                    Serial.println(rule_id);
+
+                    Rule *rule = gui_main_state->add_atf_rule();
+
+                    cJSON *active_obj = cJSON_GetObjectItem(rule_obj, "active");
+                    bool active = active_obj->valueint;
+                    Serial.print("Active: ");
+                    Serial.println(active);
+
+                    cJSON *attributes_obj = cJSON_GetObjectItem(rule_obj, "attributes");
+                    if (attributes_obj) {
+                        for (int j=0; j<cJSON_GetArraySize(attributes_obj); j++) {
+                            cJSON *attribute_obj = cJSON_GetArrayItem(attributes_obj, j);
+                            // Do something with new plot value
+
+                            String attribute_name = attribute_obj->string;
+                            Serial.print("Attribute name: ");
+                            Serial.println(attribute_name);
+
+                            // cJSON does not support 64-bit values so strings are used instead 
+                            // Serial.printf("Converting %s to 64-bit value\n", attribute_obj->valuestring);
+                            long long attribute_value = strtoll(attribute_obj->valuestring, NULL, 16);
+                            Serial.print("Attribute value: ");
+                            Serial.println(attribute_value);
+
+                            rule->set_attribute(attribute_name, attribute_value);
+                        }
+                    }
+                    rule->set_active(active);
+                }
             }
         }
 

@@ -76,13 +76,6 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
 
     // ---------------------------------
     // ------------ Buttons  -----------
-    const int button_width = RESOLUTION_X * 0.16;
-    // const int button_height = RESOLUTION_Y * 0.15;
-    const int button_height = RESOLUTION_Y * 0.07;
-    const int button_x = RESOLUTION_X*0.48;
-    const int button_y_start = RESOLUTION_Y*0.05;
-    const int button_font_size = 1; //2;
-    const int button_offset = button_height * 1.3;
     int button_y = button_y_start;
     btn_load_program = new GUI_Button(tft, "Load", button_x, button_y, button_width, button_height, button_font_size,
         WHITE,  // text colour
@@ -197,28 +190,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
         [this, gui, tft](){   
             // push rule selection state
             Serial.println("Add new rule button was released");
-            int rule_x = pynq_graph->get_x();
-            int rule_y = button_y_start + (1 + rules.size()) * button_offset;
-            Rule *rule = new Rule(tft, rule_x, rule_y, button_height, button_height, WHITE);
-            rule->set_on_label_released_callback(
-                [gui, rule](){
-                    Serial.println("Rule label was released");
-                    gui->get_state_edit_rule()->set_rule_to_edit(rule);
-                    gui->push_state(GUI_STATE_EDIT_RULE);
-                }
-            );
-            rule->set_on_checked_callback(
-                [this, rule](){
-                    Serial.println("Rule checkbox was checked");
-                }
-            );
-            rule->set_on_unchecked_callback(
-                [this, rule](){
-                    Serial.println("Rule checkbox was unchecked");
-                }
-            );
-            add_element(rule);
-            rules.push_back(rule);
+            add_atf_rule();
         }
     );
     // add_element(label_rules);
@@ -240,6 +212,47 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     // ); 
     // rules_y += button_offset;
     // add_element(checkbox);
+}
+
+Rule* GUI_State_Main::add_atf_rule() {
+    int rule_x = pynq_graph->get_x();
+    int rule_y = button_y_start + (1 + rules.size()) * button_offset;
+    Rule *rule = new Rule(tft, rules.size(), rule_x, rule_y, button_height, button_height, WHITE);
+    GUI_CMS *gui_cms = static_cast<GUI_CMS*>(this->gui);
+    rule->set_on_label_released_callback(
+        [gui_cms, rule](){
+            Serial.println("Rule label was released");
+            gui_cms->get_state_edit_rule()->set_rule_to_edit(rule);
+            gui_cms->push_state(GUI_STATE_EDIT_RULE);
+        }
+    );
+    rule->set_on_checked_callback(
+        [this, rule](){
+            Serial.println("Rule checkbox was checked");
+            int rule_index = std::find(rules.begin(), rules.end(), rule) - rules.begin();
+            rpc("rpc_atf_rule_set_active", "%d%b", rule_index, true);
+        }
+    );
+    rule->set_on_unchecked_callback(
+        [this, rule](){
+            Serial.println("Rule checkbox was unchecked");
+            int rule_index = std::find(rules.begin(), rules.end(), rule) - rules.begin();
+            rpc("rpc_atf_rule_set_active", "%d%b", rule_index, false);
+        }
+    );
+    add_element(rule);
+    rules.push_back(rule);
+
+    rule->push_to_pynq();
+    return rule;
+}
+
+void GUI_State_Main::clear_atf_rules() {
+    for (Rule *rule : rules) {
+        remove_element(rule);
+        delete rule;
+    }
+    rules.clear();
 }
 
 void GUI_State_Main::draw() {
