@@ -20,7 +20,7 @@ class GUI_CMS;
 // Graphical objects like a checkbox and a label, maybe a button will be added for PC to select from a list of functions (from objdump).
 struct Attribute {
     String name;
-    long value;
+    long long value;
     GUI_Label *label;
     GUI_Checkbox *checkbox_is_active;
     const static int font_size = 2;
@@ -58,8 +58,11 @@ struct Attribute {
     void set_value(long long value) {
         this->value = value;
         char hex_str[30];
-        lltoa(value, hex_str, 16);
-        label->set_text(name + ": 0x" + String(hex_str));
+        lltoa(llabs(value), hex_str, 16);
+        String prefix = "0x";
+        if (value < 0)
+            prefix = "-0x";
+        label->set_text(name + ": " + prefix + String(hex_str));
     }
     bool is_active() {
         return checkbox_is_active->is_checked();

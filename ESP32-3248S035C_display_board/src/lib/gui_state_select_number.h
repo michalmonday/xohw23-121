@@ -7,6 +7,7 @@
 #include <gui_state.h>
 #include <gui_label.h>
 #include <gui_button.h>
+#include <gui_triangle.h>
 
 
 class GUI_State_Select_Number : public GUI_State {
@@ -30,6 +31,16 @@ private:
     std::vector<GUI_Label*> labels;
     std::function <void(long long)> on_number_selected_callback;
     GUI_Button* btn_ok;
+    std::vector<GUI_Triangle*> triangles_up;
+    std::vector<GUI_Triangle*> triangles_down;
+    GUI_Triangle *triangle_up_polarity;
+    GUI_Triangle *triangle_down_polarity;
+
+    void digit_up(int index);
+    void digit_down(int index);
+    void toggle_polarity();
+    void update_label_colour(int index);
+    void update_labels_colour();
 };
 
 #endif

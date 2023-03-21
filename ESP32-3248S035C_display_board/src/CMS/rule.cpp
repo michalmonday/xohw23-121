@@ -1,7 +1,9 @@
 #include "rule.h"
+#include <cJSON.h>
+#include <rpc.h>
 
-Rule::Rule(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
-    : GUI_Element(tft, x, y, w, h), colour(colour) 
+Rule::Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
+    : GUI_Element(tft, x, y, w, h), colour(colour), index(index)
 {
     int checkbox_w = h;
     int checkbox_h = h;
@@ -44,6 +46,22 @@ void Rule::remove_attribute(String attribute) {
         attributes.erase(attribute);
 }
 
-// String Rule::get_attributes_as_JSON_string() {
-//     return "not implemented";
-// }
+// Caller must deallocate the returned string
+char * Rule::get_attributes_as_JSON_string() {
+    // cJSON does not support 64-bit values so hex strings are used instead
+    cJSON *root = cJSON_CreateObject();
+    for (auto &attr : attributes) {
+        // cJSON_AddNumberToObject(root, attr.first.c_str(), attr.second);
+        cJSON_AddStringToObject(root, attr.first.c_str(), String(attr.second, HEX).c_str());
+    }
+    char *json_string = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    return json_string;
+}
+
+void Rule::push_to_pynq() {
+    // rpc_set_atf_rule(index, is_active, json_str_attributes_dict)
+    char * attr_dict = get_attributes_as_JSON_string();
+    rpc("rpc_set_atf_rule", "%d%b%s", index, is_active(), attr_dict);
+    free(attr_dict);
+}
