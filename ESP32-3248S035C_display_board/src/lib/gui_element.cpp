@@ -8,16 +8,21 @@ GUI_Element::GUI_Element(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int
 }
 
 GUI_Element::~GUI_Element() {
+    undraw();
     for (auto child_element : child_elements) {
         delete child_element;
     }
 }
 
 void GUI_Element::draw() {
+    needs_redraw = false;
+    // if (is_visible == false) {
+    //     undraw();
+    //     return;
+    // }
     if (background_enabled)
         tft->fillRect(x, y, w, h, background_colour);
     // tft->drawRect(x, y, w, h, TFT_WHITE); 
-    needs_redraw = false;
 }
 
 void GUI_Element::undraw() {

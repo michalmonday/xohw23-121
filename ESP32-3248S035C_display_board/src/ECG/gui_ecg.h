@@ -17,7 +17,7 @@ public:
     GUI_ECG(TFT_eSPI &tft, Touch *touch);
     // void notify(String text, int timeout=0);
     GUI_State_Main *get_state_main();
-    // GUI_State_Select_Program *get_state_select_program(); 
+    // GUI_State_Select_Option *get_state_select_option(); 
 };
 
 #endif

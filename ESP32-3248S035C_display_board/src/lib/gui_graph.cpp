@@ -191,7 +191,7 @@ void GUI_Graph::draw_current_values() {
     int prev_pos = -1;
     int i = 0;
     for (auto it = y_positions.begin(); it != y_positions.end(); ++it) {
-        Serial.printf("i: %d y_pos=%d\n", i, it->first);
+        // Serial.printf("i: %d y_pos=%d\n", i, it->first);
         i++; 
         int y_pos = it->first;
         // to avoid overlapping

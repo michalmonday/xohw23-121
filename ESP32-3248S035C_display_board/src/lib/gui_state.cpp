@@ -4,12 +4,12 @@
 // -------------------------------
 // ---------- GUI_State ----------
 
-GUI_State::GUI_State(TFT_eSPI *tft, GUI *gui, Touch *touch) : tft(tft), gui(gui), touch(touch), last_state_enter_time(0) {
+GUI_State::GUI_State(TFT_eSPI *tft, GUI *gui, Touch *touch) : tft(tft), gui(gui), touch(touch), last_state_enter_time(0), last_touch_release_time(0) {
 }
 
 void GUI_State::update() {
     touch->update();
-    if (millis() - last_state_enter_time < 300) {
+    if (millis() - last_state_enter_time < 400 || millis() - last_touch_release_time < 100) {
         touch->reset_last_press();
         touch->reset_last_release();
         return;
@@ -30,6 +30,9 @@ void GUI_State::update() {
                 child_element->on_press();
             if (was_released) 
                 child_element->on_release();
+            
+            // if the child element happens to cause deletion of other objects then this break may prevent some issues
+            break;
         }
         if (!element->contains_point(touch_x, touch_y)) 
             continue;
@@ -43,8 +46,10 @@ void GUI_State::update() {
 
     if (was_pressed) 
         touch->reset_last_press();
-    if (was_released) 
+    if (was_released) {
         touch->reset_last_release();
+        last_touch_release_time = millis();
+    }
 }
 
 void GUI_State::draw() {
@@ -77,7 +82,7 @@ void GUI_State::on_state_enter() {
     last_state_enter_time = millis();
     Serial.println("State entered");
     for (GUI_Element *element : elements) {
-        Serial.println("Redrawing element");
+        // Serial.println("Redrawing element");
         element->needs_redraw = true;
         for (auto child_element : element->get_child_elements()) {
             child_element->needs_redraw = true;

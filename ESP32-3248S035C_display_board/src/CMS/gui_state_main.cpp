@@ -90,8 +90,24 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
             //         "function_name": "rpc_list_programs"
             //     }
             // }
+            gui->get_state_select_option()->set_on_option_selected_callback([gui](String category, String program_name){
+                cJSON *root = cJSON_CreateObject();
+                cJSON *rpc_obj = cJSON_CreateObject();
+                cJSON_AddItemToObject(root, "RPC", rpc_obj);
+                cJSON_AddStringToObject(rpc_obj, "function_name", "rpc_load_program");
+                const char *string_array[1] = {program_name.c_str()}; 
+                cJSON *function_args_obj = cJSON_CreateStringArray(string_array, 1);
+                cJSON_AddItemToObject(rpc_obj, "function_args", function_args_obj);
+                char *json_str = cJSON_PrintUnformatted(root);
+                Serial.print("Sending: '");
+                Serial.println(json_str);
+                add_string_to_queue(queue_to_send, new String(json_str), true);
+                free(json_str);
+                cJSON_Delete(root);
+                gui->pop_state();
+            });
             rpc_no_args("rpc_list_programs");
-            gui->push_state(GUI_STATE_SELECT_PROGRAM);
+            gui->push_state(GUI_STATE_SELECT_OPTION);
         }
     );
     button_y += button_offset;
@@ -243,7 +259,7 @@ Rule* GUI_State_Main::add_atf_rule() {
     add_element(rule);
     rules.push_back(rule);
 
-    rule->push_to_pynq();
+    // rule->push_to_pynq();
     return rule;
 }
 

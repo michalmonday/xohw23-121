@@ -23,6 +23,7 @@ public:
     void schedule_redraw();
 protected:
     unsigned long last_state_enter_time;
+    unsigned long last_touch_release_time;
     std::vector<GUI_Element*> elements;
     TFT_eSPI *tft;
     Touch *touch;

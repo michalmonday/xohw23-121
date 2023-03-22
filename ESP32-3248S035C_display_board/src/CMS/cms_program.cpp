@@ -14,7 +14,8 @@
 #include <gui_label.h>
 #include <rpc.h>
 #include "gui_state_main.h"
-#include "gui_state_select_program.h"
+#include "gui_state_select_option.h"
+#include "gui_state_explore_objdump.h"
 #include "gui_cms_states.h"
 #include "rule.h"
 
@@ -329,7 +330,8 @@ void update_mode(int mode) {
 void parse_tcp_message(String line) {
     cJSON *root = cJSON_Parse(line.c_str());
     if (root == NULL) {
-        Serial.println("Failed to parse json");
+        Serial.println("Failed to parse json. Line:");
+        Serial.println(line);
         return;
     }
 
@@ -538,7 +540,7 @@ void parse_tcp_message(String line) {
             gui->get_state_main()->set_loaded_program(loaded_program);
         }
 
-        if (function_name.equals("rpc_list_programs")) {
+        if (function_name.equals("rpc_list_programs") || function_name.equals("rpc_list_objdumps")) {
             cJSON *program_category_obj = return_value_obj->child;
             while(program_category_obj) {
                 String category = program_category_obj->string;
@@ -554,7 +556,7 @@ void parse_tcp_message(String line) {
                     // make a button or something, maybe change gui state into program selection?
                 }
                 program_category_obj = program_category_obj->next;
-                gui->get_state_select_program()->add_programs(category, programs);
+                gui->get_state_select_option()->add_options(category, programs);
             }
         }
 
@@ -672,6 +674,26 @@ void parse_tcp_message(String line) {
         if (function_name.equals("rpc_reset_dataset")) {
             gui->get_state_main()->set_dataset_size(0);
         }
+
+            // rpc_get_objdump_data
+        if (function_name.equals("rpc_get_objdump_data")) {
+            // if (cJSON_HasObjectItem(return_value_obj, "objdump_data")) {
+                // cJSON *objdump_data_obj = cJSON_GetObjectItem(return_value_obj, "objdump_data");
+                // String objdump_data = objdump_data_obj->valuestring;
+                // set function/basic-block selection state and fill it with received data
+                GUI_State_Explore_Objdump *state_explore_objdump = gui->get_state_explore_objdump();
+                bool success = state_explore_objdump->set_objdump(return_value_obj);
+                if (success) {
+                    state_explore_objdump->push_function("_start");
+                    state_explore_objdump->set_on_address_selected([](long long address) {
+                        gui->get_state_edit_rule()->set_attribute("PC", address);
+                    });
+                    gui->push_state(GUI_STATE_EXPLORE_OBJDUMP);
+                } else {
+                    Serial.println("Failed to set objdump data");
+                }
+            // }
+        }
     }
 
 //    if (line.startsWith("add_point")) {
@@ -756,9 +778,12 @@ void loop(void) {
             // String *line = new String(client.readStringUntil('\n'));
             String *line = new String(client.readStringUntil('\n'));
             // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')
-            Serial.print("Received: '");
-            Serial.print(*line);
-            Serial.println("'");
+            // Serial.print("Received: '");
+            // Serial.print(*line);
+            // Serial.println("'");
+            // // print free memory 
+            // Serial.printf("Free memory: %d\n", ESP.getFreeHeap());
+            // Serial.println("This task watermark: " + String(uxTaskGetStackHighWaterMark(drawing_thread)) + " bytes");
             add_string_to_queue(queue_received, line, true);
         }
     }

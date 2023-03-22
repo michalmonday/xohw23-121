@@ -6,6 +6,14 @@
 GUI_Label::GUI_Label(TFT_eSPI *tft, String text, int x, int y, int font_size, int datum, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback, double padding_x, double padding_y) :
     GUI_Element(tft, x, y, tft->textWidth(text), tft->fontHeight(font_size), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
 {
+    update_touch_area();
+    set_text(text);
+}
+
+void GUI_Label::update_touch_area() {
+    // tft->setTextSize(font_size);
+    // w = tft->textWidth(text);
+    // h = tft->fontHeight();
     if (datum == TL_DATUM || datum == ML_DATUM || datum == BL_DATUM) {
         left_x = this->x;
     } else if (datum == TC_DATUM || datum == MC_DATUM || datum == BC_DATUM) {
@@ -21,20 +29,18 @@ GUI_Label::GUI_Label(TFT_eSPI *tft, String text, int x, int y, int font_size, in
     } else if (datum == BL_DATUM || datum == BC_DATUM || datum == BR_DATUM) {
         top_y = this->y - h;
     }
-    update_touch_area();
-    set_text(text);
-}
-
-void GUI_Label::update_touch_area() {
     touch_left_x = left_x - padding_x * w;
     touch_right_x = left_x + w + padding_x * w;
     touch_top_y = top_y - padding_y * h;
     touch_bottom_y = top_y + h + padding_y * h;
+    // above is correct for datum = TL_DATUM (top left)
 }
 
 void GUI_Label::draw(unsigned int clr_override) {
     if (background_enabled)
-        tft->fillRect(left_x, top_y, w, h, background_colour);
+        // tft->fillRect(left_x, top_y, w, h, background_colour);
+        tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, background_colour);
+        // tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
         // tft->fillRect(left_x, top_y, w, h, DKRED);
 
     // draw touch area
@@ -54,7 +60,7 @@ void GUI_Label::draw() {
 void GUI_Label::undraw() {
     // GUI_Element::undraw();
     // paint over the label with the background colour
-    Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
+    // Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
     tft->setTextSize(font_size);
     tft->setTextDatum(datum);
     tft->setTextColor(background_colour);
@@ -73,7 +79,7 @@ void GUI_Label::set_font_size(int font_size) {
     this->font_size = font_size;
     tft->setTextSize(font_size);
     w = tft->textWidth(text);
-    h = tft->fontHeight(font_size);
+    h = tft->fontHeight();
     update_touch_area();
     needs_redraw = true;
 }
@@ -83,7 +89,7 @@ void GUI_Label::set_text(String text) {
     this->text = text;
     tft->setTextSize(font_size);
     w = tft->textWidth(text);
-    h = tft->fontHeight(font_size);
+    h = tft->fontHeight();
     update_touch_area();
     needs_redraw = true;
 }
