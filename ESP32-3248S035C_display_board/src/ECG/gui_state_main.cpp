@@ -42,11 +42,17 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI *gui, Touch *touch) :
         "", "", "", // title, xlabel, ylabel
         BLUE, RED, WHITE, BLACK // grid color, axis color, text color, background color
         );
+    if (ecg_graph == NULL) {
+        Serial.println("Failed to allocate memory for ecg_graph");
+    }
     ecg_graph->hide_legend();
     ecg_graph->hide_grid();
     ecg_graph->hide_axes();
     
     label_electrodes_status = new GUI_Label(tft, "Electrodes disconnected", RESOLUTION_X*0.5, RESOLUTION_Y*0.92, 2, TC_DATUM, RED, BLACK);
+    if (label_electrodes_status == NULL) {
+        Serial.println("Failed to allocate memory for label_electrodes_status");
+    }
 
     add_element(ecg_graph);
     add_element(label_electrodes_status);

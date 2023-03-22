@@ -8,7 +8,7 @@
 #include <gui_label.h>
 #include <gui_graph.h>
 #include <gui_button.h>
-#include "rule.h"
+#include "watchpoint.h"
 
 class GUI_CMS;
 class GUI_Button;
@@ -34,8 +34,8 @@ public:
     GUI_Label *get_label_tcp_conn_status() { return label_tcp_conn_status; }
     int get_dataset_size() { return dataset_size; }
 
-    Rule* add_atf_rule();
-    void clear_atf_rules();
+    Watchpoint* add_atf_watchpoint();
+    void clear_atf_watchpoints();
 private:
     int dataset_size;
     // GUI_Graph *ecg_graph;
@@ -55,11 +55,11 @@ private:
     GUI_Button *btn_test;
     GUI_Button *btn_reset_dataset;
 
-    // rules section
-    // GUI_Label *label_rules;
-    GUI_Button *btn_add_new_rule;
+    // watchpoints section
+    // GUI_Label *label_watchpoints;
+    GUI_Button *btn_add_new_watchpoint;
 
-    std::vector<Rule*> rules;
+    std::vector<Watchpoint*> watchpoints;
 
     const int button_width = RESOLUTION_X * 0.16;
     // const int button_height = RESOLUTION_Y * 0.15;

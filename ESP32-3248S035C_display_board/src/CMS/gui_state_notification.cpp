@@ -5,6 +5,9 @@
 GUI_State_Notification::GUI_State_Notification(TFT_eSPI *tft, GUI *gui, Touch *touch, int timeout) : 
     GUI_State(tft, gui, touch), timeout(timeout) {
     label = new GUI_Label(tft, "Notification", RESOLUTION_X/2, RESOLUTION_Y/2, 3, MC_DATUM, WHITE, BLACK);
+    if (label == NULL) {
+        Serial.println("Failed to allocate memory for label");
+    }
     add_element(label);
 }
 

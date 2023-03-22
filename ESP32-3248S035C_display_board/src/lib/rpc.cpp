@@ -11,7 +11,11 @@ void rpc_no_args(String function_name) {
     char *json_str = cJSON_PrintUnformatted(root);
     Serial.print("Sending: '");
     Serial.println(json_str);
-    add_string_to_queue(queue_to_send, new String(json_str), true);
+    String *msg = new String(json_str);
+    if (msg == nullptr) {
+        Serial.println("Failed to allocate memory for RPC message");
+    }
+    add_string_to_queue(queue_to_send, msg, true);
     free(json_str);
     cJSON_Delete(root);
 }
@@ -76,7 +80,11 @@ void rpc(String function_name, const char * format, ...) {
     char *json_str = cJSON_PrintUnformatted(root);
     Serial.print("Sending: '");
     Serial.println(json_str);
-    add_string_to_queue(queue_to_send, new String(json_str), true);
+    String *msg = new String(json_str);
+    if (msg == nullptr) {
+        Serial.println("Failed to allocate memory for RPC message");
+    }
+    add_string_to_queue(queue_to_send, msg, true);
     free(json_str);
     cJSON_Delete(root);
 }

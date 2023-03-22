@@ -48,14 +48,16 @@ void GUI_Button::set_text(String text) {
 }
 
 void GUI_Button::on_release() {
-    GUI_Element::on_release();
     background_colour = original_background_colour;
     // Serial.println("Button '" + text + "' touched");
     needs_redraw = true;
+    GUI_Element::on_release();
+    // no members should be modified here to allow on_release_callback to destroy the object itself if needed
 }
 
 void GUI_Button::on_press() {
-    GUI_Element::on_press();
     background_colour = WHITE;
     needs_redraw = true;
+    GUI_Element::on_press();
+    // no members should be modified here to allow on_press_callback to destroy the object itself if needed
 }

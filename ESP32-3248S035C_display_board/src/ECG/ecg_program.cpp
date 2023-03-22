@@ -64,7 +64,11 @@ LinePlot* create_new_line_plot(int clr=-1) {
         current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
         Serial.printf("current_colour_id=%d\n", current_colour_id);
     }
-    return new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    LinePlot* line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    if (line_plot == NULL) {
+        Serial.println("Failed to allocate memory for line_plot");
+    }
+    return line_plot;
 }
 
 void drawing_thread_func(void *parameter) {
@@ -98,6 +102,9 @@ void setup() {
     Serial.println();
     communication_queues_init();
     gui = new GUI_ECG(tft, &touch);
+    if (gui == NULL) {
+        Serial.println("Failed to allocate memory for gui");
+    }
     gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
     delay(100);
     serial_riscv.begin(115200);
@@ -187,6 +194,10 @@ void loop(void) {
         // Serial.println("'");
         // String *formatted_msg = new String("{\"add_points_risc_v\": {\"ECG\": [" + String(ecg_value) + "]}}");
         String *msg = new String(line);
+        if (msg == NULL) {
+            Serial.println("Failed to allocate memory for msg");
+            return;
+        }
         if (!add_string_to_queue(queue_received, msg)) {
             delete msg;
         }

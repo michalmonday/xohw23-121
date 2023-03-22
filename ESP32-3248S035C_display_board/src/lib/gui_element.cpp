@@ -3,7 +3,7 @@
 // -------------------------------
 // ---------- GUI_Element ----------
 GUI_Element::GUI_Element(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int background_colour,std::function<void()> on_press_callback, std::function<void()> on_release_callback) : 
-    tft(tft), x(x), y(y), w(w), h(h), background_colour(background_colour), needs_redraw(true), on_release_callback(on_release_callback), on_press_callback(on_press_callback), background_enabled(true)
+    tft(tft), x(x), y(y), w(w), h(h), background_colour(background_colour), needs_redraw(true), on_release_callback(on_release_callback), on_press_callback(on_press_callback), background_enabled(true), highlight_colour(TFT_WHITE) 
 {
 }
 
@@ -27,6 +27,9 @@ void GUI_Element::draw() {
 
 void GUI_Element::undraw() {
     needs_redraw = true;
+    if (background_enabled) {
+        tft->fillRect(x, y, w, h, background_colour);
+    }
     for (auto child_element : child_elements) {
         child_element->undraw();
         child_element->needs_redraw = true;

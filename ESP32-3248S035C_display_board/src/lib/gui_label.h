@@ -15,17 +15,20 @@ public:
         double padding_x = 0.0,
         double padding_y = 0.0
         );
-    void draw() override;
-    void draw(unsigned int colour_override);
-    void undraw() override;
-    void set_y(int y) override;
-    void set_x(int x) override;
-    void set_w(int w) override;
-    void set_h(int h) override;
-    void set_text(String text); 
+
+    virtual void draw() override;
+    void draw(unsigned int colour_override, unsigned int background_colour_override);
+    virtual void undraw() override;
+    virtual void set_y(int y) override;
+    virtual void set_x(int x) override;
+    virtual void set_w(int w) override;
+    virtual void set_h(int h) override;
+    virtual void set_text(String text); 
     virtual void on_release() override;
     virtual void on_press() override;
     virtual bool contains_point(int x, int y) override;
+    virtual void set_on_release_callback(std::function<void()> on_release_callback);
+
     void set_font_size(int font_size);
     String get_text() { return text; }
     void set_padding_x(double padding_x);

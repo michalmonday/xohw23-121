@@ -1,5 +1,5 @@
-#ifndef RULE_ESP32_H
-#define RULE_ESP32_H
+#ifndef WATCHPOINT_ESP32_H
+#define WATCHPOINT_ESP32_H
 #include <gui_element.h>
 #include <gui_checkbox.h>
 #include <gui_label.h>
@@ -8,9 +8,9 @@
 #include <gui_button.h>
 
 
-class Rule : public GUI_Element {
+class Watchpoint : public GUI_Element {
 public:
-    Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
+    Watchpoint(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
     virtual void draw() override;
     virtual void undraw() override;
 
@@ -55,7 +55,7 @@ private:
     // }
     // 
     // So the attributes can be assigned like:
-    // rule->set_attribute("pc", 0x8000007A0);
+    // watchpoint->set_attribute("pc", 0x8000007A0);
 
     GUI_Checkbox *checkbox_is_active;
     // GUI_Button *button_edit;

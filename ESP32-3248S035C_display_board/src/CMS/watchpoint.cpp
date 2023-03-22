@@ -1,14 +1,17 @@
-#include "rule.h"
+#include "watchpoint.h"
 #include <cJSON.h>
 #include <rpc.h>
 
-Rule::Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
+Watchpoint::Watchpoint(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
     : GUI_Element(tft, x, y, w, h), colour(colour), index(index)
 {
     int checkbox_w = h;
     int checkbox_h = h;
     int space = h*0.2;
     checkbox_is_active = new GUI_Checkbox(tft, false, x, y, checkbox_w, checkbox_h, 1, GREEN, BLACK, on_checked, on_unchecked);
+    if (checkbox_is_active == nullptr) {
+        Serial.println("ERROR: Watchpoint::Watchpoint() - checkbox_is_active is nullptr");
+    }
 
     // int button_x = x + checkbox_w + space;
     // int button_w = tft->textWidth("Edit") * 1.4;
@@ -19,7 +22,10 @@ Rule::Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int co
 
     // int label_x = button_x + button_w + space;
     int label_x = x + checkbox_w + space;
-    label = new GUI_Label(tft, "rule_" + String(index), label_x, y + h/2, 1, ML_DATUM, WHITE, BLACK);
+    label = new GUI_Label(tft, "watchpoint_" + String(index), label_x, y + h/2, 1, ML_DATUM, WHITE, BLACK);
+    if (label == nullptr) {
+        Serial.println("ERROR: Watchpoint::Watchpoint() - label is nullptr");
+    }
     label->set_padding_y(1.0); // 1.0 means it will occupy 3x the previous height (100% will be added from each side)
     label->set_on_release_callback(on_label_released);
 
@@ -28,26 +34,26 @@ Rule::Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int co
     add_child_element(label);
 }
 
-void Rule::draw() {
+void Watchpoint::draw() {
     GUI_Element::draw();
     // tft->fillRect(x, y, w, h, colour);
 }
 
-void Rule::undraw() {
+void Watchpoint::undraw() {
     GUI_Element::undraw();
 }
 
-void Rule::set_attribute(String attribute, long long value) {
+void Watchpoint::set_attribute(String attribute, long long value) {
     attributes[attribute] = value;
 }
 
-void Rule::remove_attribute(String attribute) {
+void Watchpoint::remove_attribute(String attribute) {
     if (has_attribute(attribute)) 
         attributes.erase(attribute);
 }
 
 // Caller must deallocate the returned string
-char * Rule::get_attributes_as_JSON_string() {
+char * Watchpoint::get_attributes_as_JSON_string() {
     // cJSON does not support 64-bit values so hex strings are used instead
     cJSON *root = cJSON_CreateObject();
     for (auto &attr : attributes) {
@@ -59,10 +65,10 @@ char * Rule::get_attributes_as_JSON_string() {
     return json_string;
 }
 
-void Rule::push_to_pynq() {
-    // rpc_set_atf_rule(index, is_active, json_str_attributes_dict)
-    // Serial.println("Pushing rule to PYNQ");
+void Watchpoint::push_to_pynq() {
+    // rpc_set_atf_watchpoint(index, is_active, json_str_attributes_dict)
+    // Serial.println("Pushing watchpoint to PYNQ");
     char * attr_dict = get_attributes_as_JSON_string();
-    rpc("rpc_set_atf_rule", "%d%b%s", index, is_active(), attr_dict);
+    rpc("rpc_set_atf_watchpoint", "%d%b%s", index, is_active(), attr_dict);
     free(attr_dict);
 }

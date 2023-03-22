@@ -8,6 +8,9 @@ GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(TFT_eSPI *tft, GUI_CMS *gui
     : GUI_State(tft, gui, touch), selected_address(0) 
 {
     label_current_function = new GUI_Label(tft, "-", RESOLUTION_X/2, RESOLUTION_Y * 0.01, 2, TC_DATUM, WHITE, BLACK);
+    if (label_current_function == NULL) {
+        Serial.println("label_current_function is NULL");
+    }
     add_element(label_current_function);
     tft->setTextSize(2);
     const int btn_w = tft->textWidth("Back") + RESOLUTION_X * 0.02;
@@ -15,6 +18,9 @@ GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(TFT_eSPI *tft, GUI_CMS *gui
     btn_back = new GUI_Button(tft, "Back", RESOLUTION_X - btn_w, RESOLUTION_Y * 0.01, btn_w, btn_h, 2, WHITE, BLACK, [](){}, [this](){
         pop_function();
     });
+    if (btn_back == NULL) {
+        Serial.println("btn_back is NULL");
+    }
     btn_back->hide();
     add_element(btn_back);
 }
@@ -175,16 +181,27 @@ void GUI_State_Explore_Objdump::set_current_function(String current_function) {
         if (label == NULL) {
             Serial.println("Failed to allocate memory for GUI_Label in GUI_State_Explore_Objdump::set_current_function");
         }
-        if (contains_function(item->destination)) {
+
+        String label_text = item->address + " " + item->instr_name;
+        if (contains_function(item->destination) && item->destination != current_function) {
             label->set_on_release_callback([this, item](){
                 push_function(item->destination);
             });
+            label->set_text_colour(WHITE);
         } else if (item->instr_name == "RET") {
             label->set_on_release_callback([this, item](){
                 pop_function();
             });
+        } else {
+            label->set_text_colour(DKGREY);
         }
-        String label_text = item->address + " " + item->instr_name;
+
+        if (item->type == "entry" || item->type == "exit") {
+            label->set_text_colour(YELLOW);
+            if (item->type == "entry") {
+                label_text += " (ENTRY)";
+            }
+        }
         if (item->type == "branch" || item->type == "function") {
             label_text += " -> " + item->destination;
         }
@@ -213,8 +230,22 @@ void GUI_State_Explore_Objdump::clean_objudmp() {
 
 // Should be called while traversing the objdump
 void GUI_State_Explore_Objdump::clean() {
-    for (GUI_Label *label : this->labels)        { remove_element(label); delete label; }
-    for (GUI_Button *btn : this->buttons_select) { remove_element(btn);   delete btn; }
+    for (GUI_Label *label : this->labels) { 
+        if (!has_element(label)) {
+            Serial.println("Label not found in GUI_State_Explore_Objdump::clean");
+            continue;
+        }
+        remove_element(label); 
+        delete label; 
+    }
+    for (GUI_Button *btn : this->buttons_select) {
+        if (!has_element(btn)) {
+            Serial.println("Button not found in GUI_State_Explore_Objdump::clean");
+            continue;
+        }
+        remove_element(btn);
+        delete btn; 
+    }
     this->labels.clear();
     this->buttons_select.clear();
     tft->fillScreen(BLACK);
@@ -224,8 +255,10 @@ void GUI_State_Explore_Objdump::clean() {
 
 void GUI_State_Explore_Objdump::on_state_enter() {
     GUI_State::on_state_enter();
+    Serial.println("GUI_State_Explore_Objdump::on_state_enter");
 }
 
 void GUI_State_Explore_Objdump::on_state_exit() {
     GUI_State::on_state_exit();
+    Serial.println("GUI_State_Explore_Objdump::on_state_exit");
 }

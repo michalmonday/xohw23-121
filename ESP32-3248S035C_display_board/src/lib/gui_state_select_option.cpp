@@ -68,6 +68,9 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
                 on_option_selected_callback(category, option);
             }
         );
+        if (btn == NULL) {
+            Serial.println("Failed to allocate memory for button");
+        }
         button_y += button_offset;
         add_element(btn);
     }

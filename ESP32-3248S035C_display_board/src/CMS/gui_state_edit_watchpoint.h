@@ -1,5 +1,5 @@
-#ifndef GUI_STATE_EDIT_RULE_H
-#define GUI_STATE_EDIT_RULE_H
+#ifndef GUI_STATE_EDIT_WATCHPOINT_H
+#define GUI_STATE_EDIT_WATCHPOINT_H
 
 #include <Arduino.h>
 #include <vector>
@@ -12,11 +12,11 @@
 #include <gui_state_select_number.h>
 #include <gui_cms_states.h>
 
-#include <rule.h>
+#include <watchpoint.h>
 
 class GUI_CMS;
 
-// Attribute struct below groups together graphical objects when displaying current selection of attributes for a rule.
+// Attribute struct below groups together graphical objects when displaying current selection of attributes for a watchpoint.
 // Graphical objects like a checkbox and a label, maybe a button will be added for PC to select from a list of functions (from objdump).
 struct Attribute {
     String name;
@@ -29,8 +29,14 @@ struct Attribute {
     Attribute(TFT_eSPI *tft, GUI_CMS* gui, String name, long long value, int x, int y) : name(name), value(value), gui(gui) {
         int font_height = tft->fontHeight(font_size);
         checkbox_is_active = new GUI_Checkbox(tft, false, x, y, font_height, font_height, 1, GREEN, BLACK, [](){}, [](){});
+        if (checkbox_is_active == nullptr) {
+            Serial.println("Failed to allocate memory for checkbox_is_active");
+        }
         // convert long to hex string using ltoa
         label = new GUI_Label(tft, "-", x + font_height * 1.2, y+font_height/2, font_size, ML_DATUM, WHITE, BLACK);
+        if (label == nullptr) {
+            Serial.println("Failed to allocate memory for label");
+        }
         label->set_padding_y(0.2);
         // convert this->test to std::function<void()> and pass it to set_on_release_callback, and resolve the problem with invalid use of incomplete type 'class GUI_CMS'
         label->set_on_release_callback(std::bind(&Attribute::edit_attribute, this));
@@ -73,23 +79,23 @@ struct Attribute {
     }
 };
 
-class GUI_State_Edit_Rule : public GUI_State {
+class GUI_State_Edit_Watchpoint : public GUI_State {
 public:
-    GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
+    GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
     virtual void update() override;
     virtual void on_state_enter() override;
     virtual void on_state_exit() override;
-    void set_rule_to_edit(Rule* rule);
+    void set_watchpoint_to_edit(Watchpoint* watchpoint);
     void set_attribute(String name, long long value);
 private:
     // create vector of pairs of attribute name and attribute value
     static std::vector<std::pair<String, long long>> default_attributes; 
-    Rule *rule;
+    Watchpoint *watchpoint;
     std::map<String, Attribute*> attributes;
     GUI_Button *btn_ok;
     GUI_Button *btn_objdump;
 
-    void latch_attribute_values_to_rule();
+    void latch_attribute_values_to_watchpoint();
     void set_default_values();
 };
 
