@@ -19,7 +19,7 @@ Rule::Rule(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int co
 
     // int label_x = button_x + button_w + space;
     int label_x = x + checkbox_w + space;
-    label = new GUI_Label(tft, "rule_0", label_x, y + h/2, 1, ML_DATUM, WHITE, BLACK);
+    label = new GUI_Label(tft, "rule_" + String(index), label_x, y + h/2, 1, ML_DATUM, WHITE, BLACK);
     label->set_padding_y(1.0); // 1.0 means it will occupy 3x the previous height (100% will be added from each side)
     label->set_on_release_callback(on_label_released);
 
@@ -61,6 +61,7 @@ char * Rule::get_attributes_as_JSON_string() {
 
 void Rule::push_to_pynq() {
     // rpc_set_atf_rule(index, is_active, json_str_attributes_dict)
+    // Serial.println("Pushing rule to PYNQ");
     char * attr_dict = get_attributes_as_JSON_string();
     rpc("rpc_set_atf_rule", "%d%b%s", index, is_active(), attr_dict);
     free(attr_dict);

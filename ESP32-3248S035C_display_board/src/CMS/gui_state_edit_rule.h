@@ -31,6 +31,7 @@ struct Attribute {
         checkbox_is_active = new GUI_Checkbox(tft, false, x, y, font_height, font_height, 1, GREEN, BLACK, [](){}, [](){});
         // convert long to hex string using ltoa
         label = new GUI_Label(tft, "-", x + font_height * 1.2, y+font_height/2, font_size, ML_DATUM, WHITE, BLACK);
+        label->set_padding_y(0.2);
         // convert this->test to std::function<void()> and pass it to set_on_release_callback, and resolve the problem with invalid use of incomplete type 'class GUI_CMS'
         label->set_on_release_callback(std::bind(&Attribute::edit_attribute, this));
         // label->set_on_release_callback([gui, this](){
@@ -79,12 +80,14 @@ public:
     virtual void on_state_enter() override;
     virtual void on_state_exit() override;
     void set_rule_to_edit(Rule* rule);
+    void set_attribute(String name, long long value);
 private:
     // create vector of pairs of attribute name and attribute value
     static std::vector<std::pair<String, long long>> default_attributes; 
     Rule *rule;
     std::map<String, Attribute*> attributes;
     GUI_Button *btn_ok;
+    GUI_Button *btn_objdump;
 
     void latch_attribute_values_to_rule();
     void set_default_values();

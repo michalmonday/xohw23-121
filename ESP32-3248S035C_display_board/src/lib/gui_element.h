@@ -29,6 +29,9 @@ public:
     virtual void set_w(int w) { this->w = w; needs_redraw = true; }
     virtual void set_h(int h) { this->h = h; needs_redraw = true; }
 
+    virtual void show() { is_visible = true; needs_redraw = true; }
+    virtual void hide() { is_visible = false; needs_redraw = true; }
+
     void set_on_press_callback(std::function<void()> on_press_callback) { this->on_press_callback = on_press_callback; }
     void set_on_release_callback(std::function<void()> on_release_callback) { this->on_release_callback = on_release_callback; }
 
@@ -42,11 +45,13 @@ public:
     std::function<void()> on_release_callback;
 
     std::vector<GUI_Element *> &get_child_elements() { return child_elements; }
+
 protected:
     int x,y,w,h;
     TFT_eSPI *tft;
     unsigned int background_colour;
     bool background_enabled;
+    bool is_visible;
 
     std::vector<GUI_Element *> child_elements;
     void add_child_element(GUI_Element *child_element);
