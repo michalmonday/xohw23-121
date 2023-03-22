@@ -36,15 +36,12 @@ void GUI_Label::update_touch_area() {
     // above is correct for datum = TL_DATUM (top left)
 }
 
-void GUI_Label::draw(unsigned int clr_override) {
+void GUI_Label::draw(unsigned int clr_override, unsigned int background_clr_override) {
     if (background_enabled)
-        // tft->fillRect(left_x, top_y, w, h, background_colour);
-        tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, background_colour);
-        // tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
-        // tft->fillRect(left_x, top_y, w, h, DKRED);
+        tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, background_clr_override);
 
     // draw touch area
-    tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
+    // tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
 
     tft->setTextSize(font_size);
     tft->setTextDatum(datum);
@@ -54,19 +51,18 @@ void GUI_Label::draw(unsigned int clr_override) {
 }
 
 void GUI_Label::draw() {
-    draw(text_color);
+    draw(text_color, background_colour);
 }
 
 void GUI_Label::undraw() {
     // GUI_Element::undraw();
     // paint over the label with the background colour
     // Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
-    tft->setTextSize(font_size);
-    tft->setTextDatum(datum);
-    tft->setTextColor(background_colour);
-    // tft->setTextColor(RED);
-    tft->drawString(text, x, y);
-    // tft->fillRect(x - w/2, y - h/2, w, h, background_colour);
+    draw(background_colour, background_colour);
+    // tft->setTextSize(font_size);
+    // tft->setTextDatum(datum);
+    // tft->setTextColor(background_colour);
+    // tft->drawString(text, x, y);
 }
 
 void GUI_Label::set_y(int y) { undraw(); GUI_Element::set_y(y); update_touch_area(); }
@@ -95,18 +91,20 @@ void GUI_Label::set_text(String text) {
 }
 
 void GUI_Label::on_release() {
-    GUI_Element::on_release();
-    needs_redraw = true;
     // background_colour = DKGREY;
     // Serial.println("Label '" + text + "' touched");
     // needs_redraw = true;
+    needs_redraw = true;
+    GUI_Element::on_release();
+    // no members should be modified here to allow on_release_callback to destroy the object itself if needed
 }
 
 void GUI_Label::on_press() {
-    GUI_Element::on_press();
-    draw(YELLOW);
+    draw(background_colour, text_color);
     // background_colour = WHITE;
     // needs_redraw = true;
+    GUI_Element::on_press();
+    // no members should be modified here to allow on_press_callback to destroy the object itself if needed
 }
 
 bool GUI_Label::contains_point(int point_x, int point_y) {
@@ -123,4 +121,8 @@ void GUI_Label::set_padding_x(double padding_x) {
 void GUI_Label::set_padding_y(double padding_y) {
     this->padding_y = padding_y;
     update_touch_area();
+}
+
+void GUI_Label::set_on_release_callback(std::function<void()> on_release_callback) {
+    GUI_Element::set_on_release_callback(on_release_callback);
 }

@@ -39,6 +39,9 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
     add_element(label_0);
     add_element(label_x);
 
+    if (label_polarity == NULL || triangle_up_polarity == NULL || triangle_down_polarity == NULL || label_0 == NULL || label_x == NULL) {
+        Serial.println("Failed to allocate memory for GUI_State_Select_Number");
+    }
 
     // --------------------------------
     // -------- 16 digits -------------
@@ -60,6 +63,9 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
                 digit_down(i);
             }
         );
+        if (label == NULL || triangle_up == NULL || triangle_down == NULL) {
+            Serial.println("Failed to allocate memory for GUI_State_Select_Number");
+        }
         add_element(triangle_up);
         add_element(triangle_down);
 
@@ -80,6 +86,9 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
             on_number_selected_callback(get_number());
         }
     );
+    if (btn_ok == NULL) {
+        Serial.println("Failed to allocate memory for GUI_State_Select_Number");
+    }
     add_element(btn_ok);
 }
 

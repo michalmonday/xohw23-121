@@ -12,6 +12,10 @@ The client (Esp32) should be able to:
 * send a RPC request to the server with function name and arguments
 * request list of available programs from the server
 * request to load a program into memory
+* run, halt and resume a program
+* set operational mode (enable/disable training and testing, allowing both to be disabled and enabled at the same time)
+* reset anomaly detection model/dataset
+* request status update upon restart of the Esp32 board (to restore GUI state)
 
 <!-- * configure CMS, this includes:
     * enabling/disabling and setting the trace start address
@@ -26,7 +30,11 @@ The client (Esp32) should be able to:
 ### Server requirements
 The server (PYNQ) should be able to:
 * respond to RPC requests the name of the function and its return
-* send notification about monitored program metrics (not sure yet what these will be, can be something basic at first)
+* notify client of collected program metrics like:
+    * number of collected datapoints
+    * ratio of anomalous datapoints to normal datapoints
+    * performance rate (allowing to see if and to what extent the program was slowed down due to full internal trace storage)
+* notify client of tcp server being reseted
 
 
 # Protocol

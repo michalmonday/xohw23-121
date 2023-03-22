@@ -1,4 +1,4 @@
-#include <gui_state_edit_rule.h>
+#include <gui_state_edit_watchpoint.h>
 #include <gui_state_select_number.h>
 #include <display_config.h>
 #include <gui_cms.h>
@@ -18,7 +18,7 @@ void Attribute::edit_attribute() {
     });
 }
 
-std::vector<std::pair<String, long long>> GUI_State_Edit_Rule::default_attributes = {
+std::vector<std::pair<String, long long>> GUI_State_Edit_Watchpoint::default_attributes = {
         {"A3", 0},
         {"A2", 0},
         {"A1", 0},
@@ -38,8 +38,8 @@ std::vector<std::pair<String, long long>> GUI_State_Edit_Rule::default_attribute
     };
 
 
-GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) : 
-    GUI_State(tft, gui, touch), rule(nullptr)
+GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) : 
+    GUI_State(tft, gui, touch), watchpoint(nullptr)
 {
 
     // Attribues can be any values from the atf_pkt_deterministic_structure in continouos_monitoring_system_controller.py
@@ -63,7 +63,7 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
     // }
     // 
     // So the attributes can be assigned like:
-    // rule->set_attribute("pc", 0x8000007A0);
+    // watchpoint->set_attribute("pc", 0x8000007A0);
 
     // // all values are 64 bits, except the ones where specified in comments
     // attributes = {
@@ -99,6 +99,10 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
         long long value = entry.second;
         Serial.println("Adding attribute: " + name + " with value: " + value);
         Attribute *attr = new Attribute(tft, gui, name, 0, attribute_x, attribute_y);
+        if (attr == nullptr) {
+            Serial.println("Failed to allocate memory for attribute: " + name);
+            continue;
+        }
         attributes[name] = attr;
         attribute_y += attribute_offset_y;
         if (attribute_y > RESOLUTION_Y*0.95) {
@@ -124,17 +128,20 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
     btn_ok = new GUI_Button(tft, "OK", btn_ok_x, btn_ok_y, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 
-            this->latch_attribute_values_to_rule();
+            this->latch_attribute_values_to_watchpoint();
             gui->pop_state();
-            // TODO send rule to CMS (rpc)
-            Serial.println("Rule should be saved, main state should be updated, and CMS rpc should be called");
-            if (rule != nullptr) {
-                rule->push_to_pynq();
+            // TODO send watchpoint to CMS (rpc)
+            Serial.println("Watchpoint should be saved, main state should be updated, and CMS rpc should be called");
+            if (watchpoint != nullptr) {
+                watchpoint->push_to_pynq();
             } else {
-                Serial.println("Rule is null");
+                Serial.println("Watchpoint is null");
             }
         }
     );
+    if (btn_ok == nullptr) {
+        Serial.println("Failed to allocate memory for OK button");
+    }
     add_element(btn_ok);
 
     // -----------------------------------------------
@@ -170,10 +177,13 @@ GUI_State_Edit_Rule::GUI_State_Edit_Rule(TFT_eSPI *tft, GUI_CMS *gui, Touch *tou
             gui->push_state(GUI_STATE_SELECT_OPTION);
         }
     );
+    if (btn_objdump == nullptr) {
+        Serial.println("Failed to allocate memory for OBJDUMP button");
+    }
     add_element(btn_objdump);
 }
 
-void GUI_State_Edit_Rule::set_attribute(String name, long long value) {
+void GUI_State_Edit_Watchpoint::set_attribute(String name, long long value) {
     if (attributes.find(name) == attributes.end()) {
         Serial.println("Attribute " + name + " not found");
         return;
@@ -183,7 +193,7 @@ void GUI_State_Edit_Rule::set_attribute(String name, long long value) {
     // attr->set_is_active(true);
 }
 
-void GUI_State_Edit_Rule::set_default_values() {
+void GUI_State_Edit_Watchpoint::set_default_values() {
     // set default values
     for (auto entry : default_attributes) {
         String name = entry.first;
@@ -194,26 +204,26 @@ void GUI_State_Edit_Rule::set_default_values() {
     }
 }
 
-void GUI_State_Edit_Rule::update() {
+void GUI_State_Edit_Watchpoint::update() {
     GUI_State::update();
 }
 
-void GUI_State_Edit_Rule::on_state_enter() {
+void GUI_State_Edit_Watchpoint::on_state_enter() {
     GUI_State::on_state_enter();
-    Serial.println("Edit rule state entered");
+    Serial.println("Edit watchpoint state entered");
 }
 
-void GUI_State_Edit_Rule::on_state_exit() {
+void GUI_State_Edit_Watchpoint::on_state_exit() {
     GUI_State::on_state_exit();
-    Serial.println("Edit rule state exited");
+    Serial.println("Edit watchpoint state exited");
     // destroy_and_clear_elements();
 }
 
-void GUI_State_Edit_Rule::set_rule_to_edit(Rule *rule) {
-    this->rule = rule;
+void GUI_State_Edit_Watchpoint::set_watchpoint_to_edit(Watchpoint *watchpoint) {
+    this->watchpoint = watchpoint;
     set_default_values();
 
-    for (auto entry : rule->get_attributes()) {
+    for (auto entry : watchpoint->get_attributes()) {
         if (attributes.find(entry.first) != attributes.end()) {
             attributes[entry.first]->set_value(entry.second);
             attributes[entry.first]->set_is_active(true);
@@ -223,7 +233,7 @@ void GUI_State_Edit_Rule::set_rule_to_edit(Rule *rule) {
     }
 }
 
-void GUI_State_Edit_Rule::latch_attribute_values_to_rule() {
+void GUI_State_Edit_Watchpoint::latch_attribute_values_to_watchpoint() {
     for (auto entry : attributes) {
         Attribute *attr = entry.second;
 
@@ -231,9 +241,9 @@ void GUI_State_Edit_Rule::latch_attribute_values_to_rule() {
         long long value = attr->value;
         bool is_active = attr->is_active();
         if (is_active) {
-            rule->set_attribute(name, value);
+            watchpoint->set_attribute(name, value);
         } else {
-            rule->remove_attribute(name);
+            watchpoint->remove_attribute(name);
         }
     }
 }

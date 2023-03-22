@@ -10,7 +10,7 @@
 #include <gui_state_select_option.h>
 #include <gui_state_select_number.h>
 #include <gui_state_explore_objdump.h>
-#include <gui_state_edit_rule.h>
+#include <gui_state_edit_watchpoint.h>
 #include <gui_element.h>
 #include <touch.h>
 #include <gui.h>
@@ -24,7 +24,7 @@ public:
     void notify(String text, int timeout=0);
     GUI_State_Main *get_state_main();
     GUI_State_Select_Option *get_state_select_option(); 
-    GUI_State_Edit_Rule *get_state_edit_rule();
+    GUI_State_Edit_Watchpoint *get_state_edit_watchpoint();
     GUI_State_Select_Number *get_state_select_number();
     GUI_State_Explore_Objdump* get_state_explore_objdump();
 };

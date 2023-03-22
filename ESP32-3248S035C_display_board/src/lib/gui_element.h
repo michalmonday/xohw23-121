@@ -32,8 +32,8 @@ public:
     virtual void show() { is_visible = true; needs_redraw = true; }
     virtual void hide() { is_visible = false; needs_redraw = true; }
 
-    void set_on_press_callback(std::function<void()> on_press_callback) { this->on_press_callback = on_press_callback; }
-    void set_on_release_callback(std::function<void()> on_release_callback) { this->on_release_callback = on_release_callback; }
+    virtual void set_on_press_callback(std::function<void()> on_press_callback) { this->on_press_callback = on_press_callback; }
+    virtual void set_on_release_callback(std::function<void()> on_release_callback) { this->on_release_callback = on_release_callback; }
 
 
     void disable_background() { background_enabled = false; needs_redraw = true; }
@@ -46,12 +46,15 @@ public:
 
     std::vector<GUI_Element *> &get_child_elements() { return child_elements; }
 
+    void set_highlight_colour(unsigned int highlight_colour) { this->highlight_colour = highlight_colour; }
 protected:
     int x,y,w,h;
     TFT_eSPI *tft;
     unsigned int background_colour;
+    unsigned int highlight_colour;
     bool background_enabled;
     bool is_visible;
+
 
     std::vector<GUI_Element *> child_elements;
     void add_child_element(GUI_Element *child_element);

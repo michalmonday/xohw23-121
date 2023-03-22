@@ -17,7 +17,7 @@
 #include "gui_state_select_option.h"
 #include "gui_state_explore_objdump.h"
 #include "gui_cms_states.h"
-#include "rule.h"
+#include "watchpoint.h"
 
 #include <display_config.h> // resolution
 
@@ -122,6 +122,10 @@ LinePlot* create_new_line_plot(int clr=-1) {
         Serial.printf("current_colour_id=%d\n", current_colour_id);
     }
     LinePlot* line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    if (line_plot == NULL) {
+        Serial.println("ERROR: could not allocate memory for line plot");
+        return nullptr;
+    }
     line_plot->set_top_margin(current_top_margin);
     current_top_margin += 0.15;  // top margin is used to separate line plots from each other (so they don't overlap)
     return line_plot;
@@ -161,6 +165,10 @@ void setup() {
     communication_queues_init();
 
     gui = new GUI_CMS(tft, &touch);
+    if (gui == NULL) {
+        Serial.println("ERROR: could not allocate memory for GUI");
+        return;
+    }
     gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
     // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
     // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
@@ -627,27 +635,27 @@ void parse_tcp_message(String line) {
                 gui->get_state_main()->set_run_status("Halted");
             }
 
-// {"atf_rules": {"-1": {"active": false, "attributes": {}}, "0": {"active": true, "attributes": {"PC": 2147485676}}, "1": {"active": false, "attributes": {}}, "2": {"active": false, "attributes": {}}}
-            if (cJSON_HasObjectItem(return_value_obj, "atf_rules")) {
-                // clear old rules
-                gui->get_state_main()->clear_atf_rules();
-                cJSON *atf_rules_obj = cJSON_GetObjectItem(return_value_obj, "atf_rules");
-                for (int i=0; i<cJSON_GetArraySize(atf_rules_obj); i++) {
-                    cJSON *rule_obj = cJSON_GetArrayItem(atf_rules_obj, i);
+// {"atf_watchpoints": {"-1": {"active": false, "attributes": {}}, "0": {"active": true, "attributes": {"PC": 2147485676}}, "1": {"active": false, "attributes": {}}, "2": {"active": false, "attributes": {}}}
+            if (cJSON_HasObjectItem(return_value_obj, "atf_watchpoints")) {
+                // clear old watchpoints
+                gui->get_state_main()->clear_atf_watchpoints();
+                cJSON *atf_watchpoints_obj = cJSON_GetObjectItem(return_value_obj, "atf_watchpoints");
+                for (int i=0; i<cJSON_GetArraySize(atf_watchpoints_obj); i++) {
+                    cJSON *watchpoint_obj = cJSON_GetArrayItem(atf_watchpoints_obj, i);
                     // Do something with new plot value
 
-                    int rule_id = atoi(rule_obj->string);
-                    Serial.print("Rule id: ");
-                    Serial.println(rule_id);
+                    int watchpoint_id = atoi(watchpoint_obj->string);
+                    Serial.print("Watchpoint id: ");
+                    Serial.println(watchpoint_id);
 
-                    Rule *rule = gui_main_state->add_atf_rule();
+                    Watchpoint *watchpoint = gui_main_state->add_atf_watchpoint();
 
-                    cJSON *active_obj = cJSON_GetObjectItem(rule_obj, "active");
+                    cJSON *active_obj = cJSON_GetObjectItem(watchpoint_obj, "active");
                     bool active = active_obj->valueint;
                     Serial.print("Active: ");
                     Serial.println(active);
 
-                    cJSON *attributes_obj = cJSON_GetObjectItem(rule_obj, "attributes");
+                    cJSON *attributes_obj = cJSON_GetObjectItem(watchpoint_obj, "attributes");
                     if (attributes_obj) {
                         for (int j=0; j<cJSON_GetArraySize(attributes_obj); j++) {
                             cJSON *attribute_obj = cJSON_GetArrayItem(attributes_obj, j);
@@ -663,10 +671,10 @@ void parse_tcp_message(String line) {
                             Serial.print("Attribute value: ");
                             Serial.println(attribute_value);
 
-                            rule->set_attribute(attribute_name, attribute_value);
+                            watchpoint->set_attribute(attribute_name, attribute_value);
                         }
                     }
-                    rule->set_active(active);
+                    watchpoint->set_active(active);
                 }
             }
         }
@@ -686,7 +694,7 @@ void parse_tcp_message(String line) {
                 if (success) {
                     state_explore_objdump->push_function("_start");
                     state_explore_objdump->set_on_address_selected([](long long address) {
-                        gui->get_state_edit_rule()->set_attribute("PC", address);
+                        gui->get_state_edit_watchpoint()->set_attribute("PC", address);
                     });
                     gui->push_state(GUI_STATE_EXPLORE_OBJDUMP);
                 } else {
@@ -777,6 +785,10 @@ void loop(void) {
         if (client.available()) {
             // String *line = new String(client.readStringUntil('\n'));
             String *line = new String(client.readStringUntil('\n'));
+            if (line == NULL) {
+                Serial.println("Failed to allocate memory for received string");
+                continue;
+            }
             // String line = client.readString(); // readString has a timeout that would make it inefficient (readStringUntil does not have it when using '\n')
             // Serial.print("Received: '");
             // Serial.print(*line);

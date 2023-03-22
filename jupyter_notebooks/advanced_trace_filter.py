@@ -82,62 +82,62 @@ atf_pkt_deterministic_structure = {
     'PC': 64  # program counter
 }
 
-class ATF_Rules:
+class ATF_Watchpoints:
     def __init__(self, cms_ctrl):
         self.cms_ctrl = cms_ctrl
-        self.rules_lock = Lock()
-        self.rules = {} # key = index, value = dict like:
+        self.watchpoints_lock = Lock()
+        self.watchpoints = {} # key = index, value = dict like:
                         # { 
                         #   "active" : True,
                         #   "attributes" : {"PC":0x80000000, "A0":1000}
                         # }
-        # self.load_rules()
-        # self.push_all_rules_to_cms()
+        # self.load_watchpoints()
+        # self.push_all_watchpoints_to_cms()
 
-    def load_rules(self, f_name="atf_rules.json"):
+    def load_watchpoints(self, f_name="atf_watchpoints.json"):
         # if file exists
         if os.path.exists(f_name):
             try:
                 with open(f_name) as f:
-                    self.rules = {int(k):v for k, v in json.load(f).items()}
+                    self.watchpoints = {int(k):v for k, v in json.load(f).items()}
             except Exception as e:
-                print("Error loading atf rules:", e)
-                self.rules = {}
+                print("Error loading atf watchpoints:", e)
+                self.watchpoints = {}
         else:
             print(f"No '{f_name}' file found.")
 
-    def push_all_rules_to_cms(self):
+    def push_all_watchpoints_to_cms(self):
         self.cms_ctrl.reset_atf()
-        with self.rules_lock:
-            for index, rule in self.rules.items():
-                if not rule["active"]:
+        with self.watchpoints_lock:
+            for index, watchpoint in self.watchpoints.items():
+                if not watchpoint["active"]:
                     continue
-                self.cms_ctrl.set_atf_match_rule(int(index), rule["attributes"])
+                self.cms_ctrl.set_atf_match_watchpoint(int(index), watchpoint["attributes"])
     
-    def store_rules(self, f_name="atf_rules.json"):
+    def store_watchpoints(self, f_name="atf_watchpoints.json"):
         with open(f_name, 'w') as f:
-            json.dump(self.rules, f, indent=4)
+            json.dump(self.watchpoints, f, indent=4)
     
-    def get_rules(self):
-        with self.rules_lock:
-            return deepcopy(self.rules)
+    def get_watchpoints(self):
+        with self.watchpoints_lock:
+            return deepcopy(self.watchpoints)
 
-    def get_rules_as_strings(self):
+    def get_watchpoints_as_strings(self):
         ''' This is needed because cJSON does not support 64-bit values, so we convert them to hex '''
-        with self.rules_lock:
-            rules_str = deepcopy(self.rules)
+        with self.watchpoints_lock:
+            watchpoints_str = deepcopy(self.watchpoints)
         
-        for index, rule in rules_str.items():
-            for k, v in rule["attributes"].items():
-                rules_str[index]["attributes"][k] = hex(v)[2:]
+        for index, watchpoint in watchpoints_str.items():
+            for k, v in watchpoint["attributes"].items():
+                watchpoints_str[index]["attributes"][k] = hex(v)[2:]
         # return dict with values as hex strings
-        return rules_str
+        return watchpoints_str
 
-    def has_rule(self, index):
+    def has_watchpoint(self, index):
         index = int(index)
-        return index in self.rules
+        return index in self.watchpoints
 
-    def set_rule(self, index, attributes_dict, is_active):
+    def set_watchpoint(self, index, attributes_dict, is_active):
         # convert all attributes to numerical values from hex strings
         # this is needed because cJSON does not support 64-bit values
         index = int(index)
@@ -145,30 +145,30 @@ class ATF_Rules:
             try:
                 attributes_dict[k] = int(v, 16)
             except Exception as e:
-                print(f"advanced_trace_filter set_rule error converting attribute {k} to int: {e}")
+                print(f"advanced_trace_filter set_watchpoint error converting attribute {k} to int: {e}")
 
-        with self.rules_lock:
-            self.rules[index] = {
+        with self.watchpoints_lock:
+            self.watchpoints[index] = {
                 "active" : is_active,
                 "attributes" : attributes_dict
             }
         if is_active:
-            self.cms_ctrl.set_atf_match_rule(int(index), attributes_dict)
+            self.cms_ctrl.set_atf_match_watchpoint(int(index), attributes_dict)
         else:
-            self.cms_ctrl.reset_atf_match_rule(int(index))
-        self.store_rules()
+            self.cms_ctrl.reset_atf_match_watchpoint(int(index))
+        self.store_watchpoints()
     
-    def set_rule_active(self, index, is_active):
+    def set_watchpoint_active(self, index, is_active):
         index = int(index)
-        if index not in self.rules:
-            raise Exception(f"Rule with index {index} does not exist. Can't set active state.")
-        with self.rules_lock:
-            self.rules[index]["active"] = is_active
+        if index not in self.watchpoints:
+            raise Exception(f"watchpoint with index {index} does not exist. Can't set active state.")
+        with self.watchpoints_lock:
+            self.watchpoints[index]["active"] = is_active
         if is_active:
-            self.cms_ctrl.set_atf_match_rule(index, self.rules[index]["attributes"])
+            self.cms_ctrl.set_atf_match_watchpoint(index, self.watchpoints[index]["attributes"])
         else:
-            self.cms_ctrl.reset_atf_match_rule(index)
-        self.store_rules()
+            self.cms_ctrl.reset_atf_match_watchpoint(index)
+        self.store_watchpoints()
 
 
         

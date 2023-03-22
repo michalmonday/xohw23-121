@@ -7,7 +7,7 @@
 #include <rpc.h>
 #include <cJSON.h>
 #include "gui_cms_states.h"
-#include "rule.h"
+#include "watchpoint.h"
 
 // const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 // const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
@@ -60,6 +60,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
         "Metrics (CMS)", "", "", // title, xlabel, ylabel
         BLUE, RED, WHITE, BLACK // grid, axis, text, background (colors)
         );
+    if (pynq_graph == NULL) {
+        Serial.println("pynq_graph is NULL");
+    }
     pynq_graph->show_current_value_display();
     // pynq_graph->hide_axes();
     pynq_graph->hide_grid();
@@ -68,6 +71,12 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
 
     label_ap_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
     label_tcp_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9 + 15, 1, TL_DATUM, WHITE, BLACK);
+    if (label_ap_conn_status == NULL) {
+        Serial.println("label_ap_conn_status is NULL");
+    }
+    if (label_tcp_conn_status == NULL) {
+        Serial.println("label_tcp_conn_status is NULL");
+    }
 
     // add_element(ecg_graph);
     add_element(pynq_graph);
@@ -101,7 +110,11 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
                 char *json_str = cJSON_PrintUnformatted(root);
                 Serial.print("Sending: '");
                 Serial.println(json_str);
-                add_string_to_queue(queue_to_send, new String(json_str), true);
+                String *msg = new String(json_str);
+                if (msg == NULL) {
+                    Serial.println("msg is NULL");
+                }
+                add_string_to_queue(queue_to_send, msg, true);
                 free(json_str);
                 cJSON_Delete(root);
                 gui->pop_state();
@@ -110,9 +123,15 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
             gui->push_state(GUI_STATE_SELECT_OPTION);
         }
     );
+    if (btn_load_program == NULL) {
+        Serial.println("btn_load_program is NULL");
+    }
     button_y += button_offset;
 
     btn_run_status = new GUI_Button(tft, "Run", button_x, button_y, button_width, button_height, button_font_size, WHITE,  BLACK); 
+    if (btn_run_status == NULL) {
+        Serial.println("btn_run_status is NULL");
+    }
     btn_run_status->set_on_release_callback(
         [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
@@ -131,6 +150,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     );
     button_y += button_offset;
     btn_train = new GUI_Button(tft, "Train", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
+    if (btn_train == NULL) {
+        Serial.println("btn_train is NULL");
+    }
     btn_train->set_on_release_callback(
         [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
@@ -147,6 +169,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     );
     button_y += button_offset;
     btn_test = new GUI_Button(tft, "Test", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
+    if (btn_test == NULL) {
+        Serial.println("btn_test is NULL");
+    }
     btn_test->set_on_release_callback(
         [this](){   // function on release
             // change GUI state into program selection here or request the list of programs from the server
@@ -163,6 +188,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     );
     button_y += button_offset;
     btn_reset_dataset = new GUI_Button(tft, "Reset", button_x, button_y, button_width, button_height, button_font_size, WHITE, BLACK);  
+    if (btn_reset_dataset == NULL) {
+        Serial.println("btn_reset_dataset is NULL");
+    }
     btn_reset_dataset->set_on_release_callback(
         [](){   // function on release
             rpc_no_args("rpc_reset_dataset");
@@ -187,6 +215,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     label_training_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK); label_y += button_offset;
     label_testing_status = new GUI_Label(tft, "-", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);  label_y += button_offset;
     label_dataset_size = new GUI_Label(tft, "Dataset size: 0", label_x, label_y, label_font_size, ML_DATUM, WHITE, BLACK);    label_y += button_offset;
+    if (label_loaded_program == NULL || label_run_status == NULL || label_training_status == NULL || label_testing_status == NULL || label_dataset_size == NULL) {
+        Serial.println("one of labels is NULL");
+    }
     add_element(label_loaded_program);
     add_element(label_run_status);
     add_element(label_training_status);
@@ -196,21 +227,27 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     // label_y = label_y_start;
 
     // ---------------------------------
-    // -------- Rules section  ---------
-    const int rules_x = pynq_graph->get_x();
-    int rules_y = button_y_start;
-    // label_rules = new GUI_Label(tft, "Rules:", rules_x, rules_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
-    // btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x + label_rules->get_w()*1.2, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
-    btn_add_new_rule = new GUI_Button(tft, "Add new rule", rules_x, rules_y, tft->textWidth("Add new rule")*1.2, button_height, button_font_size, WHITE, BLACK);  rules_y += button_offset;
-    btn_add_new_rule->set_on_release_callback(
+    // -------- Watchpoints section  ---------
+    const int watchpoints_x = pynq_graph->get_x();
+    int watchpoints_y = button_y_start;
+    // label_watchpoints = new GUI_Label(tft, "Watchpoints:", watchpoints_x, watchpoints_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
+    // btn_add_new_watchpoint = new GUI_Button(tft, "Add new watchpoint", watchpoints_x + label_watchpoints->get_w()*1.2, watchpoints_y, tft->textWidth("Add new watchpoint")*1.2, button_height, button_font_size, WHITE, BLACK);  watchpoints_y += button_offset;
+    btn_add_new_watchpoint = new GUI_Button(tft, "Add new watchpoint", watchpoints_x, watchpoints_y, tft->textWidth("Add new watchpoint")*1.2, button_height, button_font_size, WHITE, BLACK);  watchpoints_y += button_offset;
+    if (btn_add_new_watchpoint == NULL) {
+        Serial.println("btn_add_new_watchpoint is NULL");
+    }
+    btn_add_new_watchpoint->set_on_release_callback(
         [this, gui, tft](){   
-            // push rule selection state
-            Serial.println("Add new rule button was released");
-            add_atf_rule();
+            // push watchpoint selection state
+            Serial.println("Add new watchpoint button was released");
+            add_atf_watchpoint();
         }
     );
-    // add_element(label_rules);
-    add_element(btn_add_new_rule);
+    if (btn_add_new_watchpoint == NULL) {
+        Serial.println("btn_add_new_watchpoint is NULL");
+    }
+    // add_element(label_watchpoints);
+    add_element(btn_add_new_watchpoint);
 
 
 
@@ -218,7 +255,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
 //                            std::function<void()> on_press_callback, std::function<void()> on_release_callback,
 //                            std::function<void()> on_checked, std::function<void()> on_unchecked) :
 
-    // GUI_Checkbox* checkbox = new GUI_Checkbox(tft, true, rules_x, rules_y, button_height, button_height, 1, GREEN, BLACK, 
+    // GUI_Checkbox* checkbox = new GUI_Checkbox(tft, true, watchpoints_x, watchpoints_y, button_height, button_height, 1, GREEN, BLACK, 
     //     [](){
     //         Serial.println("Checkbox was checked");
     //     }, // on checked
@@ -226,49 +263,49 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     //         Serial.println("Checkbox was unchecked");
     //     }  // on unchecked
     // ); 
-    // rules_y += button_offset;
+    // watchpoints_y += button_offset;
     // add_element(checkbox);
 }
 
-Rule* GUI_State_Main::add_atf_rule() {
-    int rule_x = pynq_graph->get_x();
-    int rule_y = button_y_start + (1 + rules.size()) * button_offset;
-    Rule *rule = new Rule(tft, rules.size(), rule_x, rule_y, button_height, button_height, WHITE);
+Watchpoint* GUI_State_Main::add_atf_watchpoint() {
+    int watchpoint_x = pynq_graph->get_x();
+    int watchpoint_y = button_y_start + (1 + watchpoints.size()) * button_offset;
+    Watchpoint *watchpoint = new Watchpoint(tft, watchpoints.size(), watchpoint_x, watchpoint_y, button_height, button_height, WHITE);
     GUI_CMS *gui_cms = static_cast<GUI_CMS*>(this->gui);
-    rule->set_on_label_released_callback(
-        [gui_cms, rule](){
-            Serial.println("Rule label was released");
-            gui_cms->get_state_edit_rule()->set_rule_to_edit(rule);
-            gui_cms->push_state(GUI_STATE_EDIT_RULE);
+    watchpoint->set_on_label_released_callback(
+        [gui_cms, watchpoint](){
+            Serial.println("Watchpoint label was released");
+            gui_cms->get_state_edit_watchpoint()->set_watchpoint_to_edit(watchpoint);
+            gui_cms->push_state(GUI_STATE_EDIT_WATCHPOINT);
         }
     );
-    rule->set_on_checked_callback(
-        [this, rule](){
-            Serial.println("Rule checkbox was checked");
-            int rule_index = std::find(rules.begin(), rules.end(), rule) - rules.begin();
-            rpc("rpc_atf_rule_set_active", "%d%b", rule_index, true);
+    watchpoint->set_on_checked_callback(
+        [this, watchpoint](){
+            Serial.println("Watchpoint checkbox was checked");
+            int watchpoint_index = std::find(watchpoints.begin(), watchpoints.end(), watchpoint) - watchpoints.begin();
+            rpc("rpc_atf_watchpoint_set_active", "%d%b", watchpoint_index, true);
         }
     );
-    rule->set_on_unchecked_callback(
-        [this, rule](){
-            Serial.println("Rule checkbox was unchecked");
-            int rule_index = std::find(rules.begin(), rules.end(), rule) - rules.begin();
-            rpc("rpc_atf_rule_set_active", "%d%b", rule_index, false);
+    watchpoint->set_on_unchecked_callback(
+        [this, watchpoint](){
+            Serial.println("Watchpoint checkbox was unchecked");
+            int watchpoint_index = std::find(watchpoints.begin(), watchpoints.end(), watchpoint) - watchpoints.begin();
+            rpc("rpc_atf_watchpoint_set_active", "%d%b", watchpoint_index, false);
         }
     );
-    add_element(rule);
-    rules.push_back(rule);
+    add_element(watchpoint);
+    watchpoints.push_back(watchpoint);
 
-    // rule->push_to_pynq();
-    return rule;
+    // watchpoint->push_to_pynq();
+    return watchpoint;
 }
 
-void GUI_State_Main::clear_atf_rules() {
-    for (Rule *rule : rules) {
-        remove_element(rule);
-        delete rule;
+void GUI_State_Main::clear_atf_watchpoints() {
+    for (Watchpoint *watchpoint : watchpoints) {
+        remove_element(watchpoint);
+        delete watchpoint;
     }
-    rules.clear();
+    watchpoints.clear();
 }
 
 void GUI_State_Main::draw() {

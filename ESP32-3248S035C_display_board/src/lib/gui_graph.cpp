@@ -73,11 +73,11 @@ void GUI_Graph::remove_all() {
 
 LinePlot* GUI_Graph::add_plot(String name, LinePlot* line_plot) {
     if (line_plots.find(name) != line_plots.end()) {
-        Serial.printf("Plot with name %s already exists\n", name);
+        Serial.printf("Plot with name %s already exists\n", name.c_str());
         return nullptr;
     }
     line_plots[name] = line_plot;
-    Serial.printf("Added plot with name %s\n", name);
+    Serial.printf("Added plot with name %s\n", name.c_str());
     line_plot->set_graph(this);
     if (legend_enabled)
         draw_legend(background_color);
@@ -97,7 +97,7 @@ void GUI_Graph::list_all() {
 
 void GUI_Graph::remove_plot(String name) {
     if (line_plots.find(name) == line_plots.end()) {
-        Serial.printf("Plot with name %s does not exist\n", name);
+        Serial.printf("Plot with name %s does not exist\n", name.c_str());
         return;
     }
     delete line_plots[name];
@@ -107,7 +107,7 @@ void GUI_Graph::remove_plot(String name) {
 
 LinePlot* GUI_Graph::get_plot(String name) {
     if (line_plots.find(name) == line_plots.end()) {
-        Serial.printf("Plot with name %s does not exist\n", name);
+        Serial.printf("Plot with name %s does not exist\n", name.c_str());
         return nullptr;
     }
     return line_plots[name];

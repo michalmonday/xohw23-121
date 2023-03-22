@@ -17,6 +17,7 @@ public:
     virtual void reset();
     void add_element(GUI_Element *element);
     void remove_element(GUI_Element *element);
+    bool has_element(GUI_Element *element);
     virtual void on_state_enter();
     virtual void on_state_exit();
     GUI_State *get_state(int state_id);
