@@ -10,7 +10,7 @@
 
 class Watchpoint : public GUI_Element {
 public:
-    Watchpoint(TFT_eSPI *tft, int index, int x, int y, int w, int h, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
+    Watchpoint(TFT_eSPI *tft, int index, int x, int y, int font_size, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
     virtual void draw() override;
     virtual void undraw() override;
 
@@ -33,6 +33,8 @@ public:
 
     void push_to_pynq();
 private:
+    int font_size;
+
     std::map<String, long long> attributes;
     // Attribues can be any values from the atf_pkt_deterministic_structure in continouos_monitoring_system_controller.py
     // atf_pkt_deterministic_structure = {
@@ -62,6 +64,7 @@ private:
     GUI_Label *label;
     unsigned int colour;
     int index;
+
 };
 
 

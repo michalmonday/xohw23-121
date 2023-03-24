@@ -28,6 +28,13 @@ public:
     void set_graph(GUI_Graph *graph);
     void set_top_margin(double top_margin);
 
+    void set_static_upper_limit(double static_yhi) { this->static_yhi = static_yhi; static_yhi_used = true; }
+    void set_static_lower_limit(double static_ylo) { this->static_ylo = static_ylo; static_ylo_used = true; }
+    void enable_static_upper_limit() { static_yhi_used = true; }
+    void enable_static_lower_limit() { static_ylo_used = true; }
+    void disable_static_upper_limit() { static_ylo_used = false; }
+    void disable_static_lower_limit() { static_ylo_used = false; }
+
     void record_last_painted_screen_positions();
 private:
     TFT_eSPI &tft;
@@ -36,7 +43,8 @@ private:
     int graph_x, graph_y, graph_w, graph_h;
     double xlo, xhi, ylo, yhi;
     unsigned int color;
-    double static_ylo;
+    double static_ylo, static_yhi;
+    bool static_ylo_used, static_yhi_used;
 
     // ------- dynamically allocated arrays ------- //
     // raw values to plot

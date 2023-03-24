@@ -26,14 +26,15 @@ struct Attribute {
     const static int font_size = 2;
     GUI_CMS *gui;
 
-    Attribute(TFT_eSPI *tft, GUI_CMS* gui, String name, long long value, int x, int y) : name(name), value(value), gui(gui) {
-        int font_height = tft->fontHeight(font_size);
-        checkbox_is_active = new GUI_Checkbox(tft, false, x, y, font_height, font_height, 1, GREEN, BLACK, [](){}, [](){});
+    Attribute(TFT_eSPI *tft, GUI_CMS* gui, String name, long long value, int x, int y, int h) : name(name), value(value), gui(gui) {
+        tft->setTextSize(font_size);
+        // int font_height = tft->fontHeight();
+        checkbox_is_active = new GUI_Checkbox(tft, false, x, y, h, h, font_size, GREEN, BLACK, [](){}, [](){});
         if (checkbox_is_active == nullptr) {
             Serial.println("Failed to allocate memory for checkbox_is_active");
         }
         // convert long to hex string using ltoa
-        label = new GUI_Label(tft, "-", x + font_height * 1.2, y+font_height/2, font_size, ML_DATUM, WHITE, BLACK);
+        label = new GUI_Label(tft, "-", x + h * 1.2, y+h/2, font_size, ML_DATUM, WHITE, BLACK);
         if (label == nullptr) {
             Serial.println("Failed to allocate memory for label");
         }

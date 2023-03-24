@@ -44,8 +44,11 @@ GUI_Graph::GUI_Graph(TFT_eSPI *tft)
     : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
         decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), 
         ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color),
-        legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
+        legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07)
 {
+    current_value_diplay_font_size = 2;
+    legend_font_size = current_value_diplay_font_size;
+    title_font_size = current_value_diplay_font_size;
 }
 
 GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments,
@@ -53,8 +56,11 @@ GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int g
     : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
       decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel),
       ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color), 
-      legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07), current_value_diplay_font_size(1)
+      legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07) 
 {
+    current_value_diplay_font_size = 2;
+    legend_font_size = current_value_diplay_font_size;
+    title_font_size = current_value_diplay_font_size;
 }
 
 GUI_Graph::~GUI_Graph() {
@@ -151,22 +157,23 @@ void GUI_Graph::draw_plots() {
 
 void GUI_Graph::draw_legend(unsigned int background_color) {
     tft->setTextDatum(TL_DATUM);
-    tft->setTextSize(1);
+    tft->setTextSize(legend_font_size);
     const int legend_w = (int)(RESOLUTION_X * 0.15);
-    int legend_x = x + w + 5;
+    int legend_x = x + w + h*0.2;
 
     if (current_value_display_enabled)
         legend_x += current_value_display_width;
 
     tft->fillRect(legend_x, y + 1, legend_w, h - 1, background_color);
     
-    int legend_y = y + 7;
+    int legend_y = y;
     int offset_y = 0;
+    int legend_font_h = tft->fontHeight();
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) {
         unsigned int line_color = it->second->get_color();
         tft->setTextColor(line_color, background_color);
-        tft->drawString(it->first, legend_x + 5, legend_y + offset_y, 1);
-        offset_y += 15;
+        tft->drawString(it->first, legend_x + 3, legend_y + offset_y);
+        offset_y += legend_font_h * 1.1;
     }
 }
 
@@ -186,7 +193,7 @@ void GUI_Graph::draw_current_values() {
     tft->setTextDatum(ML_DATUM);
     tft->setTextSize(current_value_diplay_font_size);
 
-    int font_height = tft->fontHeight(current_value_diplay_font_size);
+    int font_height = tft->fontHeight();
 
     int prev_pos = -1;
     int i = 0;
@@ -301,8 +308,8 @@ void GUI_Graph::draw() {
 
     tft->setTextColor(text_color, background_color);
     tft->setTextDatum(BC_DATUM);
-    tft->setTextSize(1);
-    tft->drawString(title, x + w / 2, y - tft->fontHeight(2) / 2);
+    tft->setTextSize(title_font_size);
+    tft->drawString(title, x + w / 2, y - tft->fontHeight() / 2);
 
     // restore old settings
     tft->setTextColor(old_text_color);

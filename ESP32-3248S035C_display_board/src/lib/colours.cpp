@@ -4,13 +4,13 @@ unsigned int colours[12] = {
     GREEN,
     YELLOW,
     CYAN,
-    RED,
-    MAGENTA,
     ORANGE,
+    MAGENTA,
     PINK,
     GREY,
     WHITE,
     BLUE,
     TEAL,
-    PURPLE
+    PURPLE,
+    RED
 };

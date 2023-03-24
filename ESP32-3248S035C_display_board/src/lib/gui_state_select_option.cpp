@@ -27,9 +27,11 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
 
     // ---------------------------------
     // ------------ Buttons  -----------
-    const int button_height = RESOLUTION_Y * 0.07;
     const int button_y_start = RESOLUTION_Y*0.05;
-    const int button_font_size = 1;
+    const int button_font_size = 2;
+    tft->setTextSize(button_font_size);
+    int font_height = tft->fontHeight();
+    const int button_height = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;// RESOLUTION_Y * 0.07;
     const int button_offset = button_height * 1.3;
     int button_y = button_y_start;
     int i;
@@ -46,7 +48,7 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
     }
 
     // const int button_width = RESOLUTION_X * 0.3;
-    int button_width = longest_option_name_width + btn_width_padding * 2;
+    int button_width = longest_option_name_width + font_height * DEFAULT_BTN_PADDING_X*2;
     int button_x = (RESOLUTION_X*0.05) + (button_width + RESOLUTION_X*0.05) * (categories.size()-1);
 
     for (String option : options) {

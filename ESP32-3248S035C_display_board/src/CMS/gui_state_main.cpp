@@ -50,9 +50,9 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     
     pynq_graph = new GUI_Graph(tft, 
         // RESOLUTION_X*0.1, RESOLUTION_Y*0.52,  // x, y
-        RESOLUTION_X*0.04, RESOLUTION_Y*0.58,  // x, y
+        pynq_graph_x, pynq_graph_y,  // x, y
         // RESOLUTION_X*0.2, RESOLUTION_Y*0.3,   // width, height
-        RESOLUTION_X*0.6, RESOLUTION_Y*0.2,   // width, height
+        pynq_graph_w, pynq_graph_h,   // width, height
         1, 4,       // grid x, y segments
         2,          // decimal precision of tick labels
         0, 30,      // xlo, xhi (how many data points to show at once)
@@ -67,6 +67,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     // pynq_graph->hide_axes();
     pynq_graph->hide_grid();
     pynq_graph->hide_axis_labels();
+    pynq_graph->set_title_font_size(2);
 
 
     label_ap_conn_status = new GUI_Label(tft, "", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
@@ -86,6 +87,11 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     // ---------------------------------
     // ------------ Buttons  -----------
     int button_y = button_y_start;
+    tft->setTextSize(button_font_size);
+
+    int font_height = tft->fontHeight();
+    button_height = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
+    button_offset = button_height * 1.1;
     btn_load_program = new GUI_Button(tft, "Load", button_x, button_y, button_width, button_height, button_font_size,
         WHITE,  // text colour
         BLACK,  // background colour
@@ -204,7 +210,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     add_element(btn_reset_dataset);
 
 
-    const int label_x = button_x + button_width + RESOLUTION_X*0.04;
+    const int label_x = button_x + button_width + button_height/2;
     const int label_y_start = button_y_start + button_height/2;
     const int label_font_size = button_font_size;
     int label_y = label_y_start;
@@ -230,16 +236,18 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
     // -------- Watchpoints section  ---------
     const int watchpoints_x = pynq_graph->get_x();
     int watchpoints_y = button_y_start;
+    tft->setTextSize(button_font_size);
+    const int btn_add_new_watchpoint_w = tft->textWidth("Add WP") + font_height * DEFAULT_BTN_PADDING_X*2;
     // label_watchpoints = new GUI_Label(tft, "Watchpoints:", watchpoints_x, watchpoints_y + button_height - 2, label_font_size, BL_DATUM, WHITE, BLACK);  
     // btn_add_new_watchpoint = new GUI_Button(tft, "Add new watchpoint", watchpoints_x + label_watchpoints->get_w()*1.2, watchpoints_y, tft->textWidth("Add new watchpoint")*1.2, button_height, button_font_size, WHITE, BLACK);  watchpoints_y += button_offset;
-    btn_add_new_watchpoint = new GUI_Button(tft, "Add new watchpoint", watchpoints_x, watchpoints_y, tft->textWidth("Add new watchpoint")*1.2, button_height, button_font_size, WHITE, BLACK);  watchpoints_y += button_offset;
+    btn_add_new_watchpoint = new GUI_Button(tft, "Add WP", watchpoints_x, watchpoints_y, btn_add_new_watchpoint_w, button_height, button_font_size, WHITE, BLACK);  watchpoints_y += button_offset;
     if (btn_add_new_watchpoint == NULL) {
         Serial.println("btn_add_new_watchpoint is NULL");
     }
     btn_add_new_watchpoint->set_on_release_callback(
         [this, gui, tft](){   
             // push watchpoint selection state
-            Serial.println("Add new watchpoint button was released");
+            Serial.println("Add watchpoint button was released");
             add_atf_watchpoint();
         }
     );
@@ -270,7 +278,7 @@ GUI_State_Main::GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) :
 Watchpoint* GUI_State_Main::add_atf_watchpoint() {
     int watchpoint_x = pynq_graph->get_x();
     int watchpoint_y = button_y_start + (1 + watchpoints.size()) * button_offset;
-    Watchpoint *watchpoint = new Watchpoint(tft, watchpoints.size(), watchpoint_x, watchpoint_y, button_height, button_height, WHITE);
+    Watchpoint *watchpoint = new Watchpoint(tft, watchpoints.size(), watchpoint_x, watchpoint_y, button_font_size, WHITE);
     GUI_CMS *gui_cms = static_cast<GUI_CMS*>(this->gui);
     watchpoint->set_on_label_released_callback(
         [gui_cms, watchpoint](){

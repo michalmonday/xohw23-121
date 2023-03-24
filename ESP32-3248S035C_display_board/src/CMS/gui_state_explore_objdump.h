@@ -36,7 +36,7 @@ public:
     void clean_objudmp();
     void set_on_address_selected(std::function<void((long long))> on_address_selected) { this->on_address_selected = on_address_selected; }
 
-    const static int font_size = 1;
+    const static int font_size = 2;
 private:
     // key = function name, value = vector of Objdump_Items (one for each branch/call/entry/exit)
     std::map<String, std::vector<Objdump_Item*>> objdump;
