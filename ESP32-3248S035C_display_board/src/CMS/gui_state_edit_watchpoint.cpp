@@ -86,11 +86,12 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
     // };
 
     const int attribute_w = RESOLUTION_X * 0.3;
-    const int attribute_y_start = RESOLUTION_Y*0.05;
+    const int attribute_y_start = RESOLUTION_Y*0.025;
 
     tft->setTextSize(Attribute::font_size);
-    const int attribute_h = tft->fontHeight(Attribute::font_size);
-    const int attribute_offset_y = attribute_h * 1.2;
+    const int ATTRIBUTES_PER_COLUMN = 8;
+    const int attribute_h = (RESOLUTION_Y - attribute_y_start*2) / ATTRIBUTES_PER_COLUMN;// tft->fontHeight();
+    const int attribute_offset_y = attribute_h;
     int attribute_x = RESOLUTION_X*0.01;
     int attribute_y = attribute_y_start;
 
@@ -98,7 +99,7 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
         String name = entry.first;
         long long value = entry.second;
         Serial.println("Adding attribute: " + name + " with value: " + value);
-        Attribute *attr = new Attribute(tft, gui, name, 0, attribute_x, attribute_y);
+        Attribute *attr = new Attribute(tft, gui, name, 0, attribute_x, attribute_y, attribute_h);
         if (attr == nullptr) {
             Serial.println("Failed to allocate memory for attribute: " + name);
             continue;
@@ -117,13 +118,14 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
     
     // ------------------------------------------------
     // ---------------- OK button ---------------------
-    const int btn_padding = RESOLUTION_X / 50;
     const int btn_ok_font_size = 2;
+    // const int attributes_per_column = RESOLUTION_Y * 0.9 / attribute_offset_y;
     tft->setTextSize(btn_ok_font_size);
+    int font_height = tft->fontHeight();
     // int btn_ok_font_height = tft->fontHeight(btn_ok_font_size);
-    const int btn_ok_h = attribute_h;
-    const int btn_ok_w = tft->textWidth("OK") + btn_padding*2;
-    const int btn_ok_y = attribute_y_start + attribute_offset_y*7; // RESOLUTION_Y - btn_ok_h;
+    const int btn_ok_h = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
+    const int btn_ok_w = tft->textWidth("OK") + font_height * DEFAULT_BTN_PADDING_X*2;
+    const int btn_ok_y = RESOLUTION_Y - attribute_y_start - btn_ok_h; // RESOLUTION_Y - btn_ok_h;
     const int btn_ok_x = RESOLUTION_X - btn_ok_w;
     btn_ok = new GUI_Button(tft, "OK", btn_ok_x, btn_ok_y, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
@@ -146,8 +148,8 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
 
     // -----------------------------------------------
     // ------------- objdump button ------------------
-    const int btn_objdump_h = attribute_h;
-    const int btn_objdump_w = tft->textWidth("OBJDUMP") + btn_padding*2;
+    const int btn_objdump_h = btn_ok_h;
+    const int btn_objdump_w = tft->textWidth("OBJDUMP") + font_height * DEFAULT_BTN_PADDING_X*2;
     const int btn_objdump_x = RESOLUTION_X - btn_objdump_w;
     const int btn_objdump_y = attribute_y_start; //RESOLUTION_Y - btn_objdump_h - attribute_offset_y;
     btn_objdump = new GUI_Button(tft, "OBJDUMP", btn_objdump_x, btn_objdump_y, btn_objdump_w, btn_objdump_h, btn_ok_font_size, WHITE, BLACK, 

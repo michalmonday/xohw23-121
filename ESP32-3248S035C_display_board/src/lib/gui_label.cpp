@@ -4,7 +4,7 @@
 // -------------------------------
 // ---------- GUI_Label ----------
 GUI_Label::GUI_Label(TFT_eSPI *tft, String text, int x, int y, int font_size, int datum, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback, double padding_x, double padding_y) :
-    GUI_Element(tft, x, y, tft->textWidth(text), tft->fontHeight(font_size), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
+    GUI_Element(tft, x, y, tft->textWidth(text), tft->fontHeight(), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
 {
     update_touch_area();
     set_text(text);

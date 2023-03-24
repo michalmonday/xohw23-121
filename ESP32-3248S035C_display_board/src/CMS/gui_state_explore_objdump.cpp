@@ -12,9 +12,10 @@ GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(TFT_eSPI *tft, GUI_CMS *gui
         Serial.println("label_current_function is NULL");
     }
     add_element(label_current_function);
-    tft->setTextSize(2);
-    const int btn_w = tft->textWidth("Back") + RESOLUTION_X * 0.02;
-    const int btn_h = tft->fontHeight() + RESOLUTION_Y * 0.02;
+    tft->setTextSize(GUI_State_Explore_Objdump::font_size);
+    int font_height = tft->fontHeight();
+    const int btn_w = tft->textWidth("Back") + font_height * DEFAULT_BTN_PADDING_X*2;
+    const int btn_h = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
     btn_back = new GUI_Button(tft, "Back", RESOLUTION_X - btn_w, RESOLUTION_Y * 0.01, btn_w, btn_h, 2, WHITE, BLACK, [](){}, [this](){
         pop_function();
     });
@@ -162,7 +163,7 @@ void GUI_State_Explore_Objdump::set_current_function(String current_function) {
         return;
     }
     tft->setTextSize(GUI_State_Explore_Objdump::font_size);
-    const int y_offset = tft->fontHeight(GUI_State_Explore_Objdump::font_size) * 1.2;
+    const int y_offset = tft->fontHeight() * 1.2;
     const int y_start = RESOLUTION_Y * 0.05 + y_offset;
     int y = y_start;
     const int x = RESOLUTION_X * 0.02;

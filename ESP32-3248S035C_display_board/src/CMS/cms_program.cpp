@@ -20,6 +20,7 @@
 #include "watchpoint.h"
 
 #include <display_config.h> // resolution
+#define DISPLAY_BRIGHTNESS 0.2
 
 #include <touch.h>
 Touch touch;
@@ -151,12 +152,6 @@ void drawing_thread_func(void *parameter) {
     }
 }
 
-void init_display() {
-    tft.begin();
-    tft.fillScreen(BLACK);
-    // tft.setRotation(1); // landscape
-    tft.setRotation(3); // landscape, upside downh
-}
 
 void setup() {
     Serial.begin(115200);
@@ -177,7 +172,7 @@ void setup() {
     delay(100);
 
     serial_riscv.begin(115200);
-    init_display();
+    init_display(tft, DISPLAY_BRIGHTNESS);
     init_wifi();
 
     delay(1000);

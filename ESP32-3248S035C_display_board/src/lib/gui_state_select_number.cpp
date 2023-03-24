@@ -77,9 +77,10 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
     // --------- OK button ------------
     const int btn_ok_font_size = 2;
     tft->setTextSize(btn_ok_font_size);
-    int btn_ok_font_height = tft->fontHeight(btn_ok_font_size);
-    int btn_ok_h = btn_ok_font_height*1.2;
-    const int btn_ok_w = tft->textWidth("OK") * 2;
+    int btn_ok_font_height = tft->fontHeight();
+
+    int btn_ok_h = btn_ok_font_height + btn_ok_font_height * DEFAULT_BTN_PADDING_Y*2;
+    const int btn_ok_w = tft->textWidth("OK") + btn_ok_font_height * DEFAULT_BTN_PADDING_X*2;
     btn_ok = new GUI_Button(tft, "OK", RESOLUTION_X - btn_ok_w*1.2, RESOLUTION_Y - btn_ok_h*1.2, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 

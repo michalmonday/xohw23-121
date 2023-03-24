@@ -6,7 +6,7 @@
 
 LinePlot::LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
 tft(tft), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),
-max_value(INT_MIN), min_value(INT_MAX), dropped_value_screen_pos(-1), static_ylo(0), top_margin(0.0)
+max_value(INT_MIN), min_value(INT_MAX), dropped_value_screen_pos(-1), static_ylo(0), static_yhi(1), static_yhi_used(false), static_ylo_used(true), top_margin(0.0)
 {
     values = new double[max_number_of_items];
     values_screen_pos = new int[max_number_of_items];
@@ -57,18 +57,18 @@ void LinePlot::undraw_line(int i) {
 }
 
 void LinePlot::update_min_max_values() {
+    if (!static_yhi_used && !static_ylo_used) return;
     for (int i = 0; i < current_number_of_items; i++) {
-        if (values[i] > yhi)
+        if (values[i] > yhi && !static_yhi_used)
             yhi = values[i];
-        if (values[i] < ylo)
+        if (values[i] < ylo && !static_ylo_used)
             ylo = values[i];
     }
 }
 
 void LinePlot::record_last_painted_screen_positions() {
-    for (int i = 0; i < current_number_of_items; i++) {
+    for (int i = 0; i < current_number_of_items; i++)
         last_painted_values_screen_pos[i] = values_screen_pos[i];
-    }
 }
 
 int LinePlot::calculate_screen_ypos(double value) {
@@ -76,6 +76,14 @@ int LinePlot::calculate_screen_ypos(double value) {
     double effective_yhi = yhi + top_margin * (yhi - ylo);
     if (effective_yhi == 0)
         effective_yhi = 1;
+    
+    // this will cap value if it's outside of static_yhi or static_ylo 
+    // (to avoid drawing outside of the graph even if the value is out of range which it shouln't be)
+    if (value > yhi)
+        value = yhi;
+    if (value < ylo)
+        value = ylo;
+
     return (int)( graph->get_y() + graph->get_h() * (effective_yhi - value) / (effective_yhi - ylo));
 }
 
@@ -94,9 +102,9 @@ void LinePlot::add_point(double value) {
     bool scale_changed = false;
     if (value > yhi || value < ylo) {
         scale_changed = true;
-        if (value > yhi)
+        if (value > yhi && !static_yhi_used)
             yhi = value;
-        if (value < ylo)
+        if (value < ylo && !static_ylo_used)
             ylo = value;
     }
 
@@ -115,20 +123,20 @@ void LinePlot::add_point(double value) {
 
     // if the line plot is full, shift values to the left and add new value to the end
     // if the oldest value was min or max, then we need to update min or max after shifting
-    bool need_update_min_max = (values[0] <= ylo || values[0] >= yhi);
+    bool need_update_min_max = (values[0] <= ylo || values[0] >= yhi && (static_ylo_used || static_yhi_used));
     if (need_update_min_max) {
         // assign yhi o minimum double value
-        yhi = std::numeric_limits<double>::min();
-        ylo = static_ylo != -1 ? static_ylo : std::numeric_limits<double>::max();
+        yhi = static_yhi_used ? static_yhi : std::numeric_limits<double>::min();
+        ylo = static_ylo_used ? static_ylo : std::numeric_limits<double>::max();
         for (int i = 1; i < max_number_of_items; i++) {
-            if (values[i] > yhi)
+            if (values[i] > yhi && !static_yhi_used)
                 yhi = values[i];
-            if (values[i] < ylo)
+            if (values[i] < ylo && !static_ylo_used)
                 ylo = values[i];
         }
-        if (value > yhi)
+        if (value > yhi && !static_yhi_used)
             yhi = value;
-        if (value < ylo)
+        if (value < ylo && !static_ylo_used)
             ylo = value;
         scale_changed = true;
     }

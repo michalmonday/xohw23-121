@@ -53,6 +53,7 @@ public:
     void draw_grid();
 
     unsigned int get_background_color() { return background_color; }
+    void set_title_font_size(int font_size) { title_font_size = font_size; needs_redraw = true; }
 private:
     int grid_x_segments, grid_y_segments;
     std::map<String, LinePlot *> line_plots;
@@ -77,6 +78,8 @@ private:
 
     int current_value_display_width;
     int current_value_diplay_font_size;
+    int legend_font_size;
+    int title_font_size;
     std::map<LinePlot *, GUI_Label *> current_value_labels;
     void draw_current_values();
 };

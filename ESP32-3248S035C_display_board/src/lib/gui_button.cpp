@@ -3,7 +3,7 @@
 // -------------------------------
 // ---------- GUI_Button ----------
 GUI_Button::GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int font_size, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback) :
-    GUI_Element(tft, x, y, w, h, background_colour, on_press_callback, on_release_callback), text(text), font_size(font_size), text_colour(text_colour), original_background_colour(background_colour)
+    GUI_Element(tft, x, y, w, h, background_colour, on_press_callback, on_release_callback), text(text), font_size(font_size), text_colour(text_colour), original_background_colour(background_colour), original_text_colour(text_colour)
 {
 }
 
@@ -30,8 +30,10 @@ void GUI_Button::draw() {
     tft->setTextColor(text_colour);
     tft->setTextSize(font_size);
     tft->drawString(text, x + w / 2, y + h / 2);
-// - tft->fontHeight(2)/
+// - tft->fontHeight()/
 }
+
+
 
 void GUI_Button::undraw() {
     // paint over the label with the background colour
@@ -49,6 +51,7 @@ void GUI_Button::set_text(String text) {
 
 void GUI_Button::on_release() {
     background_colour = original_background_colour;
+    text_colour = original_text_colour;
     // Serial.println("Button '" + text + "' touched");
     needs_redraw = true;
     GUI_Element::on_release();
@@ -56,7 +59,8 @@ void GUI_Button::on_release() {
 }
 
 void GUI_Button::on_press() {
-    background_colour = WHITE;
+    background_colour = text_colour;
+    text_colour = original_background_colour;
     needs_redraw = true;
     GUI_Element::on_press();
     // no members should be modified here to allow on_press_callback to destroy the object itself if needed

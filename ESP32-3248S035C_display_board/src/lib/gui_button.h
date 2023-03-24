@@ -6,6 +6,10 @@
 
 #include <functional>
 
+// 0.4 of height
+#define DEFAULT_BTN_PADDING_X 0.6 
+#define DEFAULT_BTN_PADDING_Y 0.2
+
 class GUI_Button : public GUI_Element {
 public:
     GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int font_size, unsigned int text_colour, unsigned int background_colour = BLACK, 
@@ -22,6 +26,7 @@ private:
     String text;
     unsigned int text_colour;
     unsigned int original_background_colour;
+    unsigned int original_text_colour;
     unsigned int font_size;
 };
 
