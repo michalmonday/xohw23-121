@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Wed Mar 15 16:45:32 2023" VIVADOVERSION="2020.1">
+<EDKSYSTEM EDWVERSION="1.2" TIMESTAMP="Sat Mar 18 00:36:57 2023" VIVADOVERSION="2020.1">
 
   <SYSTEMINFO ARCH="zynq" BOARD="xilinx.com:zc706:part0:1.4" DEVICE="7z045" NAME="imported_design" PACKAGE="ffg900" SPEEDGRADE="-2"/>
 
@@ -42,6 +42,53 @@
     <PORT DIR="I" NAME="PMOD1_1_LS" SIGIS="undef" SIGNAME="External_Ports_PMOD1_1_LS">
       <CONNECTIONS>
         <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0" PORT="rx"/>
+        <CONNECTION INSTANCE="system_ila_0" PORT="probe13"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" NAME="PMOD1_2_LS" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_sr_latch">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="sr_latch"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="O" NAME="PMOD1_3_LS" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_sr_clock">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="sr_clock"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="I" NAME="PMOD1_4_LS" SIGIS="undef" SIGNAME="External_Ports_PMOD1_4_LS">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_c_din"/>
+        <CONNECTION INSTANCE="system_ila_0" PORT="probe12"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" LEFT="53" NAME="FIXED_IO_mio" RIGHT="0" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_MIO">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="MIO"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" NAME="FIXED_IO_ddr_vrn" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_VRN">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="DDR_VRN"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" NAME="FIXED_IO_ddr_vrp" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_VRP">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="DDR_VRP"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" NAME="FIXED_IO_ps_srstb" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_SRSTB">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_SRSTB"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" NAME="FIXED_IO_ps_clk" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_CLK">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_CLK"/>
+      </CONNECTIONS>
+    </PORT>
+    <PORT DIR="IO" NAME="FIXED_IO_ps_porb" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_PORB">
+      <CONNECTIONS>
+        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_PORB"/>
       </CONNECTIONS>
     </PORT>
     <PORT DIR="IO" NAME="DDR_cas_n" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_CAS_n">
@@ -117,51 +164,6 @@
     <PORT DIR="IO" LEFT="3" NAME="DDR_dqs_p" RIGHT="0" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_DQS">
       <CONNECTIONS>
         <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="DDR_DQS"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" LEFT="53" NAME="FIXED_IO_mio" RIGHT="0" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_MIO">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="MIO"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" NAME="FIXED_IO_ddr_vrn" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_VRN">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="DDR_VRN"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" NAME="FIXED_IO_ddr_vrp" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_DDR_VRP">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="DDR_VRP"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" NAME="FIXED_IO_ps_srstb" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_SRSTB">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_SRSTB"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" NAME="FIXED_IO_ps_clk" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_CLK">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_CLK"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="IO" NAME="FIXED_IO_ps_porb" SIGIS="undef" SIGNAME="ZYNQ_ARM_processing_system_PS_PORB">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="PS_PORB"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="O" NAME="PMOD1_2_LS" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_sr_latch">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="sr_latch"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="O" NAME="PMOD1_3_LS" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_sr_clock">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="sr_clock"/>
-      </CONNECTIONS>
-    </PORT>
-    <PORT DIR="I" NAME="PMOD1_4_LS" SIGIS="undef" SIGNAME="External_Ports_PMOD1_4_LS">
-      <CONNECTIONS>
-        <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_c_din"/>
       </CONNECTIONS>
     </PORT>
   </EXTERNALPORTS>
@@ -585,6 +587,7 @@
         <PORT DIR="O" NAME="cpu_reset_completed" SIGIS="undef" SIGNAME="CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_console_io_console_io" PORT="cpu_reset_completed"/>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" PORT="cpu_reset_completed"/>
           </CONNECTIONS>
         </PORT>
       </PORTS>
@@ -741,10 +744,12 @@
       <MEMORYMAP>
         <MEMRANGE ADDRESSBLOCK="Mem0" BASENAME="C_S_AXI_BASEADDR" BASEVALUE="0xC0003000" HIGHNAME="C_S_AXI_HIGHADDR" HIGHVALUE="0xC0003FFF" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_axi_bram_ctrl_sensors" IS_DATA="TRUE" IS_INSTRUCTION="TRUE" MASTERBUSINTERFACE="core_dmem_post_fabric" MEMTYPE="MEMORY" SLAVEBUSINTERFACE="S_AXI"/>
         <MEMRANGE ADDRESSBLOCK="Reg" BASENAME="C_BASEADDR" BASEVALUE="0xC0004000" HIGHNAME="C_HIGHADDR" HIGHVALUE="0xC0004FFF" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0" IS_DATA="TRUE" IS_INSTRUCTION="TRUE" MASTERBUSINTERFACE="core_dmem_post_fabric" MEMTYPE="REGISTER" SLAVEBUSINTERFACE="S_AXI"/>
+        <MEMRANGE ADDRESSBLOCK="Mem0" BASENAME="C_S_AXI_BASEADDR" BASEVALUE="0xC0005000" HIGHNAME="C_S_AXI_HIGHADDR" HIGHVALUE="0xC0005FFF" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" IS_DATA="TRUE" IS_INSTRUCTION="TRUE" MASTERBUSINTERFACE="core_dmem_post_fabric" MEMTYPE="MEMORY" SLAVEBUSINTERFACE="S_AXI"/>
       </MEMORYMAP>
       <PERIPHERALS>
         <PERIPHERAL INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_axi_bram_ctrl_sensors"/>
         <PERIPHERAL INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0"/>
+        <PERIPHERAL INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom"/>
       </PERIPHERALS>
     </MODULE>
     <MODULE COREREVISION="23" FULLNAME="/PYNQ_wrapper_blocks/axi_gpio_0" HWVERSION="2.0" INSTANCE="PYNQ_wrapper_blocks_axi_gpio_0" IPTYPE="PERIPHERAL" IS_ENABLE="1" MODCLASS="PERIPHERAL" MODTYPE="axi_gpio" VLNV="xilinx.com:ip:axi_gpio:2.0">
@@ -6722,6 +6727,7 @@
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_axi_bram_ctrl_sensors" PORT="s_axi_aresetn"/>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="aresetn"/>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0" PORT="s_axi_aresetn"/>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_aresetn"/>
           </CONNECTIONS>
         </PORT>
       </PORTS>
@@ -7786,6 +7792,7 @@
         <PORT DIR="O" LEFT="4" NAME="S" RIGHT="0" SIGIS="data" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_c_addsub_minus_0x10_S">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_b_addr"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe16"/>
           </CONNECTIONS>
         </PORT>
       </PORTS>
@@ -7824,11 +7831,13 @@
         <PORT DIR="O" LEFT="5" NAME="address" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_address">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_c_addr"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe14"/>
           </CONNECTIONS>
         </PORT>
         <PORT DIR="O" NAME="write_enable" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_write_enable">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_c_we"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe15"/>
           </CONNECTIONS>
         </PORT>
       </PORTS>
@@ -8200,11 +8209,13 @@
         <PORT DIR="O" NAME="drdy_out" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input_drdy_out">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_b_we"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe18"/>
           </CONNECTIONS>
         </PORT>
         <PORT DIR="O" LEFT="15" NAME="do_out" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input_do_out">
           <CONNECTIONS>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_extension_bram_0" PORT="port_b_din"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe17"/>
           </CONNECTIONS>
         </PORT>
         <PORT CLKFREQUENCY="50000000" DIR="I" NAME="dclk_in" SIGIS="clk" SIGNAME="ZYNQ_ARM_processing_system_FCLK_CLK0">
@@ -8306,7 +8317,7 @@
         <PARAMETER NAME="TLM_COMPONENT_NAME" VALUE="imported_design_smartconnect_other_peripherals_0"/>
         <PARAMETER NAME="HAS_RESET" VALUE="1"/>
         <PARAMETER NAME="Component_Name" VALUE="imported_design_smartconnect_other_peripherals_0"/>
-        <PARAMETER NAME="NUM_MI" VALUE="2"/>
+        <PARAMETER NAME="NUM_MI" VALUE="3"/>
         <PARAMETER NAME="NUM_SI" VALUE="1"/>
         <PARAMETER NAME="NUM_CLKS" VALUE="1"/>
         <PARAMETER NAME="HAS_ARESETN" VALUE="1"/>
@@ -8753,6 +8764,163 @@
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0" PORT="s_axi_rready"/>
           </CONNECTIONS>
         </PORT>
+        <PORT DIR="O" LEFT="11" NAME="M02_AXI_awaddr" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awaddr">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awaddr"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="7" NAME="M02_AXI_awlen" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awlen">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awlen"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="2" NAME="M02_AXI_awsize" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awsize">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awsize"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="1" NAME="M02_AXI_awburst" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awburst">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awburst"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="0" NAME="M02_AXI_awlock" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awlock">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awlock"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="3" NAME="M02_AXI_awcache" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awcache">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awcache"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="2" NAME="M02_AXI_awprot" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awprot">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awprot"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="3" NAME="M02_AXI_awqos" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="O" NAME="M02_AXI_awvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_awready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_awready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="63" NAME="M02_AXI_wdata" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wdata">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_wdata"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="7" NAME="M02_AXI_wstrb" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wstrb">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_wstrb"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="M02_AXI_wlast" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wlast">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_wlast"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="M02_AXI_wvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_wvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_wready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_wready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="1" NAME="M02_AXI_bresp" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bresp">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_bresp"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_bvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_bvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="M02_AXI_bready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_bready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="11" NAME="M02_AXI_araddr" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_araddr">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_araddr"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="7" NAME="M02_AXI_arlen" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arlen">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arlen"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="2" NAME="M02_AXI_arsize" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arsize">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arsize"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="1" NAME="M02_AXI_arburst" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arburst">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arburst"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="0" NAME="M02_AXI_arlock" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arlock">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arlock"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="3" NAME="M02_AXI_arcache" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arcache">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arcache"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="2" NAME="M02_AXI_arprot" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arprot">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arprot"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="3" NAME="M02_AXI_arqos" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="O" NAME="M02_AXI_arvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_arready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_arready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="63" NAME="M02_AXI_rdata" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rdata">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_rdata"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="1" NAME="M02_AXI_rresp" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rresp">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_rresp"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_rlast" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rlast">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_rlast"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="M02_AXI_rvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_rvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="M02_AXI_rready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_rready"/>
+          </CONNECTIONS>
+        </PORT>
       </PORTS>
       <BUSINTERFACES>
         <BUSINTERFACE BUSNAME="CHERI_RISCV_Flute_mkSoC_Top_core_dmem_post_fabric" DATAWIDTH="64" NAME="S00_AXI" TYPE="SLAVE" VLNV="xilinx.com:interface:aximm:1.0">
@@ -8949,7 +9117,748 @@
             <PORTMAP LOGICAL="RREADY" PHYSICAL="M01_AXI_rready"/>
           </PORTMAPS>
         </BUSINTERFACE>
+        <BUSINTERFACE BUSNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI" DATAWIDTH="64" NAME="M02_AXI" TYPE="MASTER" VLNV="xilinx.com:interface:aximm:1.0">
+          <PARAMETER NAME="DATA_WIDTH" VALUE="64"/>
+          <PARAMETER NAME="PROTOCOL" VALUE="AXI4"/>
+          <PARAMETER NAME="FREQ_HZ" VALUE="50000000"/>
+          <PARAMETER NAME="ID_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ADDR_WIDTH" VALUE="12"/>
+          <PARAMETER NAME="AWUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ARUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="WUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="RUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="BUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="READ_WRITE_MODE" VALUE="READ_WRITE"/>
+          <PARAMETER NAME="HAS_BURST" VALUE="1"/>
+          <PARAMETER NAME="HAS_LOCK" VALUE="1"/>
+          <PARAMETER NAME="HAS_PROT" VALUE="1"/>
+          <PARAMETER NAME="HAS_CACHE" VALUE="1"/>
+          <PARAMETER NAME="HAS_QOS" VALUE="1"/>
+          <PARAMETER NAME="HAS_REGION" VALUE="0"/>
+          <PARAMETER NAME="HAS_WSTRB" VALUE="1"/>
+          <PARAMETER NAME="HAS_BRESP" VALUE="1"/>
+          <PARAMETER NAME="HAS_RRESP" VALUE="1"/>
+          <PARAMETER NAME="SUPPORTS_NARROW_BURST" VALUE="0"/>
+          <PARAMETER NAME="NUM_READ_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="NUM_WRITE_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="MAX_BURST_LENGTH" VALUE="256"/>
+          <PARAMETER NAME="PHASE" VALUE="0.000"/>
+          <PARAMETER NAME="CLK_DOMAIN" VALUE="imported_design_ZYNQ_ARM_processing_system_0_FCLK_CLK0"/>
+          <PARAMETER NAME="NUM_READ_THREADS" VALUE="1"/>
+          <PARAMETER NAME="NUM_WRITE_THREADS" VALUE="1"/>
+          <PARAMETER NAME="RUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="WUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="INSERT_VIP" VALUE="0"/>
+          <PORTMAPS>
+            <PORTMAP LOGICAL="AWADDR" PHYSICAL="M02_AXI_awaddr"/>
+            <PORTMAP LOGICAL="AWLEN" PHYSICAL="M02_AXI_awlen"/>
+            <PORTMAP LOGICAL="AWSIZE" PHYSICAL="M02_AXI_awsize"/>
+            <PORTMAP LOGICAL="AWBURST" PHYSICAL="M02_AXI_awburst"/>
+            <PORTMAP LOGICAL="AWLOCK" PHYSICAL="M02_AXI_awlock"/>
+            <PORTMAP LOGICAL="AWCACHE" PHYSICAL="M02_AXI_awcache"/>
+            <PORTMAP LOGICAL="AWPROT" PHYSICAL="M02_AXI_awprot"/>
+            <PORTMAP LOGICAL="AWQOS" PHYSICAL="M02_AXI_awqos"/>
+            <PORTMAP LOGICAL="AWVALID" PHYSICAL="M02_AXI_awvalid"/>
+            <PORTMAP LOGICAL="AWREADY" PHYSICAL="M02_AXI_awready"/>
+            <PORTMAP LOGICAL="WDATA" PHYSICAL="M02_AXI_wdata"/>
+            <PORTMAP LOGICAL="WSTRB" PHYSICAL="M02_AXI_wstrb"/>
+            <PORTMAP LOGICAL="WLAST" PHYSICAL="M02_AXI_wlast"/>
+            <PORTMAP LOGICAL="WVALID" PHYSICAL="M02_AXI_wvalid"/>
+            <PORTMAP LOGICAL="WREADY" PHYSICAL="M02_AXI_wready"/>
+            <PORTMAP LOGICAL="BRESP" PHYSICAL="M02_AXI_bresp"/>
+            <PORTMAP LOGICAL="BVALID" PHYSICAL="M02_AXI_bvalid"/>
+            <PORTMAP LOGICAL="BREADY" PHYSICAL="M02_AXI_bready"/>
+            <PORTMAP LOGICAL="ARADDR" PHYSICAL="M02_AXI_araddr"/>
+            <PORTMAP LOGICAL="ARLEN" PHYSICAL="M02_AXI_arlen"/>
+            <PORTMAP LOGICAL="ARSIZE" PHYSICAL="M02_AXI_arsize"/>
+            <PORTMAP LOGICAL="ARBURST" PHYSICAL="M02_AXI_arburst"/>
+            <PORTMAP LOGICAL="ARLOCK" PHYSICAL="M02_AXI_arlock"/>
+            <PORTMAP LOGICAL="ARCACHE" PHYSICAL="M02_AXI_arcache"/>
+            <PORTMAP LOGICAL="ARPROT" PHYSICAL="M02_AXI_arprot"/>
+            <PORTMAP LOGICAL="ARQOS" PHYSICAL="M02_AXI_arqos"/>
+            <PORTMAP LOGICAL="ARVALID" PHYSICAL="M02_AXI_arvalid"/>
+            <PORTMAP LOGICAL="ARREADY" PHYSICAL="M02_AXI_arready"/>
+            <PORTMAP LOGICAL="RDATA" PHYSICAL="M02_AXI_rdata"/>
+            <PORTMAP LOGICAL="RRESP" PHYSICAL="M02_AXI_rresp"/>
+            <PORTMAP LOGICAL="RLAST" PHYSICAL="M02_AXI_rlast"/>
+            <PORTMAP LOGICAL="RVALID" PHYSICAL="M02_AXI_rvalid"/>
+            <PORTMAP LOGICAL="RREADY" PHYSICAL="M02_AXI_rready"/>
+          </PORTMAPS>
+        </BUSINTERFACE>
       </BUSINTERFACES>
+    </MODULE>
+    <MODULE COREREVISION="3" FULLNAME="/PYNQ_wrapper_blocks/riscv_other_peripherals/utils_rom_blocks/axi_bram_ctrl_utils_rom" HWVERSION="4.1" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" IPTYPE="PERIPHERAL" IS_ENABLE="1" MODCLASS="MEMORY_CNTLR" MODTYPE="axi_bram_ctrl" VLNV="xilinx.com:ip:axi_bram_ctrl:4.1">
+      <DOCUMENTS>
+        <DOCUMENT SOURCE="http://www.xilinx.com/cgi-bin/docs/ipdoc?c=axi_bram_ctrl;v=v4_1;d=pg078-axi-bram-ctrl.pdf"/>
+      </DOCUMENTS>
+      <ADDRESSBLOCKS>
+        <ADDRESSBLOCK ACCESS="read-write" INTERFACE="S_AXI" NAME="Mem0" RANGE="8192" USAGE="memory">
+          <REGISTERS>
+            <REGISTER NAME="ECC_STATUS">
+              <PROPERTY NAME="DESCRIPTION" VALUE="ECC Status Register"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x000"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0x0"/>
+              <FIELDS>
+                <FIELD NAME="UE_STATUS">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="If 1 an uncorrectable error has occurred. Cleared when 1 is written to this bit position&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE="oneToClear"/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="1"/>
+                </FIELD>
+                <FIELD NAME="CE_STATUS">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="If 1 a correctable error has occurred. Cleared when 1 is written to this bit position&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="1"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE="oneToClear"/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="1"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="1"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="ECC_EN_IRQ">
+              <PROPERTY NAME="DESCRIPTION" VALUE="ECC Enable Interrupt Register"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x004"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0x0"/>
+              <FIELDS>
+                <FIELD NAME="UE_EN_IRQ">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="1 - The value of the UE_STATUS bit of the ECC Status Register is propagated to the Interrupt signal.&#xA;0 - The value of the UE_STATUS bit of the ECC Status Register is not propagated to the Interrupt signal.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="1"/>
+                </FIELD>
+                <FIELD NAME="CE_EN_IRQ">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="1 - The value of the CE_STATUS bit of the ECC Status Register is propagated to the Interrupt signal.&#xA;0 - The value of the CE_STATUS bit of the ECC Status Register is not propagated to the Interrupt signal.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="1"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="1"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="1"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="ECC_ON_OFF">
+              <PROPERTY NAME="DESCRIPTION" VALUE="ECC On/Off Register"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x008"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="ECC_ON_OFF">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="0 - ECC checking is disabled on read operations. (ECC generation is enabled on write operations when C_ECC = 1).&#xA;1 - ECC checking is enabled on read operations. All correctable and uncorrectable error conditions are captured and status updated.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="1"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="CE_CNT">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Correctable Error Counter Register"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x00C"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="CE_CNT">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Registers holds number of correctable errors encountered&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-write"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="8"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="CE_FFA0">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Correctable Error First Failing Address Register, bits [31:0]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x1C0"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="CE_FFA0">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Address (bits [31:0]) of the first occurrence of a correctable error&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="CE_FFA1">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Correctable Error First Failing Address Register, bits [63:32]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x1C4"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="CE_FFA1">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Address (bits [63:32]) of the first occurrence of a correctable error&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="UE_FFD1">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Uncorrectable Error First Failing Data Register , bits [63:32]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x204"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="UE_FFD">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Data (bits [63:32) of the first occurrence of an uncorrectable error&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="UE_FFD2">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Uncorrectable Error First Failing Data Register , bits [95:64]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x208"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="UE_FFD">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Data (bits [95:64]) of the first occurrence of an uncorrectable error&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="UE_FFD3">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Uncorrectable Error First Failing Data Register , bits [127:96]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x20C"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="UE_FFD">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Data (bits [127:96]) of the first occurrence of an uncorrectable error&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="FI_D0">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Fault Inject Data Register, bits[31:0]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x300"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="write-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="FI_D0">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Bit positions set to 1 toggle the corresponding bits [31:0] of the next data word written to the block RAM.&#xA;The register is automatically cleared after the fault has been injected.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="FI_D1">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Fault Inject Data Register, bits[63:32]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x304"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="write-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="FI_D1">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Bit positions set to 1 toggle the corresponding bits [63:32] of the next data word written to the block RAM.&#xA;The register is automatically cleared after the fault has been injected.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="FI_D2">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Fault Inject Data Register, bits[95:64]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x308"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="write-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="FI_D2">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Bit positions set to 1 toggle the corresponding bits [95:64] of the next data word written to the block RAM.&#xA;The register is automatically cleared after the fault has been injected.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="FI_D3">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Fault Inject Data Register, bits[127:96]"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x30C"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="write-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="FI_D3">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Bit positions set to 1 toggle the corresponding bits [127:96] of the next data word written to the block RAM.&#xA;The register is automatically cleared after the fault has been injected.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="32"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+            <REGISTER NAME="FI_ECC">
+              <PROPERTY NAME="DESCRIPTION" VALUE="Fault Inject ECC Register"/>
+              <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0x380"/>
+              <PROPERTY NAME="SIZE" VALUE="1"/>
+              <PROPERTY NAME="ACCESS" VALUE="write-only"/>
+              <PROPERTY NAME="IS_ENABLED" VALUE="false"/>
+              <PROPERTY NAME="RESET_VALUE" VALUE="0"/>
+              <FIELDS>
+                <FIELD NAME="FI_ECC">
+                  <PROPERTY NAME="DESCRIPTION" VALUE="Bit positions set to 1 toggle the corresponding bit of the next ECC written to the block RAM.&#xA;The register is automatically cleared after the fault has been injected.&#xA;"/>
+                  <PROPERTY NAME="ADDRESS_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="ACCESS" VALUE="read-only"/>
+                  <PROPERTY NAME="MODIFIED_READ_VALUES" VALUE=""/>
+                  <PROPERTY NAME="WRITE_CONSTRAINT" VALUE="0"/>
+                  <PROPERTY NAME="READ_ACTION" VALUE=""/>
+                  <PROPERTY NAME="BIT_OFFSET" VALUE="0"/>
+                  <PROPERTY NAME="BIT_WIDTH" VALUE="64"/>
+                </FIELD>
+              </FIELDS>
+            </REGISTER>
+          </REGISTERS>
+        </ADDRESSBLOCK>
+      </ADDRESSBLOCKS>
+      <PARAMETERS>
+        <PARAMETER NAME="C_BRAM_INST_MODE" VALUE="EXTERNAL"/>
+        <PARAMETER NAME="C_MEMORY_DEPTH" VALUE="512"/>
+        <PARAMETER NAME="C_BRAM_ADDR_WIDTH" VALUE="9"/>
+        <PARAMETER NAME="C_S_AXI_ADDR_WIDTH" VALUE="12"/>
+        <PARAMETER NAME="C_S_AXI_DATA_WIDTH" VALUE="64"/>
+        <PARAMETER NAME="C_S_AXI_ID_WIDTH" VALUE="1"/>
+        <PARAMETER NAME="C_S_AXI_PROTOCOL" VALUE="AXI4"/>
+        <PARAMETER NAME="C_S_AXI_SUPPORTS_NARROW_BURST" VALUE="0"/>
+        <PARAMETER NAME="C_SINGLE_PORT_BRAM" VALUE="1"/>
+        <PARAMETER NAME="C_FAMILY" VALUE="zynq"/>
+        <PARAMETER NAME="C_READ_LATENCY" VALUE="1"/>
+        <PARAMETER NAME="C_RD_CMD_OPTIMIZATION" VALUE="0"/>
+        <PARAMETER NAME="C_S_AXI_CTRL_ADDR_WIDTH" VALUE="32"/>
+        <PARAMETER NAME="C_S_AXI_CTRL_DATA_WIDTH" VALUE="32"/>
+        <PARAMETER NAME="C_ECC" VALUE="0"/>
+        <PARAMETER NAME="C_ECC_TYPE" VALUE="0"/>
+        <PARAMETER NAME="C_FAULT_INJECT" VALUE="0"/>
+        <PARAMETER NAME="C_ECC_ONOFF_RESET_VALUE" VALUE="0"/>
+        <PARAMETER NAME="DATA_WIDTH" VALUE="64"/>
+        <PARAMETER NAME="ID_WIDTH" VALUE="0"/>
+        <PARAMETER NAME="PROTOCOL" VALUE="AXI4"/>
+        <PARAMETER NAME="SUPPORTS_NARROW_BURST" VALUE="0"/>
+        <PARAMETER NAME="SINGLE_PORT_BRAM" VALUE="1"/>
+        <PARAMETER NAME="ECC_TYPE" VALUE="0"/>
+        <PARAMETER NAME="USE_ECC" VALUE="0"/>
+        <PARAMETER NAME="FAULT_INJECT" VALUE="0"/>
+        <PARAMETER NAME="ECC_ONOFF_RESET_VALUE" VALUE="0"/>
+        <PARAMETER NAME="Component_Name" VALUE="imported_design_axi_bram_ctrl_0_0"/>
+        <PARAMETER NAME="BMG_INSTANCE" VALUE="EXTERNAL"/>
+        <PARAMETER NAME="MEM_DEPTH" VALUE="512"/>
+        <PARAMETER NAME="READ_LATENCY" VALUE="1"/>
+        <PARAMETER NAME="RD_CMD_OPTIMIZATION" VALUE="0"/>
+        <PARAMETER NAME="EDK_IPTYPE" VALUE="PERIPHERAL"/>
+        <PARAMETER NAME="EDK_SPECIAL" VALUE="BRAM_CTRL"/>
+        <PARAMETER NAME="C_S_AXI_BASEADDR" VALUE="0xC0005000"/>
+        <PARAMETER NAME="C_S_AXI_HIGHADDR" VALUE="0xC0005FFF"/>
+      </PARAMETERS>
+      <PORTS>
+        <PORT CLKFREQUENCY="50000000" DIR="I" NAME="s_axi_aclk" SIGIS="clk" SIGNAME="ZYNQ_ARM_processing_system_FCLK_CLK0">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="FCLK_CLK0"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_aresetn" POLARITY="ACTIVE_LOW" SIGIS="rst" SIGNAME="PYNQ_wrapper_blocks_gpio_reset_slice_Dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_gpio_reset_slice" PORT="Dout"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="11" NAME="s_axi_awaddr" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awaddr">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awaddr"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="7" NAME="s_axi_awlen" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awlen">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awlen"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="2" NAME="s_axi_awsize" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awsize">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awsize"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="1" NAME="s_axi_awburst" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awburst">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awburst"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_awlock" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awlock">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awlock"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="3" NAME="s_axi_awcache" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awcache">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awcache"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="2" NAME="s_axi_awprot" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awprot">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awprot"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_awvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_awready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_awready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_awready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="63" NAME="s_axi_wdata" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wdata">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_wdata"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="7" NAME="s_axi_wstrb" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wstrb">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_wstrb"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_wlast" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wlast">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_wlast"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_wvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_wvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_wready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_wready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_wready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="1" NAME="s_axi_bresp" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bresp">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_bresp"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_bvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_bvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_bready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_bready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_bready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="11" NAME="s_axi_araddr" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_araddr">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_araddr"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="7" NAME="s_axi_arlen" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arlen">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arlen"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="2" NAME="s_axi_arsize" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arsize">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arsize"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="1" NAME="s_axi_arburst" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arburst">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arburst"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_arlock" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arlock">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arlock"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="3" NAME="s_axi_arcache" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arcache">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arcache"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="2" NAME="s_axi_arprot" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arprot">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arprot"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_arvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_arready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_arready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_arready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="63" NAME="s_axi_rdata" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rdata">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_rdata"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="1" NAME="s_axi_rresp" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rresp">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_rresp"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_rlast" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rlast">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_rlast"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="s_axi_rvalid" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rvalid">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_rvalid"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="s_axi_rready" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI_rready">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="M02_AXI_rready"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" NAME="bram_rst_a" SIGIS="rst"/>
+        <PORT DIR="O" NAME="bram_clk_a" SIGIS="clk"/>
+        <PORT DIR="O" NAME="bram_en_a" SIGIS="undef"/>
+        <PORT DIR="O" LEFT="7" NAME="bram_we_a" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="O" LEFT="11" NAME="bram_addr_a" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom_bram_addr_a">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0" PORT="Din"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe19"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="63" NAME="bram_wrdata_a" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="63" NAME="bram_rddata_a" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0_dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" PORT="dout"/>
+          </CONNECTIONS>
+        </PORT>
+      </PORTS>
+      <BUSINTERFACES>
+        <BUSINTERFACE BUSNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI" DATAWIDTH="64" NAME="S_AXI" TYPE="SLAVE" VLNV="xilinx.com:interface:aximm:1.0">
+          <PARAMETER NAME="DATA_WIDTH" VALUE="64"/>
+          <PARAMETER NAME="PROTOCOL" VALUE="AXI4"/>
+          <PARAMETER NAME="FREQ_HZ" VALUE="50000000"/>
+          <PARAMETER NAME="ID_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ADDR_WIDTH" VALUE="12"/>
+          <PARAMETER NAME="AWUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ARUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="WUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="RUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="BUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="READ_WRITE_MODE" VALUE="READ_WRITE"/>
+          <PARAMETER NAME="HAS_BURST" VALUE="1"/>
+          <PARAMETER NAME="HAS_LOCK" VALUE="1"/>
+          <PARAMETER NAME="HAS_PROT" VALUE="1"/>
+          <PARAMETER NAME="HAS_CACHE" VALUE="1"/>
+          <PARAMETER NAME="HAS_QOS" VALUE="0"/>
+          <PARAMETER NAME="HAS_REGION" VALUE="0"/>
+          <PARAMETER NAME="HAS_WSTRB" VALUE="1"/>
+          <PARAMETER NAME="HAS_BRESP" VALUE="1"/>
+          <PARAMETER NAME="HAS_RRESP" VALUE="1"/>
+          <PARAMETER NAME="SUPPORTS_NARROW_BURST" VALUE="0"/>
+          <PARAMETER NAME="NUM_READ_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="NUM_WRITE_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="MAX_BURST_LENGTH" VALUE="256"/>
+          <PARAMETER NAME="PHASE" VALUE="0.000"/>
+          <PARAMETER NAME="CLK_DOMAIN" VALUE="imported_design_ZYNQ_ARM_processing_system_0_FCLK_CLK0"/>
+          <PARAMETER NAME="NUM_READ_THREADS" VALUE="1"/>
+          <PARAMETER NAME="NUM_WRITE_THREADS" VALUE="1"/>
+          <PARAMETER NAME="RUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="WUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="INSERT_VIP" VALUE="0"/>
+          <PORTMAPS>
+            <PORTMAP LOGICAL="ARADDR" PHYSICAL="s_axi_araddr"/>
+            <PORTMAP LOGICAL="ARBURST" PHYSICAL="s_axi_arburst"/>
+            <PORTMAP LOGICAL="ARCACHE" PHYSICAL="s_axi_arcache"/>
+            <PORTMAP LOGICAL="ARLEN" PHYSICAL="s_axi_arlen"/>
+            <PORTMAP LOGICAL="ARLOCK" PHYSICAL="s_axi_arlock"/>
+            <PORTMAP LOGICAL="ARPROT" PHYSICAL="s_axi_arprot"/>
+            <PORTMAP LOGICAL="ARREADY" PHYSICAL="s_axi_arready"/>
+            <PORTMAP LOGICAL="ARSIZE" PHYSICAL="s_axi_arsize"/>
+            <PORTMAP LOGICAL="ARVALID" PHYSICAL="s_axi_arvalid"/>
+            <PORTMAP LOGICAL="AWADDR" PHYSICAL="s_axi_awaddr"/>
+            <PORTMAP LOGICAL="AWBURST" PHYSICAL="s_axi_awburst"/>
+            <PORTMAP LOGICAL="AWCACHE" PHYSICAL="s_axi_awcache"/>
+            <PORTMAP LOGICAL="AWLEN" PHYSICAL="s_axi_awlen"/>
+            <PORTMAP LOGICAL="AWLOCK" PHYSICAL="s_axi_awlock"/>
+            <PORTMAP LOGICAL="AWPROT" PHYSICAL="s_axi_awprot"/>
+            <PORTMAP LOGICAL="AWREADY" PHYSICAL="s_axi_awready"/>
+            <PORTMAP LOGICAL="AWSIZE" PHYSICAL="s_axi_awsize"/>
+            <PORTMAP LOGICAL="AWVALID" PHYSICAL="s_axi_awvalid"/>
+            <PORTMAP LOGICAL="BREADY" PHYSICAL="s_axi_bready"/>
+            <PORTMAP LOGICAL="BRESP" PHYSICAL="s_axi_bresp"/>
+            <PORTMAP LOGICAL="BVALID" PHYSICAL="s_axi_bvalid"/>
+            <PORTMAP LOGICAL="RDATA" PHYSICAL="s_axi_rdata"/>
+            <PORTMAP LOGICAL="RLAST" PHYSICAL="s_axi_rlast"/>
+            <PORTMAP LOGICAL="RREADY" PHYSICAL="s_axi_rready"/>
+            <PORTMAP LOGICAL="RRESP" PHYSICAL="s_axi_rresp"/>
+            <PORTMAP LOGICAL="RVALID" PHYSICAL="s_axi_rvalid"/>
+            <PORTMAP LOGICAL="WDATA" PHYSICAL="s_axi_wdata"/>
+            <PORTMAP LOGICAL="WLAST" PHYSICAL="s_axi_wlast"/>
+            <PORTMAP LOGICAL="WREADY" PHYSICAL="s_axi_wready"/>
+            <PORTMAP LOGICAL="WSTRB" PHYSICAL="s_axi_wstrb"/>
+            <PORTMAP LOGICAL="WVALID" PHYSICAL="s_axi_wvalid"/>
+          </PORTMAPS>
+        </BUSINTERFACE>
+        <BUSINTERFACE BUSNAME="__NOC__" NAME="BRAM_PORTA" TYPE="INITIATOR" VLNV="xilinx.com:interface:bram:1.0">
+          <PARAMETER NAME="MASTER_TYPE" VALUE="BRAM_CTRL"/>
+          <PARAMETER NAME="MEM_SIZE" VALUE="4096"/>
+          <PARAMETER NAME="MEM_WIDTH" VALUE="64"/>
+          <PARAMETER NAME="MEM_ECC" VALUE="NONE"/>
+          <PARAMETER NAME="READ_WRITE_MODE" VALUE="READ_WRITE"/>
+          <PARAMETER NAME="READ_LATENCY" VALUE="1"/>
+          <PORTMAPS>
+            <PORTMAP LOGICAL="ADDR" PHYSICAL="bram_addr_a"/>
+            <PORTMAP LOGICAL="CLK" PHYSICAL="bram_clk_a"/>
+            <PORTMAP LOGICAL="DIN" PHYSICAL="bram_wrdata_a"/>
+            <PORTMAP LOGICAL="DOUT" PHYSICAL="bram_rddata_a"/>
+            <PORTMAP LOGICAL="EN" PHYSICAL="bram_en_a"/>
+            <PORTMAP LOGICAL="RST" PHYSICAL="bram_rst_a"/>
+            <PORTMAP LOGICAL="WE" PHYSICAL="bram_we_a"/>
+          </PORTMAPS>
+        </BUSINTERFACE>
+      </BUSINTERFACES>
+    </MODULE>
+    <MODULE COREREVISION="1" FULLNAME="/PYNQ_wrapper_blocks/riscv_other_peripherals/utils_rom_blocks/utils_rom_0" HWVERSION="1.0" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" IPTYPE="PERIPHERAL" IS_ENABLE="1" MODCLASS="PERIPHERAL" MODTYPE="utils_rom" VLNV="xilinx.com:module_ref:utils_rom:1.0">
+      <DOCUMENTS/>
+      <PARAMETERS>
+        <PARAMETER NAME="Component_Name" VALUE="imported_design_utils_rom_0_0"/>
+        <PARAMETER NAME="EDK_IPTYPE" VALUE="PERIPHERAL"/>
+      </PARAMETERS>
+      <PORTS>
+        <PORT CLKFREQUENCY="50000000" DIR="I" NAME="clk" SIGIS="clk" SIGNAME="ZYNQ_ARM_processing_system_FCLK_CLK0">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="ZYNQ_ARM_processing_system" PORT="FCLK_CLK0"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" NAME="cpu_reset_completed" SIGIS="undef" SIGNAME="CHERI_RISCV_Flute_mkSoC_Top_cpu_reset_completed">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="CHERI_RISCV_Flute_mkSoC_Top" PORT="cpu_reset_completed"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="1" NAME="addr" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0_Dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0" PORT="Dout"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="63" NAME="dout" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0_dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="bram_rddata_a"/>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe20"/>
+          </CONNECTIONS>
+        </PORT>
+      </PORTS>
+      <BUSINTERFACES/>
+    </MODULE>
+    <MODULE COREREVISION="2" FULLNAME="/PYNQ_wrapper_blocks/riscv_other_peripherals/utils_rom_blocks/xlslice_0" HWVERSION="1.0" INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0" IPTYPE="PERIPHERAL" IS_ENABLE="1" MODCLASS="PERIPHERAL" MODTYPE="xlslice" VLNV="xilinx.com:ip:xlslice:1.0">
+      <DOCUMENTS/>
+      <PARAMETERS>
+        <PARAMETER NAME="DIN_WIDTH" VALUE="16"/>
+        <PARAMETER NAME="DIN_FROM" VALUE="4"/>
+        <PARAMETER NAME="DIN_TO" VALUE="3"/>
+        <PARAMETER NAME="Component_Name" VALUE="imported_design_xlslice_0_17"/>
+        <PARAMETER NAME="DOUT_WIDTH" VALUE="2"/>
+        <PARAMETER NAME="EDK_IPTYPE" VALUE="PERIPHERAL"/>
+      </PARAMETERS>
+      <PORTS>
+        <PORT DIR="I" LEFT="15" NAME="Din" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom_bram_addr_a">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="bram_addr_a"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="O" LEFT="1" NAME="Dout" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0_Dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="system_ila_0" PORT="probe21"/>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" PORT="addr"/>
+          </CONNECTIONS>
+        </PORT>
+      </PORTS>
+      <BUSINTERFACES/>
     </MODULE>
     <MODULE BD="imported_design_smartconnect_1_0" BDTYPE="SBD" COREREVISION="13" DRIVERMODE="CORE" FULLNAME="/PYNQ_wrapper_blocks/smartconnect_1" HWVERSION="1.0" INSTANCE="PYNQ_wrapper_blocks_smartconnect_1" IPTYPE="BUS" IS_ENABLE="1" MODCLASS="BUS" MODTYPE="smartconnect" SIM_BD="imported_design_smartconnect_1_0" VLNV="xilinx.com:ip:smartconnect:1.0">
       <DOCUMENTS>
@@ -11020,6 +11929,8 @@
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="clk"/>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals" PORT="aclk"/>
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_axi_uartlite_0" PORT="s_axi_aclk"/>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="s_axi_aclk"/>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" PORT="clk"/>
             <CONNECTION INSTANCE="CHERI_RISCV_Flute_mkSoC_Top" PORT="CLK"/>
             <CONNECTION INSTANCE="system_ila_0" PORT="clk"/>
           </CONNECTIONS>
@@ -11669,7 +12580,7 @@
         <PARAMETER NAME="C_SLOT_15_APC_MAX_WLAST_TO_AWVALID_WAITS" VALUE="0"/>
         <PARAMETER NAME="C_SLOT_15_APC_MAX_WRITE_TO_BVALID_WAITS" VALUE="0"/>
         <PARAMETER NAME="C_SLOT_15_APC_MAX_CONTINUOUS_RTRANSFERS_WAITS" VALUE="0"/>
-        <PARAMETER NAME="C_BRAM_CNT" VALUE="29"/>
+        <PARAMETER NAME="C_BRAM_CNT" VALUE="13"/>
         <PARAMETER NAME="C_SLOT_0_AXI_AW_SEL_DATA" VALUE="1"/>
         <PARAMETER NAME="C_SLOT_0_AXI_W_SEL_DATA" VALUE="1"/>
         <PARAMETER NAME="C_SLOT_0_AXI_B_SEL_DATA" VALUE="1"/>
@@ -13990,7 +14901,7 @@
         <PARAMETER NAME="C_PROBE1_WIDTH" VALUE="1"/>
         <PARAMETER NAME="C_PROBE0_WIDTH" VALUE="1"/>
         <PARAMETER NAME="C_DATA_DEPTH" VALUE="1024"/>
-        <PARAMETER NAME="C_NUM_OF_PROBES" VALUE="12"/>
+        <PARAMETER NAME="C_NUM_OF_PROBES" VALUE="22"/>
         <PARAMETER NAME="C_XLNX_HW_PROBE_INFO" VALUE="DEFAULT"/>
         <PARAMETER NAME="Component_Name" VALUE="imported_design_system_ila_0_2"/>
         <PARAMETER NAME="C_PROBE70_WIDTH" VALUE="1"/>
@@ -15028,7 +15939,7 @@
         <PARAMETER NAME="EN_BRAM_DRC" VALUE="TRUE"/>
         <PARAMETER NAME="ALL_PROBE_SAME_MU" VALUE="TRUE"/>
         <PARAMETER NAME="ALL_PROBE_SAME_MU_CNT" VALUE="1"/>
-        <PARAMETER NAME="C_NUM_MONITOR_SLOTS" VALUE="2"/>
+        <PARAMETER NAME="C_NUM_MONITOR_SLOTS" VALUE="3"/>
         <PARAMETER NAME="C_SLOT_0_AXI_ARUSER_WIDTH" VALUE="1"/>
         <PARAMETER NAME="C_SLOT_0_AXI_RUSER_WIDTH" VALUE="1"/>
         <PARAMETER NAME="C_SLOT_0_AXI_AWUSER_WIDTH" VALUE="1"/>
@@ -15289,15 +16200,6 @@
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_continuous_monitoring_system_blocks_cms_ip_wrapper_0" PORT="atf_upper_bound_0_0_probe"/>
           </CONNECTIONS>
         </PORT>
-        <PORT DIR="I" LEFT="1023" NAME="SLOT_0_AXIS_tdata" RIGHT="0" SIGIS="undef"/>
-        <PORT DIR="I" NAME="SLOT_0_AXIS_tlast" SIGIS="undef"/>
-        <PORT DIR="I" NAME="SLOT_0_AXIS_tvalid" SIGIS="undef"/>
-        <PORT DIR="I" NAME="SLOT_0_AXIS_tready" SIGIS="undef"/>
-        <PORT DIR="I" NAME="resetn" POLARITY="ACTIVE_LOW" SIGIS="rst" SIGNAME="proc_sys_reset_0_peripheral_aresetn">
-          <CONNECTIONS>
-            <CONNECTION INSTANCE="proc_sys_reset_0" PORT="peripheral_aresetn"/>
-          </CONNECTIONS>
-        </PORT>
         <PORT DIR="I" LEFT="128" NAME="probe5" RIGHT="0" SIGIS="undef" SIGNAME="CHERI_RISCV_Flute_mkSoC_Top_cms_ifc_gp_write_reg">
           <CONNECTIONS>
             <CONNECTION INSTANCE="CHERI_RISCV_Flute_mkSoC_Top" PORT="cms_ifc_gp_write_reg"/>
@@ -15333,6 +16235,10 @@
             <CONNECTION INSTANCE="PYNQ_wrapper_blocks_continuous_monitoring_system_blocks_cms_ip_wrapper_0" PORT="shadow_general_purpose_register_A3_probe"/>
           </CONNECTIONS>
         </PORT>
+        <PORT DIR="I" LEFT="1023" NAME="SLOT_0_AXIS_tdata" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_0_AXIS_tlast" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_0_AXIS_tvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_0_AXIS_tready" SIGIS="undef"/>
         <PORT DIR="I" LEFT="11" NAME="SLOT_1_AXI_awaddr" RIGHT="0" SIGIS="undef"/>
         <PORT DIR="I" LEFT="7" NAME="SLOT_1_AXI_awlen" RIGHT="0" SIGIS="undef"/>
         <PORT DIR="I" LEFT="2" NAME="SLOT_1_AXI_awsize" RIGHT="0" SIGIS="undef"/>
@@ -15366,6 +16272,94 @@
         <PORT DIR="I" NAME="SLOT_1_AXI_rlast" SIGIS="undef"/>
         <PORT DIR="I" NAME="SLOT_1_AXI_rvalid" SIGIS="undef"/>
         <PORT DIR="I" NAME="SLOT_1_AXI_rready" SIGIS="undef"/>
+        <PORT DIR="I" NAME="resetn" POLARITY="ACTIVE_LOW" SIGIS="rst" SIGNAME="proc_sys_reset_0_peripheral_aresetn">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="proc_sys_reset_0" PORT="peripheral_aresetn"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="0" NAME="probe12" RIGHT="0" SIGIS="undef" SIGNAME="External_Ports_PMOD1_4_LS">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="PMOD1_4_LS"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="0" NAME="probe13" RIGHT="0" SIGIS="undef" SIGNAME="External_Ports_PMOD1_1_LS">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="External_Ports" PORT="PMOD1_1_LS"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="5" NAME="probe14" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_address">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="address"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="0" NAME="probe15" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0_write_enable">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_digital_input_sequen_0" PORT="write_enable"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="4" NAME="probe16" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_c_addsub_minus_0x10_S">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_c_addsub_minus_0x10" PORT="S"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="15" NAME="probe17" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input_do_out">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input" PORT="do_out"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="0" NAME="probe18" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input_drdy_out">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_sensors_blocks_xadc_wiz_analog_input" PORT="drdy_out"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="11" NAME="probe19" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom_bram_addr_a">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_axi_bram_ctrl_utils_rom" PORT="bram_addr_a"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="63" NAME="probe20" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0_dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_utils_rom_0" PORT="dout"/>
+          </CONNECTIONS>
+        </PORT>
+        <PORT DIR="I" LEFT="11" NAME="SLOT_2_AXI_awaddr" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="7" NAME="SLOT_2_AXI_awlen" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="2" NAME="SLOT_2_AXI_awsize" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="1" NAME="SLOT_2_AXI_awburst" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="0" NAME="SLOT_2_AXI_awlock" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="3" NAME="SLOT_2_AXI_awcache" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="2" NAME="SLOT_2_AXI_awprot" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="3" NAME="SLOT_2_AXI_awqos" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_awvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_awready" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="63" NAME="SLOT_2_AXI_wdata" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="7" NAME="SLOT_2_AXI_wstrb" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_wlast" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_wvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_wready" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="1" NAME="SLOT_2_AXI_bresp" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_bvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_bready" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="11" NAME="SLOT_2_AXI_araddr" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="7" NAME="SLOT_2_AXI_arlen" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="2" NAME="SLOT_2_AXI_arsize" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="1" NAME="SLOT_2_AXI_arburst" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="0" NAME="SLOT_2_AXI_arlock" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="3" NAME="SLOT_2_AXI_arcache" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="2" NAME="SLOT_2_AXI_arprot" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="3" NAME="SLOT_2_AXI_arqos" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_arvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_arready" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="63" NAME="SLOT_2_AXI_rdata" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="1" NAME="SLOT_2_AXI_rresp" RIGHT="0" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_rlast" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_rvalid" SIGIS="undef"/>
+        <PORT DIR="I" NAME="SLOT_2_AXI_rready" SIGIS="undef"/>
+        <PORT DIR="I" LEFT="1" NAME="probe21" RIGHT="0" SIGIS="undef" SIGNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0_Dout">
+          <CONNECTIONS>
+            <CONNECTION INSTANCE="PYNQ_wrapper_blocks_riscv_other_peripherals_utils_rom_blocks_xlslice_0" PORT="Dout"/>
+          </CONNECTIONS>
+        </PORT>
       </PORTS>
       <BUSINTERFACES>
         <BUSINTERFACE BUSNAME="PYNQ_wrapper_blocks_continuous_monitoring_system_blocks_cms_ip_wrapper_0_M_AXIS" NAME="SLOT_0_AXIS" TYPE="MONITOR" VLNV="xilinx.com:interface:axis:1.0">
@@ -15455,6 +16449,74 @@
             <PORTMAP LOGICAL="RLAST" PHYSICAL="SLOT_1_AXI_rlast"/>
             <PORTMAP LOGICAL="RVALID" PHYSICAL="SLOT_1_AXI_rvalid"/>
             <PORTMAP LOGICAL="RREADY" PHYSICAL="SLOT_1_AXI_rready"/>
+          </PORTMAPS>
+        </BUSINTERFACE>
+        <BUSINTERFACE BUSNAME="PYNQ_wrapper_blocks_riscv_other_peripherals_smartconnect_other_peripherals_M02_AXI" DATAWIDTH="64" NAME="SLOT_2_AXI" TYPE="MONITOR" VLNV="xilinx.com:interface:aximm:1.0">
+          <PARAMETER NAME="DATA_WIDTH" VALUE="64"/>
+          <PARAMETER NAME="PROTOCOL" VALUE="AXI4"/>
+          <PARAMETER NAME="FREQ_HZ" VALUE="50000000"/>
+          <PARAMETER NAME="ID_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ADDR_WIDTH" VALUE="12"/>
+          <PARAMETER NAME="AWUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="ARUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="WUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="RUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="BUSER_WIDTH" VALUE="0"/>
+          <PARAMETER NAME="READ_WRITE_MODE" VALUE="READ_WRITE"/>
+          <PARAMETER NAME="HAS_BURST" VALUE="1"/>
+          <PARAMETER NAME="HAS_LOCK" VALUE="1"/>
+          <PARAMETER NAME="HAS_PROT" VALUE="1"/>
+          <PARAMETER NAME="HAS_CACHE" VALUE="1"/>
+          <PARAMETER NAME="HAS_QOS" VALUE="1"/>
+          <PARAMETER NAME="HAS_REGION" VALUE="0"/>
+          <PARAMETER NAME="HAS_WSTRB" VALUE="1"/>
+          <PARAMETER NAME="HAS_BRESP" VALUE="1"/>
+          <PARAMETER NAME="HAS_RRESP" VALUE="1"/>
+          <PARAMETER NAME="SUPPORTS_NARROW_BURST" VALUE="0"/>
+          <PARAMETER NAME="NUM_READ_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="NUM_WRITE_OUTSTANDING" VALUE="2"/>
+          <PARAMETER NAME="MAX_BURST_LENGTH" VALUE="256"/>
+          <PARAMETER NAME="PHASE" VALUE="0.000"/>
+          <PARAMETER NAME="CLK_DOMAIN" VALUE="imported_design_ZYNQ_ARM_processing_system_0_FCLK_CLK0"/>
+          <PARAMETER NAME="NUM_READ_THREADS" VALUE="1"/>
+          <PARAMETER NAME="NUM_WRITE_THREADS" VALUE="1"/>
+          <PARAMETER NAME="RUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="WUSER_BITS_PER_BYTE" VALUE="0"/>
+          <PARAMETER NAME="INSERT_VIP" VALUE="0"/>
+          <PORTMAPS>
+            <PORTMAP LOGICAL="AWADDR" PHYSICAL="SLOT_2_AXI_awaddr"/>
+            <PORTMAP LOGICAL="AWLEN" PHYSICAL="SLOT_2_AXI_awlen"/>
+            <PORTMAP LOGICAL="AWSIZE" PHYSICAL="SLOT_2_AXI_awsize"/>
+            <PORTMAP LOGICAL="AWBURST" PHYSICAL="SLOT_2_AXI_awburst"/>
+            <PORTMAP LOGICAL="AWLOCK" PHYSICAL="SLOT_2_AXI_awlock"/>
+            <PORTMAP LOGICAL="AWCACHE" PHYSICAL="SLOT_2_AXI_awcache"/>
+            <PORTMAP LOGICAL="AWPROT" PHYSICAL="SLOT_2_AXI_awprot"/>
+            <PORTMAP LOGICAL="AWQOS" PHYSICAL="SLOT_2_AXI_awqos"/>
+            <PORTMAP LOGICAL="AWVALID" PHYSICAL="SLOT_2_AXI_awvalid"/>
+            <PORTMAP LOGICAL="AWREADY" PHYSICAL="SLOT_2_AXI_awready"/>
+            <PORTMAP LOGICAL="WDATA" PHYSICAL="SLOT_2_AXI_wdata"/>
+            <PORTMAP LOGICAL="WSTRB" PHYSICAL="SLOT_2_AXI_wstrb"/>
+            <PORTMAP LOGICAL="WLAST" PHYSICAL="SLOT_2_AXI_wlast"/>
+            <PORTMAP LOGICAL="WVALID" PHYSICAL="SLOT_2_AXI_wvalid"/>
+            <PORTMAP LOGICAL="WREADY" PHYSICAL="SLOT_2_AXI_wready"/>
+            <PORTMAP LOGICAL="BRESP" PHYSICAL="SLOT_2_AXI_bresp"/>
+            <PORTMAP LOGICAL="BVALID" PHYSICAL="SLOT_2_AXI_bvalid"/>
+            <PORTMAP LOGICAL="BREADY" PHYSICAL="SLOT_2_AXI_bready"/>
+            <PORTMAP LOGICAL="ARADDR" PHYSICAL="SLOT_2_AXI_araddr"/>
+            <PORTMAP LOGICAL="ARLEN" PHYSICAL="SLOT_2_AXI_arlen"/>
+            <PORTMAP LOGICAL="ARSIZE" PHYSICAL="SLOT_2_AXI_arsize"/>
+            <PORTMAP LOGICAL="ARBURST" PHYSICAL="SLOT_2_AXI_arburst"/>
+            <PORTMAP LOGICAL="ARLOCK" PHYSICAL="SLOT_2_AXI_arlock"/>
+            <PORTMAP LOGICAL="ARCACHE" PHYSICAL="SLOT_2_AXI_arcache"/>
+            <PORTMAP LOGICAL="ARPROT" PHYSICAL="SLOT_2_AXI_arprot"/>
+            <PORTMAP LOGICAL="ARQOS" PHYSICAL="SLOT_2_AXI_arqos"/>
+            <PORTMAP LOGICAL="ARVALID" PHYSICAL="SLOT_2_AXI_arvalid"/>
+            <PORTMAP LOGICAL="ARREADY" PHYSICAL="SLOT_2_AXI_arready"/>
+            <PORTMAP LOGICAL="RDATA" PHYSICAL="SLOT_2_AXI_rdata"/>
+            <PORTMAP LOGICAL="RRESP" PHYSICAL="SLOT_2_AXI_rresp"/>
+            <PORTMAP LOGICAL="RLAST" PHYSICAL="SLOT_2_AXI_rlast"/>
+            <PORTMAP LOGICAL="RVALID" PHYSICAL="SLOT_2_AXI_rvalid"/>
+            <PORTMAP LOGICAL="RREADY" PHYSICAL="SLOT_2_AXI_rready"/>
           </PORTMAPS>
         </BUSINTERFACE>
       </BUSINTERFACES>

@@ -1,8 +1,5 @@
-# TODO: add gif here of a working system
-
-
 # PYNQ wrapper for Flute processor
-This repository contains source files and documentation for a PYNQ design that collects metrics from RISC-V processor implemented in programmable logic (PL) of the ZC706 board.
+This repository contains source files and documentation for a PYNQ design that collects metrics from CHERI-RISC-V (Flute) processor implemented in programmable logic (PL) of the ZC706 board. It includes a continuous monitoring system (CMS) hardware module responsible for filtering and preprocessing extracted data.
 
 ![ERROR: IMAGE WASNT DISPLAYED](./images/overview_detailed.png)
 
@@ -15,7 +12,13 @@ Documentation files are in the [docs](./docs) directory and include:
 * [loading_and_running_programs.md](./docs/loading_and_running_programs.md) - how to load a program into memory and run it on the RISC-V processor
 * [sensors_extension.md](./docs/sensors_extension.md) - reading analog sensor inputs inside a RISC-V program
 * [flute_modifications.md](./docs/flute_modifications.md) - how the Flute processor was modified
-* [display.md](./docs/display.md) (TODO)
+* [display.md](./docs/display.md) - information about ESP32-3248S035C display board
+* [use_case.md](./docs/use_case.md) - example use case of the CMS module, monitoring ECG program that displays heart activity
+
+# Example use case
+In [this video](https://www.youtube.com/watch?v=mMTVhH6iV2M) PYNQ wrapper is used to detect anomalous behaviour of a CHERI-RISC-V processor. The test involved training a detection model using a baseline "ecg" program and then replacing it with a malicious equivalent "ecg_info_leak" which leaks information through 2nd UART. Decreased similarity of the current processor state to the previously collected dataset ("Avg sim") indicates anomalous behaviour. More information about the test can be found in the [use_case.md](./docs/use_case.md) file.
+
+![ERROR: GIF WASNT DISPLAYED](./images/cms_gif.gif)
 
 # Purpose
 The main purpose of this wrapper is to help with development and testing of a [continuous monitoring system](https://github.com/michalmonday/continuous_monitoring_system) that will compare program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors). In similar way to previously published work like:  
