@@ -37,7 +37,7 @@ The server (PYNQ) should be able to:
 * notify client of tcp server being reseted
 
 
-# Protocol
+# Client to server - eample RPCs
 
 ### Client gets list of available programs from the server:
 ```json
@@ -77,110 +77,54 @@ Servers response:
     "RPC_return" : {
         "function_name": "rpc_load_program",
         "return_value": "",
-        "return_status": "success"
+        "return_status": "success",
+        "function_args": ["ecg_baseline.bin"]
     } 
 }
 ```
 
-### Client requests to run a program
-```json
-{
-    "RPC" : {
-        "function_name": "rpc_run"
-    }
-}
-```
-Servers response:
-```json
-{
-    "RPC_return" : {
-        "function_name": "rpc_run",
-        "return_value": "",
-        "return_status": "success"
-    } 
-}
-```
+# Client to server - list of RPCs
+The client can call the following methods defined in pynq_wrapper.ipynb notebook file:
+* rpc_list_programs()
+* rpc_list_objdumps()
+* rpc_get_objdump_data(category, objdump_fname)
+* rpc_load_program(name)
+* rpc_run()
+* rpc_halt()
+* rpc_enable_training()
+* rpc_disable_training()
+* rpc_enable_testing()
+* rpc_disable_testing()
+* rpc_reset_dataset()
+* rpc_update_status()
+* rpc_set_atf_watchpoint(index, is_active, json_str_attributes_dict)
+* rpc_atf_watchpoint_set_active(index, state)
 
-### Client requests to halt a program
-```json
-{
-    "RPC" : {
-        "function_name": "rpc_halt"
-    }
-}
-```
+# Server to client
+The server can update the client without being requested to do so. Currently it sends:
+* current dataset size
+* performance rate (1 if working as usual, lowered if CPU needs to halt due to full internal trace storage)
+* average similarity of collected data to previously trained dataset
+* the number of items collected
+"add_points" directly inserts values into the Metrics graph shown on the display.
 
-Servers response:
-```json
-{
-    "RPC_return" : {
-        "function_name": "rpc_halt",
-        "return_value": "",
-        "return_status": "success"
-    } 
-}
-```
+The following code is responsible for sending the update:
 
-### Client requests to start training
-```json
-{
-    "RPC" : {
-        "function_name": "rpc_start_training"
-    }
-}
+```python
+    tcp_server.send_to_all(
+        json.dumps({
+            'status_update' : {
+                'dataset_size' : anomaly_detection.get_dataset_size()
+            }, 
+            'add_points' : {
+                'Perf' : [performance_rate],
+                #'Anomaly ratio' : [number_of_anomalies / (items_since_last_send or 1)],
+                'Avg sim' : [avg_sim],
+                'Avg sim bot-1%' : [avg_sim_bot_1],
+                'Items collected' : [items_since_last_send]
+            }
+        })
 ```
-
-Servers response:
-```json
-{
-    "RPC_return" : {
-        "function_name": "rpc_start_training",
-        "return_value": "",
-        "return_status": "success"
-    } 
-}
-```
-
-### Client requests to stop training
-```json
-{
-    "RPC" : {
-        "function_name": "rpc_stop_training"
-    }
-}
-```
-
-Servers response:
-```json
-{
-    "RPC_return" : {
-        "function_name": "rpc_stop_training",
-        "return_value": "",
-        "return_status": "success"
-    } 
-}
-```
-
-### Client requests to start testing
-```json
-{
-    "RPC" : {
-        "function_name": "rpc_start_testing"
-    }
-}
-```
-
-Servers response:
-```json
-{
-    "RPC_return" : {
-        "function_name": "rpc_start_testing",
-        "return_value": "",
-        "return_status": "success"
-    } 
-}
-```
-
 
 # Security considerations
 The client shouldn't be able to execute any function on the server, the server needs to check if the requested RPC starts with "rpc" and only allow those to be executed.
