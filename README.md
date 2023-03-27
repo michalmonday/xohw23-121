@@ -13,6 +13,7 @@ Documentation files are in the [docs](./docs) directory and include:
 * [sensors_extension.md](./docs/sensors_extension.md) - reading analog sensor inputs inside a RISC-V program
 * [flute_modifications.md](./docs/flute_modifications.md) - how the Flute processor was modified
 * [display.md](./docs/display.md) - information about ESP32-3248S035C display board
+* [tcp_server_protocol.md](./docs/tcp_server_protocol.md) - protocol for controlling and getting updates from PYNQ, it is used by the display board
 * [use_case.md](./docs/use_case.md) - example use case of the CMS module, monitoring ECG program that displays heart activity
 
 # Example use case
