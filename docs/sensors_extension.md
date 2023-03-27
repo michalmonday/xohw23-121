@@ -96,8 +96,9 @@ int main() {
 }
 ```
 
-# Working principle and Vivado implementation
+# Setup and Vivado implementation
 
+### Analog sensors
 In the pynq wrapper design the XADC wizard has the "external multiplexer" setting enabled. This means that the XADC wizard will output "muxaddr_out" signal, letting know the physically connected external multiplexer which input channel (which sensor) to select. The "muxaddr_out" is a 4-bit signal, so the multiplexer can select up to 16 different sensors. 
 
 The currently selected input travels to the FPGA through XADC_VAUX0P pin (while XADC_VAUX0N is connected to ground, for the purpose of reducing noise by subtracting the ground voltage from the XADC_VAUX0P signal). XADC_GPIO pins 0-3 are connected to the multiplexers address pins (through the level shifter to raise their voltage from 1.5V to 3.3V). The image below shows their state during operation:
@@ -124,6 +125,10 @@ Diagram below shows the newly created output (of the internal Soc_Top fabric) co
 ![ERROR: IMAGE WASNT DISPLAYED](../images/other_peripherals_vivado.png)
 
 ### Block diagram (XADC wizard and storage)
-It can be noticed that the slice component is used between the BRAM controller and the memory, this is because the BRAM controller does not anticipate that the memory is item-addressable, it expects that the memory is byte-addressable, which isn't the case. For that reason the address is divided by 8 (by effectively shifting the address 3 bits to the right by using the slice block).
+It can be noticed that the slice component is used between the BRAM controller and the memory, this is because the BRAM controller does not anticipate that the memory is item-addressable, it expects that the memory is byte-addressable, which isn't the case. For that reason the address is divided by 8 (by shifting the address 3 bits to the right using the slice block).
 
 ![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_blocks.png)
+
+
+### Digital sensors
+The setup used in this project allows to read 16 digital inputs through a single wire thanks to using 2 cascaded SN74HC165N shift registers controlled by the [digital_input_sequencer.v](../vivado_files/src_verilog/custom_hdl/digital_input_sequencer.v). The sequencer controls the "sr_latch" and "sr_clock" pins that determine which digital input is currently supplied to the board. It also controls the "address" and "write_enable" pins that let the input value to update memory location corresponding to it.
