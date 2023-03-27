@@ -4,11 +4,12 @@
 - [Wiring](#wiring)
 - [Flute modification](#flute-modification)
 - [How values are read in the RISC-V program](#how-values-are-read-in-the-risc-v-program)
-- [Working principle and Vivado implementation](#working-principle-and-vivado-implementation)
+- [Setup and Vivado implementation](#setup-and-vivado-implementation)
+    - [Analog sensors](#analog-sensors)
     - [Intermediate sensor data storage](#intermediate-sensor-data-storage)
     - [Interconnect](#interconnect)
     - [Block diagram (XADC wizard and storage)](#block-diagram-xadc-wizard-and-storage)
-
+    - [Digital sensors](#digital-sensors)
 
 # Overview
 Embedded systems often interact with the outside world through sensors and actuators. By default, the Flute processor does not seem to have support for interacting with such peripherals. We created a custom board with support for up to 16 analog inputs and 16 digital inputs, we modified the processor to allow reading their values. This way we can run programs on the Flute RISC-V that use sensor data, making it easy to disrupt their baseline behaviour, or emulate sensor failure for presentation purposes.
