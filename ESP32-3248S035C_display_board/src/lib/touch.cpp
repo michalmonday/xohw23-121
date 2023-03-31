@@ -37,7 +37,7 @@ Touch::Touch() :
 void Touch::init() { init(DEFAULT_TOUCH_SDA, DEFAULT_TOUCH_SCL, DEFAULT_TOUCH_INT, DEFAULT_TOUCH_RST, DEFAULT_TOUCH_WIDTH, DEFAULT_TOUCH_HEIGHT, ROTATION_LEFT); }
 void Touch::init(int sda_pin, int scl_pin, int int_pin, int rst_pin, int width, int height, int rotation) {
     gt911 = new TAMC_GT911(sda_pin, scl_pin, int_pin, rst_pin, width, height);
-    gt911->reset();
+    // gt911->reset();
     gt911->begin();
     gt911->setRotation(rotation);
 }
