@@ -30,11 +30,13 @@ def calculate_atf_pkt_deterministic_offset(key):
             return offset
         offset += atf_pkt_deterministic_structure[k]
 
-def create_seed_mask_and_range_for_values(values_dict):
+def create_seed_mask_and_range_for_values(values_dict, masks_dict={}):
     seed = 0
     mask = 0
     for k, v in values_dict.items():
         mask_chunk = ((1 << atf_pkt_deterministic_structure[k]) - 1) << calculate_atf_pkt_deterministic_offset(k)
+        if k in masks_dict:
+            mask_chunk &= masks_dict[k]
         mask |= mask_chunk
         seed |= (v << calculate_atf_pkt_deterministic_offset(k)) & mask_chunk
     # range is a single number, it is equal to the number of bits in the mask
@@ -137,7 +139,7 @@ class ATF_Watchpoints:
         index = int(index)
         return index in self.watchpoints
 
-    def set_watchpoint(self, index, attributes_dict, is_active):
+    def set_watchpoint(self, index, attributes_dict, is_active, masks_dict={}):
         # convert all attributes to numerical values from hex strings
         # this is needed because cJSON does not support 64-bit values
         index = int(index)
@@ -153,7 +155,7 @@ class ATF_Watchpoints:
                 "attributes" : attributes_dict
             }
         if is_active:
-            self.cms_ctrl.set_atf_match_watchpoint(int(index), attributes_dict)
+            self.cms_ctrl.set_atf_match_watchpoint(int(index), attributes_dict, masks_dict)
         else:
             self.cms_ctrl.reset_atf_match_watchpoint(int(index))
         self.store_watchpoints()
