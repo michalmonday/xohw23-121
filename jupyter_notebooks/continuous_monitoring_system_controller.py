@@ -192,7 +192,7 @@ class ContinuousMonitoringSystemController:
         '''
         self.send_data_to_cms(mode, __class__.ATF_MODE)
 
-    def set_atf_match_watchpoint(self, seed_address, values_dict):
+    def set_atf_match_watchpoint(self, seed_address, values_dict, masks_dict={}):
         ''' takes one seed, the range is a number of positive bits in the mask 
         this way it results in direct match of values specified in values_dict. 
 
@@ -200,7 +200,7 @@ class ContinuousMonitoringSystemController:
             values_dict = {'pc': 0x80000000, 'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}
             cms_ctrl.set_atf_match_watchpoint(seed_address=0, values_dict)
          '''
-        seed, mask, range_ = atf.create_seed_mask_and_range_for_values(values_dict)
+        seed, mask, range_ = atf.create_seed_mask_and_range_for_values(values_dict, masks_dict=masks_dict)
         self.set_atf_seed(seed, seed_address, mask=mask)
         self.set_atf_range(seed_address, range_address=0, lower_bound=range_, upper_bound=range_)
     
