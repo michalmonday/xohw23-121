@@ -48,9 +48,9 @@ HardwareSerial serial_riscv(2);  // UART2 (GPIO17=TX, GPIO16=RX)
 // Thread used for drawing will be on separate thread from receiving/parsing data from tcp server
 TaskHandle_t drawing_thread;
 
-const IPAddress server_ip(192, 168, 0, 104);
+const IPAddress server_ip(192, 168, 0, 107);
 const uint16_t server_port = 9093;
-const String server_ip_str = "192.168.0.104:" + String(server_port); // just for displaying status
+const String server_ip_str = "192.168.0.107:" + String(server_port); // just for displaying status
 WiFiClient client;
 
 // display object
