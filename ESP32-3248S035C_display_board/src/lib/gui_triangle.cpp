@@ -1,7 +1,9 @@
 #include <gui_triangle.h>
+#include <TFT_eSPI.h>
 
-GUI_Triangle::GUI_Triangle(TFT_eSPI *tft, int rotation, int x, int y, int w, int h, int datum, unsigned int border_colour, unsigned int fill_colour, unsigned int background_colour, std::function<void()> on_release_callback)
-    : GUI_Element(tft, x, y, w, h, background_colour, [](){}, on_release_callback), datum(datum), border_colour(border_colour), fill_colour(fill_colour), rotation(rotation)
+
+GUI_Triangle::GUI_Triangle(Graphics *gfx, int rotation, int x, int y, int w, int h, int datum, unsigned int border_colour, unsigned int fill_colour, unsigned int background_colour, std::function<void()> on_release_callback)
+    : GUI_Element(gfx, x, y, w, h, background_colour, [](){}, on_release_callback), datum(datum), border_colour(border_colour), fill_colour(fill_colour), rotation(rotation)
 {
     update_location_points();
 }
@@ -11,8 +13,8 @@ void GUI_Triangle::draw() {
 }
 
 void GUI_Triangle::draw(unsigned int fill_clr_override, unsigned int border_clr_override) {
-    tft->fillTriangle(x1, y1, x2, y2, x3, y3, fill_clr_override);
-    tft->drawTriangle(x1, y1, x2, y2, x3, y3, border_clr_override);
+    gfx->fillTriangle(x1, y1, x2, y2, x3, y3, fill_clr_override);
+    gfx->drawTriangle(x1, y1, x2, y2, x3, y3, border_clr_override);
     needs_redraw = false;
 }
 

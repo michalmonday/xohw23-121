@@ -10,11 +10,13 @@
 #include <gui_element.h>
 #include <touch.h>
 
+#include "graphics.h"
+
 class GUI_State;
 
 class GUI {
 public:
-    GUI(TFT_eSPI &tft, Touch *touch);
+    GUI(Graphics *gfx, Touch *touch);
     virtual void update();
     virtual void draw();
     virtual void push_state(int state);
@@ -29,7 +31,7 @@ protected:
     std::vector<int> state_stack;
     GUI_State *current_state;
     int current_state_id;
-    TFT_eSPI &tft;
+    Graphics *gfx;
     Touch *touch;
     void set_state(int state);
 };

@@ -1,7 +1,6 @@
 #ifndef GUI_STATE_SELECT_NUMBER_H
 #define GUI_STATE_SELECT_NUMBER_H
 
-#include <TFT_eSPI.h>
 #include <vector>
 
 #include <gui_state.h>
@@ -9,10 +8,12 @@
 #include <gui_button.h>
 #include <gui_triangle.h>
 
+#include "graphics.h"
+
 
 class GUI_State_Select_Number : public GUI_State {
 public:
-    GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch *touch);
+    GUI_State_Select_Number(Graphics *gfx, GUI *gui, Touch *touch);
     virtual void update() override;
     virtual void reset() override;
     virtual void draw() override;

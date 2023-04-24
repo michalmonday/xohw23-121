@@ -2,8 +2,8 @@
 #include <display_config.h>
 #include <colours.h>
 
-GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch *touch) 
-    : GUI_State(tft, gui, touch), on_number_selected_callback([](long long l){})
+GUI_State_Select_Number::GUI_State_Select_Number(Graphics *gfx, GUI *gui, Touch *touch) 
+    : GUI_State(gfx, gui, touch), on_number_selected_callback([](long long l){})
 {
     // 21 parts:
     // - 1 empty
@@ -24,9 +24,9 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
 
     // --------------------------------
     // -------- polarity --------------
-    label_polarity = new GUI_Label(tft, "+", x_start, y_pos, font_size, MC_DATUM, WHITE, BLACK);  
-    triangle_up_polarity = new GUI_Triangle(tft, GUI_TRIANGLE_ROTATION_UP, x_pos, y_pos - triangle_offset, triangle_w, triangle_h, BC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, [this]() { toggle_polarity(); });
-    triangle_down_polarity = new GUI_Triangle(tft, GUI_TRIANGLE_ROTATION_DOWN, x_pos, y_pos + triangle_offset, triangle_w, triangle_h, TC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, [this]() { toggle_polarity(); });
+    label_polarity = new GUI_Label(gfx, "+", x_start, y_pos, font_size, MC_DATUM, WHITE, BLACK);  
+    triangle_up_polarity = new GUI_Triangle(gfx, GUI_TRIANGLE_ROTATION_UP, x_pos, y_pos - triangle_offset, triangle_w, triangle_h, BC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, [this]() { toggle_polarity(); });
+    triangle_down_polarity = new GUI_Triangle(gfx, GUI_TRIANGLE_ROTATION_DOWN, x_pos, y_pos + triangle_offset, triangle_w, triangle_h, TC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, [this]() { toggle_polarity(); });
     add_element(triangle_up_polarity);
     add_element(triangle_down_polarity);
     add_element(label_polarity);
@@ -34,8 +34,8 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
     
     // --------------------------------
     // -------- 0x --------------------
-    label_0 = new GUI_Label(tft, "0", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);           x_pos += x_offset;
-    label_x = new GUI_Label(tft, "x", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);           x_pos += x_offset;
+    label_0 = new GUI_Label(gfx, "0", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);           x_pos += x_offset;
+    label_x = new GUI_Label(gfx, "x", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);           x_pos += x_offset;
     add_element(label_0);
     add_element(label_x);
 
@@ -47,18 +47,18 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
     // -------- 16 digits -------------
     for (int i = 0; i < 16; i++) {
         // digit labels
-        GUI_Label *label = new GUI_Label(tft, "-", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);
+        GUI_Label *label = new GUI_Label(gfx, "-", x_pos, y_pos, font_size, MC_DATUM, WHITE, BLACK);
         labels.push_back(label);
         add_element(label);
 
         // triangles
-        GUI_Triangle *triangle_up = new GUI_Triangle(tft, GUI_TRIANGLE_ROTATION_UP, x_pos, y_pos - triangle_offset, triangle_w, triangle_h, BC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, 
+        GUI_Triangle *triangle_up = new GUI_Triangle(gfx, GUI_TRIANGLE_ROTATION_UP, x_pos, y_pos - triangle_offset, triangle_w, triangle_h, BC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, 
             [this, i]() {
                 digit_up(i);
             }
         );
 
-        GUI_Triangle *triangle_down = new GUI_Triangle(tft, GUI_TRIANGLE_ROTATION_DOWN, x_pos, y_pos + triangle_offset, triangle_w, triangle_h, TC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, 
+        GUI_Triangle *triangle_down = new GUI_Triangle(gfx, GUI_TRIANGLE_ROTATION_DOWN, x_pos, y_pos + triangle_offset, triangle_w, triangle_h, TC_DATUM, triangle_border_colour, triangle_fill_colour, BLACK, 
             [this, i]() {
                 digit_down(i);
             }
@@ -76,12 +76,12 @@ GUI_State_Select_Number::GUI_State_Select_Number(TFT_eSPI *tft, GUI *gui, Touch 
     // --------------------------------
     // --------- OK button ------------
     const int btn_ok_font_size = 2;
-    tft->setTextSize(btn_ok_font_size);
-    int btn_ok_font_height = tft->fontHeight();
+    gfx->setTextSize(btn_ok_font_size);
+    int btn_ok_font_height = gfx->fontHeight();
 
     int btn_ok_h = btn_ok_font_height + btn_ok_font_height * DEFAULT_BTN_PADDING_Y*2;
-    const int btn_ok_w = tft->textWidth("OK") + btn_ok_font_height * DEFAULT_BTN_PADDING_X*2;
-    btn_ok = new GUI_Button(tft, "OK", RESOLUTION_X - btn_ok_w*1.2, RESOLUTION_Y - btn_ok_h*1.2, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
+    const int btn_ok_w = gfx->textWidth("OK") + btn_ok_font_height * DEFAULT_BTN_PADDING_X*2;
+    btn_ok = new GUI_Button(gfx, "OK", RESOLUTION_X - btn_ok_w*1.2, RESOLUTION_Y - btn_ok_h*1.2, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 
             on_number_selected_callback(get_number());

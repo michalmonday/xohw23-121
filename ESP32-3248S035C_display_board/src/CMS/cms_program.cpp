@@ -27,6 +27,9 @@ Touch touch;
 
 #include <communication_queues.h>
 
+// #include <graphics_arduino_gfx.h>
+#include <graphics_tft_espi.h>
+
 // Wifi credentials file contains 2 lines:
 // #ifndef MICHAL_WIFI_CREDENTIALS_H
 // #define MICHAL_WIFI_CREDENTIALS_H
@@ -54,17 +57,17 @@ const String server_ip_str = "192.168.0.107:" + String(server_port); // just for
 WiFiClient client;
 
 // display object
-TFT_eSPI tft = TFT_eSPI(); 
+Graphics *gfx = new Graphics_TFT_ESPI();
 
 // status display is a GUI component that covers bottom of the screen and can display status messages like "Connecting to WiFi"
-// StatusDisplay status_display(tft, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), TFT_WHITE, TFT_BLACK);
+// StatusDisplay status_display(gfx, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), WHITE, BLACK);
 
 int current_colour_id = 0;
 double current_top_margin = 0.0;
 
 // graph without parameters will have default values (to cover most of the screen with space for status display)
 // see graph.cpp to see or change default values
-// GUI_Graph graph(tft); 
+// GUI_Graph graph(gfx); 
 
 GUI_CMS *gui;
 GUI_State_Main *gui_main_state;
@@ -81,8 +84,8 @@ int max_number_of_items = xhi - xlo;
 void parse_tcp_message(String line);
 
 void init_wifi() {
-    tft.setTextColor(WHITE);
-    //tft.setTextSize(2);
+    gfx->setTextColor(WHITE);
+    //gfx.setTextSize(2);
     // status_display.set_status("ap_connection_status", "Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
     // status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
 
@@ -122,7 +125,7 @@ LinePlot* create_new_line_plot(int clr=-1) {
         current_colour_id = (current_colour_id + 1) % (sizeof(colours) / sizeof(colours[0]));
         Serial.printf("current_colour_id=%d\n", current_colour_id);
     }
-    LinePlot* line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, clr, max_number_of_items);
+    LinePlot* line_plot = new LinePlot(gfx, xlo, xhi, ylo, yhi, clr, max_number_of_items);
     if (line_plot == NULL) {
         Serial.println("ERROR: could not allocate memory for line plot");
         return nullptr;
@@ -159,7 +162,9 @@ void setup() {
 
     communication_queues_init();
 
-    gui = new GUI_CMS(tft, &touch);
+    gfx->init();
+
+    gui = new GUI_CMS(gfx, &touch);
     if (gui == NULL) {
         Serial.println("ERROR: could not allocate memory for GUI");
         return;
@@ -172,7 +177,7 @@ void setup() {
     delay(100);
 
     serial_riscv.begin(115200);
-    init_display(tft, DISPLAY_BRIGHTNESS);
+    // init_display(gfx, DISPLAY_BRIGHTNESS);
     init_wifi();
 
     delay(1000);
@@ -203,14 +208,14 @@ void setup() {
 			(xPortGetCoreID() & 1) ^ 1); /* Core where the task should run, Esp32 has 2 cores, using XOR the chosen core is the opposite of the current one. */
 
 
-    // GUI_Button *btn = new GUI_Button(&tft, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
+    // GUI_Button *btn = new GUI_Button(&gfx, "Hello", RESOLUTION_X*0.5, RESOLUTION_Y*0.1, RESOLUTION_X * 0.3, RESOLUTION_Y * 0.7, BLACK,
     //      [](){Serial.println("Hello button was pressed");},
     //      [](){Serial.println("Hello button was released");}
     // );
     // gui->add_element(btn, GUI_STATE_MAIN);
 
 
-    // GUI_Button *btn2 = new GUI_Button(&tft, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
+    // GUI_Button *btn2 = new GUI_Button(&gfx, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
     // gui->add_element(btn2, GUI_STATE_SECOND);
 }
 
@@ -293,7 +298,7 @@ bool contains_digits_only(String str) {
 // //    if (line.startsWith("create_plot")) {
 // //        char plot_name[20];
 // //        sscanf(line.c_str(), "create_plot:%s", plot_name);
-// //        LinePlot *line_plot = new LinePlot(tft, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
+// //        LinePlot *line_plot = new LinePlot(gfx, xlo, xhi, ylo, yhi, CYAN, max_number_of_items);
 // //        if (ecg_graph.add_plot(String(plot_name), line_plot)) {
 // //            client.write("OK");
 // //        } else {

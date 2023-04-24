@@ -4,8 +4,8 @@
 // -------------------------------
 // ----------    GUI    ----------
 
-GUI::GUI(TFT_eSPI &tft, Touch *touch) : 
-    tft(tft), touch(touch)
+GUI::GUI(Graphics *gfx, Touch *touch) : 
+    gfx(gfx), touch(touch)
 {
     touch->init();
     Serial.println("GUI initialized");
@@ -21,7 +21,7 @@ void GUI::draw() {
 
 void GUI::set_state(int state_id) {
     Serial.println("Setting state to " + String(state_id));
-    tft.fillScreen(TFT_BLACK);
+    gfx->fillScreen(BLACK);
     if (current_state) {
         current_state->on_state_exit();
     } else {
@@ -57,7 +57,7 @@ void GUI::add_element(GUI_Element* element) {
 
 void GUI::add_element(GUI_Element* element, int state) {
     if (states.find(state) == states.end()) {
-        states[state] = new GUI_State(&tft, this, touch);
+        states[state] = new GUI_State(gfx, this, touch);
     }
     states[state]->add_element(element);
 }

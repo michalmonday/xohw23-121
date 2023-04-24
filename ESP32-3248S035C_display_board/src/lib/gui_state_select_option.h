@@ -8,11 +8,13 @@
 #include <gui_label.h>
 #include <gui_graph.h>
 
+#include "graphics.h"
+
 class GUI;
 
 class GUI_State_Select_Option : public GUI_State {
 public:
-    GUI_State_Select_Option(TFT_eSPI *tft, GUI *gui, Touch *touch);
+    GUI_State_Select_Option(Graphics *gfx, GUI *gui, Touch *touch);
     virtual void update() override;
     virtual void on_state_enter() override;
     virtual void on_state_exit() override;

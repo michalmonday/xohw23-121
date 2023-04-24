@@ -1,14 +1,14 @@
 #ifndef GUI_CHECKBOX_ESP32_H
 #define GUI_CHECKBOX_ESP32_H
 
-#include <TFT_eSPI.h>
 #include <gui_element.h>
 
 #include <functional>
+#include "graphics.h"
 
 class GUI_Checkbox : public GUI_Element {
 public:
-    GUI_Checkbox(TFT_eSPI *tft, bool initial_is_checked, int x, int y, int w, int h, unsigned int font_size, unsigned int colour, unsigned int background_colour = BLACK, 
+    GUI_Checkbox(Graphics *gfx, bool initial_is_checked, int x, int y, int w, int h, unsigned int font_size, unsigned int colour, unsigned int background_colour = BLACK, 
         std::function<void()> on_checked = [](){},
         std::function<void()> on_unchecked = [](){}
         );

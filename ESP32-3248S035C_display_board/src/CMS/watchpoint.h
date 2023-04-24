@@ -7,10 +7,12 @@
 #include <map>
 #include <gui_button.h>
 
+#include "graphics.h"
+
 
 class Watchpoint : public GUI_Element {
 public:
-    Watchpoint(TFT_eSPI *tft, int index, int x, int y, int font_size, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
+    Watchpoint(Graphics *gfx, int index, int x, int y, int font_size, unsigned int colour, std::function<void()> on_checked = [](){}, std::function<void()> on_unchecked = [](){}, std::function<void()> on_label_released = [](){});
     virtual void draw() override;
     virtual void undraw() override;
 

@@ -4,7 +4,7 @@
 // -------------------------------
 // ---------- GUI_State ----------
 
-GUI_State::GUI_State(TFT_eSPI *tft, GUI *gui, Touch *touch) : tft(tft), gui(gui), touch(touch), last_state_enter_time(0), last_touch_release_time(0) {
+GUI_State::GUI_State(Graphics *gfx, GUI *gui, Touch *touch) : gfx(gfx), gui(gui), touch(touch), last_state_enter_time(0), last_touch_release_time(0) {
 }
 
 void GUI_State::update() {

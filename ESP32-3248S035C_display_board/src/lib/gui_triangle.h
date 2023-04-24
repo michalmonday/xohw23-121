@@ -2,6 +2,8 @@
 #define GUI_TRIANGLE_H
 #include <gui_element.h>
 
+#include "graphics.h"
+
 #define GUI_TRIANGLE_ROTATION_UP 0
 #define GUI_TRIANGLE_ROTATION_RIGHT 1
 #define GUI_TRIANGLE_ROTATION_DOWN 2
@@ -10,7 +12,7 @@
 
 class GUI_Triangle : public GUI_Element {
 public:
-    GUI_Triangle(TFT_eSPI *tft, int rotation, int x, int y, int w, int h, int datum, unsigned int border_colour, unsigned int fill_colour, unsigned int background_colour = BLACK, std::function<void()> on_release_callback = [](){});
+    GUI_Triangle(Graphics *gfx, int rotation, int x, int y, int w, int h, int datum, unsigned int border_colour, unsigned int fill_colour, unsigned int background_colour = BLACK, std::function<void()> on_release_callback = [](){});
     virtual void draw() override;
     void draw(unsigned int fill_clr_override, unsigned int border_clr_override);
     virtual void undraw() override;

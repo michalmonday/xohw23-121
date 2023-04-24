@@ -6,6 +6,8 @@
 #include <communication_queues.h>
 #include <rpc.h>
 
+#include <graphics.h>
+
 #include <cJSON.h>
 
 void Attribute::edit_attribute() {
@@ -38,8 +40,8 @@ std::vector<std::pair<String, long long>> GUI_State_Edit_Watchpoint::default_att
     };
 
 
-GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) : 
-    GUI_State(tft, gui, touch), watchpoint(nullptr)
+GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(Graphics *gfx, GUI_CMS *gui, Touch *touch) : 
+    GUI_State(gfx, gui, touch), watchpoint(nullptr)
 {
 
     // Attribues can be any values from the atf_pkt_deterministic_structure in continouos_monitoring_system_controller.py
@@ -88,9 +90,9 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
     const int attribute_w = RESOLUTION_X * 0.3;
     const int attribute_y_start = RESOLUTION_Y*0.025;
 
-    tft->setTextSize(Attribute::font_size);
+    gfx->setTextSize(Attribute::font_size);
     const int ATTRIBUTES_PER_COLUMN = 8;
-    const int attribute_h = (RESOLUTION_Y - attribute_y_start*2) / ATTRIBUTES_PER_COLUMN;// tft->fontHeight();
+    const int attribute_h = (RESOLUTION_Y - attribute_y_start*2) / ATTRIBUTES_PER_COLUMN;// gfx->fontHeight();
     const int attribute_offset_y = attribute_h;
     int attribute_x = RESOLUTION_X*0.01;
     int attribute_y = attribute_y_start;
@@ -99,7 +101,7 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
         String name = entry.first;
         long long value = entry.second;
         Serial.println("Adding attribute: " + name + " with value: " + value);
-        Attribute *attr = new Attribute(tft, gui, name, 0, attribute_x, attribute_y, attribute_h);
+        Attribute *attr = new Attribute(gfx, gui, name, 0, attribute_x, attribute_y, attribute_h);
         if (attr == nullptr) {
             Serial.println("Failed to allocate memory for attribute: " + name);
             continue;
@@ -120,14 +122,14 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
     // ---------------- OK button ---------------------
     const int btn_ok_font_size = 2;
     // const int attributes_per_column = RESOLUTION_Y * 0.9 / attribute_offset_y;
-    tft->setTextSize(btn_ok_font_size);
-    int font_height = tft->fontHeight();
-    // int btn_ok_font_height = tft->fontHeight(btn_ok_font_size);
+    gfx->setTextSize(btn_ok_font_size);
+    int font_height = gfx->fontHeight();
+    // int btn_ok_font_height = gfx->fontHeight(btn_ok_font_size);
     const int btn_ok_h = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
-    const int btn_ok_w = tft->textWidth("OK") + font_height * DEFAULT_BTN_PADDING_X*2;
+    const int btn_ok_w = gfx->textWidth("OK") + font_height * DEFAULT_BTN_PADDING_X*2;
     const int btn_ok_y = RESOLUTION_Y - attribute_y_start - btn_ok_h; // RESOLUTION_Y - btn_ok_h;
     const int btn_ok_x = RESOLUTION_X - btn_ok_w;
-    btn_ok = new GUI_Button(tft, "OK", btn_ok_x, btn_ok_y, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
+    btn_ok = new GUI_Button(gfx, "OK", btn_ok_x, btn_ok_y, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 
             this->latch_attribute_values_to_watchpoint();
@@ -149,10 +151,10 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui
     // -----------------------------------------------
     // ------------- objdump button ------------------
     const int btn_objdump_h = btn_ok_h;
-    const int btn_objdump_w = tft->textWidth("OBJDUMP") + font_height * DEFAULT_BTN_PADDING_X*2;
+    const int btn_objdump_w = gfx->textWidth("OBJDUMP") + font_height * DEFAULT_BTN_PADDING_X*2;
     const int btn_objdump_x = RESOLUTION_X - btn_objdump_w;
     const int btn_objdump_y = attribute_y_start; //RESOLUTION_Y - btn_objdump_h - attribute_offset_y;
-    btn_objdump = new GUI_Button(tft, "OBJDUMP", btn_objdump_x, btn_objdump_y, btn_objdump_w, btn_objdump_h, btn_ok_font_size, WHITE, BLACK, 
+    btn_objdump = new GUI_Button(gfx, "OBJDUMP", btn_objdump_x, btn_objdump_y, btn_objdump_w, btn_objdump_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 
             // select objdump file (reuse state select program, maybe rename it to select file) 

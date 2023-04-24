@@ -1,15 +1,16 @@
 #ifndef GUI_LABEL_ESP32_H
 #define GUI_LABEL_ESP32_H
 
-#include <TFT_eSPI.h>
 
 #include <gui_element.h>
 
 #include <functional>
 
+#include "graphics.h"
+
 class GUI_Label : public GUI_Element {
 public:
-    GUI_Label(TFT_eSPI *tft, String text, int x, int y, int font_size, int datum, unsigned int text_color = WHITE, unsigned int background_colour = BLACK, 
+    GUI_Label(Graphics *gfx, String text, int x, int y, int font_size, int datum, unsigned int text_color = WHITE, unsigned int background_colour = BLACK, 
         std::function<void()> on_press_callback = [](){},
         std::function<void()> on_release = [](){},
         double padding_x = 0.0,

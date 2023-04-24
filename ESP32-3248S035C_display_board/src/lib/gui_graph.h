@@ -2,12 +2,13 @@
 #define GRAPH_ESP32_DISPLAY_H
 
 #include <Arduino.h>
-#include <TFT_eSPI.h>
 #include <map>
 
 #include <gui_element.h>
 #include <gui_label.h>
 #include <display_config.h>
+
+#include "graphics.h"
 
 // forward declaration (to avoid circular dependency)
 class LinePlot;
@@ -17,11 +18,11 @@ class LinePlot;
 // Then each plot could have its own "xlo, xhi, ylo, yhi", but with many of these, drawing ticks would be a problem
 class GUI_Graph : public GUI_Element {
 public:
-    GUI_Graph(TFT_eSPI *tft);
-    GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments, 
+    GUI_Graph(Graphics *gfx);
+    GUI_Graph(Graphics *gfx, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments, 
           byte decimal_precision=2, double xlo=0, double xhi=RESOLUTION_X*0.2, double ylo=0, double yhi=1, String title="test", String xlabel="x", String ylabel="y", unsigned int grid_color=DKBLUE, unsigned int axis_color=RED, unsigned int text_color=WHITE, unsigned int background_color=BLACK); 
     ~GUI_Graph();
-    // LinePlot* add_plot(char *name, TFT_eSPI &tft, int graph_x, int graph_y, int graph_w, int graph_h, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items);
+    // LinePlot* add_plot(char *name, Graphics &gfx, int graph_x, int graph_y, int graph_w, int graph_h, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items);
     LinePlot* add_plot(String name, LinePlot *plot);
     void remove_plot(String name);
     void remove_all();

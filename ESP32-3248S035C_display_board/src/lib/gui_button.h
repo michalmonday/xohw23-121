@@ -1,10 +1,11 @@
 #ifndef GUI_BUTTON_ESP32_H
 #define GUI_BUTTON_ESP32_H
 
-#include <TFT_eSPI.h>
 #include <gui_element.h>
 
 #include <functional>
+
+#include "graphics.h"
 
 // 0.4 of height
 #define DEFAULT_BTN_PADDING_X 0.6 
@@ -12,7 +13,7 @@
 
 class GUI_Button : public GUI_Element {
 public:
-    GUI_Button(TFT_eSPI *tft, String text, int x, int y, int w, int h, unsigned int font_size, unsigned int text_colour, unsigned int background_colour = BLACK, 
+    GUI_Button(Graphics *gfx, String text, int x, int y, int w, int h, unsigned int font_size, unsigned int text_colour, unsigned int background_colour = BLACK, 
         std::function<void()> on_press_callback = [](){},
         std::function<void()> on_release = [](){}
         );

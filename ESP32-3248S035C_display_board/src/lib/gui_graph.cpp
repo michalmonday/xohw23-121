@@ -40,8 +40,8 @@ const unsigned int default_axis_color = RED;
 const unsigned int default_text_color = WHITE;
 const unsigned int default_background_color = BLACK;
 
-GUI_Graph::GUI_Graph(TFT_eSPI *tft) 
-    : GUI_Element(tft, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
+GUI_Graph::GUI_Graph(Graphics *gfx) 
+    : GUI_Element(gfx, default_graph_x, default_graph_y, default_graph_w, default_graph_h), grid_x_segments(default_grid_x_segments), grid_y_segments(default_grid_y_segments),
         decimal_precision(default_decimal_precision), xlo(default_xlo), xhi(default_xhi), ylo(default_ylo), yhi(default_yhi), title(default_title), xlabel(default_xlabel), 
         ylabel(default_ylabel), grid_color(default_grid_color), axis_color(default_axis_color), text_color(default_text_color), background_color(default_background_color),
         legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07)
@@ -51,9 +51,9 @@ GUI_Graph::GUI_Graph(TFT_eSPI *tft)
     title_font_size = current_value_diplay_font_size;
 }
 
-GUI_Graph::GUI_Graph(TFT_eSPI *tft, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments,
+GUI_Graph::GUI_Graph(Graphics *gfx, int graph_x, int graph_y, int graph_w, int graph_h, int grid_x_segments, int grid_y_segments,
              byte decimal_precision, double xlo, double xhi, double ylo, double yhi, String title, String xlabel, String ylabel, unsigned int grid_color, unsigned int axis_color, unsigned int text_color, unsigned int background_color)
-    : GUI_Element(tft, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
+    : GUI_Element(gfx, graph_x, graph_y, graph_w, graph_h), grid_x_segments(grid_x_segments), grid_y_segments(grid_y_segments),
       decimal_precision(decimal_precision), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), title(title), xlabel(xlabel),
       ylabel(ylabel), grid_color(grid_color), axis_color(axis_color), text_color(text_color), background_color(background_color), 
       legend_enabled(true), grid_enabled(true), axes_enabled(true), axis_labels_enabled(true), current_value_display_enabled(false), current_value_display_width(RESOLUTION_X*0.07) 
@@ -88,7 +88,7 @@ LinePlot* GUI_Graph::add_plot(String name, LinePlot* line_plot) {
     if (legend_enabled)
         draw_legend(background_color);
     
-    current_value_labels[line_plot] = new GUI_Label(tft, "-", x + w + 5, line_plot->get_newest_y_screen_pos(), current_value_diplay_font_size, ML_DATUM, line_plot->get_color(), background_color);
+    current_value_labels[line_plot] = new GUI_Label(gfx, "-", x + w + 5, line_plot->get_newest_y_screen_pos(), current_value_diplay_font_size, ML_DATUM, line_plot->get_color(), background_color);
     current_value_labels[line_plot]->disable_background();
     add_child_element(current_value_labels[line_plot]);
     return line_plot;
@@ -156,23 +156,23 @@ void GUI_Graph::draw_plots() {
 // }
 
 void GUI_Graph::draw_legend(unsigned int background_color) {
-    tft->setTextDatum(TL_DATUM);
-    tft->setTextSize(legend_font_size);
+    gfx->setTextDatum(TL_DATUM);
+    gfx->setTextSize(legend_font_size);
     const int legend_w = (int)(RESOLUTION_X * 0.15);
     int legend_x = x + w + h*0.2;
 
     if (current_value_display_enabled)
         legend_x += current_value_display_width;
 
-    tft->fillRect(legend_x, y + 1, legend_w, h - 1, background_color);
+    gfx->fillRect(legend_x, y + 1, legend_w, h - 1, background_color);
     
     int legend_y = y;
     int offset_y = 0;
-    int legend_font_h = tft->fontHeight();
+    int legend_font_h = gfx->fontHeight();
     for (auto it = line_plots.begin(); it != line_plots.end(); ++it) {
         unsigned int line_color = it->second->get_color();
-        tft->setTextColor(line_color, background_color);
-        tft->drawString(it->first, legend_x + 3, legend_y + offset_y);
+        gfx->setTextColor(line_color, background_color);
+        gfx->drawString(it->first, legend_x + 3, legend_y + offset_y);
         offset_y += legend_font_h * 1.1;
     }
 }
@@ -190,10 +190,10 @@ void GUI_Graph::draw_current_values() {
     }
     
     // middle vertically, left horizontally
-    tft->setTextDatum(ML_DATUM);
-    tft->setTextSize(current_value_diplay_font_size);
+    gfx->setTextDatum(ML_DATUM);
+    gfx->setTextSize(current_value_diplay_font_size);
 
-    int font_height = tft->fontHeight();
+    int font_height = gfx->fontHeight();
 
     int prev_pos = -1;
     int i = 0;
@@ -210,12 +210,12 @@ void GUI_Graph::draw_current_values() {
             }
         }
         LinePlot* line_plot = it->second;
-        tft->setTextColor(line_plot->get_color());
+        gfx->setTextColor(line_plot->get_color());
         String value = String(line_plot->get_newest_value());
         if (value.endsWith(".00")) {
             value = value.substring(0, value.length() - 3);
         } 
-        // tft->drawString(value, x + w + 5, y_pos);
+        // gfx->drawString(value, x + w + 5, y_pos);
         GUI_Label *label = current_value_labels[line_plot];
         if (label->get_text() != value) 
             label->set_text(value);
@@ -245,12 +245,12 @@ void GUI_Graph::draw() {
     GUI_Element::draw();
     Serial.println("Drawing graph...");
     // peserve old settings
-    unsigned int old_text_color = tft->textcolor;
-    int old_text_size = tft->textsize;
-    uint8_t old_datum = tft->getTextDatum();
+    unsigned int old_text_color = gfx->getTextColor();
+    int old_text_size = gfx->getTextSize();
+    uint8_t old_datum = gfx->getTextDatum();
 
-    tft->setTextDatum(MR_DATUM);
-    tft->setTextSize(1);
+    gfx->setTextDatum(MR_DATUM);
+    gfx->setTextSize(1);
 
 
     double x_inc = (xhi - xlo) / (double)grid_x_segments;
@@ -262,14 +262,14 @@ void GUI_Graph::draw() {
         int current_y = y + (i * h / grid_y_segments);
         // horizontal grid line
         if (grid_enabled)
-            tft->drawLine(x, current_y, x + w, current_y, grid_color);
+            gfx->drawLine(x, current_y, x + w, current_y, grid_color);
 
         if (axes_enabled && axis_labels_enabled) {
             Serial.printf("Drawing horizontal line at %d\n", current_y);
             // horizontal line label
-            tft->setTextColor(text_color, background_color);
+            gfx->setTextColor(text_color, background_color);
             // precision is default Arduino--this could really use some format control
-            tft->drawFloat(y_val, decimal_precision, x - 4, current_y, 1);
+            gfx->drawFloat(y_val, decimal_precision, x - 4, current_y, 1);
         }
         y_val -= y_dec;
     }
@@ -279,42 +279,42 @@ void GUI_Graph::draw() {
         int current_x = x + (i * w / grid_x_segments);
         // vertical grid line
         if (grid_enabled)
-            tft->drawLine(current_x, y, current_x, y + h, grid_color);
+            gfx->drawLine(current_x, y, current_x, y + h, grid_color);
         if (axes_enabled && axis_labels_enabled) {
             // vertical line label
-            tft->setTextColor(text_color, background_color);
+            gfx->setTextColor(text_color, background_color);
             // precision is default Arduino--this could really use some format control
-            tft->drawFloat(x_val, decimal_precision, current_x, y + h + 7, 1);
+            gfx->drawFloat(x_val, decimal_precision, current_x, y + h + 7, 1);
         }
         x_val += x_inc;
     }
 
     if (axes_enabled) {
         // vertical axis line
-        tft->drawLine(x, y, x, y + h, axis_color);
+        gfx->drawLine(x, y, x, y + h, axis_color);
 
         // horizontal axis line (depends if y range contains 0)
         int bottom = y + h;
         if (ylo >= 0 && yhi <= 0) {
             // draw line at 0
             int zero_y = y + (yhi / (yhi - ylo)) * h;
-            tft->drawLine(x, zero_y, x + w, zero_y, axis_color);
+            gfx->drawLine(x, zero_y, x + w, zero_y, axis_color);
         } else {
             // draw line at bottom
-            tft->drawLine(x, bottom+1, x + w, bottom+1, axis_color);
+            gfx->drawLine(x, bottom+1, x + w, bottom+1, axis_color);
         }
     }
 
 
-    tft->setTextColor(text_color, background_color);
-    tft->setTextDatum(BC_DATUM);
-    tft->setTextSize(title_font_size);
-    tft->drawString(title, x + w / 2, y - tft->fontHeight() / 2);
+    gfx->setTextColor(text_color, background_color);
+    gfx->setTextDatum(BC_DATUM);
+    gfx->setTextSize(title_font_size);
+    gfx->drawString(title, x + w / 2, y - gfx->fontHeight() / 2);
 
     // restore old settings
-    tft->setTextColor(old_text_color);
-    tft->setTextSize(old_text_size);
-    tft->setTextDatum(old_datum);
+    gfx->setTextColor(old_text_color);
+    gfx->setTextSize(old_text_size);
+    gfx->setTextDatum(old_datum);
 
     draw_plots();
 
@@ -331,27 +331,27 @@ void GUI_Graph::draw_grid() {
     for (int i = 0; i <= grid_y_segments; i++) {
         int current_y = y + (i * h / grid_y_segments);
         // horizontal grid line
-        tft->drawLine(x, current_y, x + w, current_y, grid_color);
+        gfx->drawLine(x, current_y, x + w, current_y, grid_color);
     }
 
     // draw vertical lines
     for (int i = 0; i <= grid_x_segments; i++) {
         int current_x = x + (i * w / grid_x_segments);
         // vertical grid line
-        tft->drawLine(current_x, y, current_x, y + h, grid_color);
+        gfx->drawLine(current_x, y, current_x, y + h, grid_color);
     }
 
     // vertical axis line
-    tft->drawLine(x, y, x, y + h, axis_color);
+    gfx->drawLine(x, y, x, y + h, axis_color);
 
     // horizontal axis line (depends if y range contains 0)
     int bottom = y + h;
     if (ylo >= 0 && yhi <= 0) {
         // draw line at 0
         int zero_y = y + (yhi / (yhi - ylo)) * h;
-        tft->drawLine(x, zero_y, x + w, zero_y, axis_color);
+        gfx->drawLine(x, zero_y, x + w, zero_y, axis_color);
     } else {
         // draw line at bottom
-        tft->drawLine(x, bottom, x + w, bottom, axis_color);
+        gfx->drawLine(x, bottom, x + w, bottom, axis_color);
     }
 }

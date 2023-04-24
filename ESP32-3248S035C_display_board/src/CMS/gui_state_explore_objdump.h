@@ -1,12 +1,13 @@
 #ifndef GUI_STATE_EXPLORE_OBJDUMP_H
 #define GUI_STATE_EXPLORE_OBJDUMP_H
 
-#include <TFT_eSPI.h>
 #include <map>
 #include <gui_state.h>
 #include <gui_label.h>
 #include <gui_button.h>
 #include <cJSON.h>
+
+#include "graphics.h"
 
 
 class GUI_CMS;
@@ -21,7 +22,7 @@ struct Objdump_Item {
 
 class GUI_State_Explore_Objdump : public GUI_State {
 public:
-    GUI_State_Explore_Objdump(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
+    GUI_State_Explore_Objdump(Graphics *gfx, GUI_CMS *gui, Touch *touch);
     virtual void update() override;
     virtual void draw() override;
     virtual void on_state_enter() override;

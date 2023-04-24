@@ -8,21 +8,23 @@
 #include <gui_state_select_number.h>
 #include <gui_state_explore_objdump.h>
 
+#include "graphics.h"
+
 // -------------------------------
 // ----------    GUI    ----------
 
-GUI_CMS::GUI_CMS(TFT_eSPI &tft, Touch *touch) : 
-    GUI(tft, touch) 
+GUI_CMS::GUI_CMS(Graphics *gfx, Touch *touch) : 
+    GUI(gfx, touch) 
 {
     current_state_id = GUI_STATE_MAIN;
     current_state = nullptr;
     touch->init();
-    states[GUI_STATE_MAIN] = new GUI_State_Main(&tft, this, touch);
-    states[GUI_STATE_NOTIFICATION] = new GUI_State_Notification(&tft, this, touch);
-    states[GUI_STATE_SELECT_OPTION] = new GUI_State_Select_Option(&tft, this, touch);
-    states[GUI_STATE_EDIT_WATCHPOINT] = new GUI_State_Edit_Watchpoint(&tft, this, touch);
-    states[GUI_STATE_SELECT_NUMBER] = new GUI_State_Select_Number(&tft, this, touch);
-    states[GUI_STATE_EXPLORE_OBJDUMP] = new GUI_State_Explore_Objdump(&tft, this, touch);
+    states[GUI_STATE_MAIN] = new GUI_State_Main(gfx, this, touch);
+    states[GUI_STATE_NOTIFICATION] = new GUI_State_Notification(gfx, this, touch);
+    states[GUI_STATE_SELECT_OPTION] = new GUI_State_Select_Option(gfx, this, touch);
+    states[GUI_STATE_EDIT_WATCHPOINT] = new GUI_State_Edit_Watchpoint(gfx, this, touch);
+    states[GUI_STATE_SELECT_NUMBER] = new GUI_State_Select_Number(gfx, this, touch);
+    states[GUI_STATE_EXPLORE_OBJDUMP] = new GUI_State_Explore_Objdump(gfx, this, touch);
 
     if (states[GUI_STATE_MAIN] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_MAIN] is null");
     if (states[GUI_STATE_NOTIFICATION] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_NOTIFICATION] is null");

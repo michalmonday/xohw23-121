@@ -10,12 +10,14 @@
 #include <gui_button.h>
 #include "watchpoint.h"
 
+#include "graphics.h"
+
 class GUI_CMS;
 class GUI_Button;
 
 class GUI_State_Main : public GUI_State {
 public:
-    GUI_State_Main(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
+    GUI_State_Main(Graphics *gfx, GUI_CMS *gui, Touch *touch);
     virtual void update() override;
     virtual void reset() override;
     virtual void draw() override;

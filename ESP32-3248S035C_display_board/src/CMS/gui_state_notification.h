@@ -6,11 +6,13 @@
 #include <gui_state.h>
 #include <gui_label.h>
 
+#include "graphics.h"
+
 class GUI;
 
 class GUI_State_Notification : public GUI_State {
 public:
-    GUI_State_Notification(TFT_eSPI *tft, GUI *gui, Touch *touch, int timeout=0);
+    GUI_State_Notification(Graphics *gfx, GUI *gui, Touch *touch, int timeout=0);
     void set_text(String text);
     void set_font_size(int font_size) { label->set_font_size(font_size);}
     virtual void update() override;

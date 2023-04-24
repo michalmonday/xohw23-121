@@ -3,32 +3,32 @@
 #include <rpc.h>
 #include <display_config.h>
 
-Watchpoint::Watchpoint(TFT_eSPI *tft, int index, int x, int y, int font_size, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
-    : GUI_Element(tft, x, y, 10, 10), colour(colour), index(index), font_size(font_size)
+Watchpoint::Watchpoint(Graphics *gfx, int index, int x, int y, int font_size, unsigned int colour, std::function<void()> on_checked, std::function<void()> on_unchecked, std::function<void()> on_label_released)
+    : GUI_Element(gfx, x, y, 10, 10), colour(colour), index(index), font_size(font_size)
 {
-    tft->setTextSize(font_size);
-    h = tft->fontHeight() * 1.3;
+    gfx->setTextSize(font_size);
+    h = gfx->fontHeight() * 1.3;
     
     int checkbox_w = h;
     int checkbox_h = h;
     int x_space = h*0.5;
     Serial.printf("Watchpoint::Watchpoint() - h: %d, checkbox_w: %d, checkbox_h: %d, x_space: %d\n", h, checkbox_w, checkbox_h, x_space);
-    w = tft->textWidth("wp_0") + checkbox_w + x_space;
-    checkbox_is_active = new GUI_Checkbox(tft, false, x, y, checkbox_w, checkbox_h, font_size, GREEN, BLACK, on_checked, on_unchecked);
+    w = gfx->textWidth("wp_0") + checkbox_w + x_space;
+    checkbox_is_active = new GUI_Checkbox(gfx, false, x, y, checkbox_w, checkbox_h, font_size, GREEN, BLACK, on_checked, on_unchecked);
     if (checkbox_is_active == nullptr) {
         Serial.println("ERROR: Watchpoint::Watchpoint() - checkbox_is_active is nullptr");
     }
 
     // int button_x = x + checkbox_w + x_space;
-    // int button_w = tft->textWidth("Edit") * 1.4;
-    // button_edit = new GUI_Button(tft, "Edit", button_x, y, button_w, h, 1, WHITE, BLACK);
+    // int button_w = gfx->textWidth("Edit") * 1.4;
+    // button_edit = new GUI_Button(gfx, "Edit", button_x, y, button_w, h, 1, WHITE, BLACK);
     // button_edit->set_on_release_callback([](){
     //     Serial.println("Edit button pressed");        
     // });
 
     // int label_x = button_x + button_w + x_space;
     int label_x = x + checkbox_w + x_space;
-    label = new GUI_Label(tft, "wp_" + String(index), label_x, y + h/2, font_size, ML_DATUM, WHITE, BLACK);
+    label = new GUI_Label(gfx, "wp_" + String(index), label_x, y + h/2, font_size, ML_DATUM, WHITE, BLACK);
     if (label == nullptr) {
         Serial.println("ERROR: Watchpoint::Watchpoint() - label is nullptr");
     }
@@ -42,7 +42,7 @@ Watchpoint::Watchpoint(TFT_eSPI *tft, int index, int x, int y, int font_size, un
 
 void Watchpoint::draw() {
     GUI_Element::draw();
-    // tft->fillRect(x, y, w, h, colour);
+    // gfx->fillRect(x, y, w, h, colour);
 }
 
 void Watchpoint::undraw() {

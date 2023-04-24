@@ -4,19 +4,21 @@
 #include <gui_state.h>
 #include "gui_cms_states.h"
 
-GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch) 
-    : GUI_State(tft, gui, touch), selected_address(0) 
+#include <graphics.h>
+
+GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(Graphics *gfx, GUI_CMS *gui, Touch *touch) 
+    : GUI_State(gfx, gui, touch), selected_address(0) 
 {
-    label_current_function = new GUI_Label(tft, "-", RESOLUTION_X/2, RESOLUTION_Y * 0.01, 2, TC_DATUM, WHITE, BLACK);
+    label_current_function = new GUI_Label(gfx, "-", RESOLUTION_X/2, RESOLUTION_Y * 0.01, 2, TC_DATUM, WHITE, BLACK);
     if (label_current_function == NULL) {
         Serial.println("label_current_function is NULL");
     }
     add_element(label_current_function);
-    tft->setTextSize(GUI_State_Explore_Objdump::font_size);
-    int font_height = tft->fontHeight();
-    const int btn_w = tft->textWidth("Back") + font_height * DEFAULT_BTN_PADDING_X*2;
+    gfx->setTextSize(GUI_State_Explore_Objdump::font_size);
+    int font_height = gfx->fontHeight();
+    const int btn_w = gfx->textWidth("Back") + font_height * DEFAULT_BTN_PADDING_X*2;
     const int btn_h = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
-    btn_back = new GUI_Button(tft, "Back", RESOLUTION_X - btn_w, RESOLUTION_Y * 0.01, btn_w, btn_h, 2, WHITE, BLACK, [](){}, [this](){
+    btn_back = new GUI_Button(gfx, "Back", RESOLUTION_X - btn_w, RESOLUTION_Y * 0.01, btn_w, btn_h, 2, WHITE, BLACK, [](){}, [this](){
         pop_function();
     });
     if (btn_back == NULL) {
@@ -162,15 +164,15 @@ void GUI_State_Explore_Objdump::set_current_function(String current_function) {
         Serial.printf("Function %s not found in objdump. Can't set it as current function.\n", current_function.c_str());
         return;
     }
-    tft->setTextSize(GUI_State_Explore_Objdump::font_size);
-    const int y_offset = tft->fontHeight() * 1.2;
+    gfx->setTextSize(GUI_State_Explore_Objdump::font_size);
+    const int y_offset = gfx->fontHeight() * 1.2;
     const int y_start = RESOLUTION_Y * 0.05 + y_offset;
     int y = y_start;
     const int x = RESOLUTION_X * 0.02;
-    const int btn_w = tft->textWidth("Select")*1.1;
+    const int btn_w = gfx->textWidth("Select")*1.1;
     this->current_function = current_function;
     for (Objdump_Item *item : this->objdump[current_function]) {
-        GUI_Button *btn = new GUI_Button(tft, "Select", x, y, btn_w, y_offset, GUI_State_Explore_Objdump::font_size, WHITE, BLACK, [](){}, [this, item](){
+        GUI_Button *btn = new GUI_Button(gfx, "Select", x, y, btn_w, y_offset, GUI_State_Explore_Objdump::font_size, WHITE, BLACK, [](){}, [this, item](){
             selected_address = strtoll(item->address.c_str(), NULL, 16);
             on_address_selected(selected_address);
             gui->pop_state();
@@ -178,7 +180,7 @@ void GUI_State_Explore_Objdump::set_current_function(String current_function) {
         if (btn == NULL) {
             Serial.println("Failed to allocate memory for GUI_Button in GUI_State_Explore_Objdump::set_current_function");
         }
-        GUI_Label *label = new GUI_Label(tft, "-", x + btn_w * 1.2, y+y_offset/2, GUI_State_Explore_Objdump::font_size, ML_DATUM, WHITE, BLACK, [](){}, [](){}, 0.0, 0.2);//0.2);
+        GUI_Label *label = new GUI_Label(gfx, "-", x + btn_w * 1.2, y+y_offset/2, GUI_State_Explore_Objdump::font_size, ML_DATUM, WHITE, BLACK, [](){}, [](){}, 0.0, 0.2);//0.2);
         if (label == NULL) {
             Serial.println("Failed to allocate memory for GUI_Label in GUI_State_Explore_Objdump::set_current_function");
         }
@@ -249,7 +251,7 @@ void GUI_State_Explore_Objdump::clean() {
     }
     this->labels.clear();
     this->buttons_select.clear();
-    tft->fillScreen(BLACK);
+    gfx->fillScreen(BLACK);
     btn_back->needs_redraw = true;
     label_current_function->needs_redraw = true;
 }

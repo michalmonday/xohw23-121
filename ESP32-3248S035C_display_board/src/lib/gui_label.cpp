@@ -1,19 +1,21 @@
 #include <gui_label.h>
 
+#include <TFT_eSPI.h>
+
 
 // -------------------------------
 // ---------- GUI_Label ----------
-GUI_Label::GUI_Label(TFT_eSPI *tft, String text, int x, int y, int font_size, int datum, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback, double padding_x, double padding_y) :
-    GUI_Element(tft, x, y, tft->textWidth(text), tft->fontHeight(), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
+GUI_Label::GUI_Label(Graphics *gfx, String text, int x, int y, int font_size, int datum, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback, double padding_x, double padding_y) :
+    GUI_Element(gfx, x, y, gfx->textWidth(text), gfx->fontHeight(), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
 {
     update_touch_area();
     set_text(text);
 }
 
 void GUI_Label::update_touch_area() {
-    // tft->setTextSize(font_size);
-    // w = tft->textWidth(text);
-    // h = tft->fontHeight();
+    // gfx->setTextSize(font_size);
+    // w = gfx->textWidth(text);
+    // h = gfx->fontHeight();
     if (datum == TL_DATUM || datum == ML_DATUM || datum == BL_DATUM) {
         left_x = this->x;
     } else if (datum == TC_DATUM || datum == MC_DATUM || datum == BC_DATUM) {
@@ -38,15 +40,15 @@ void GUI_Label::update_touch_area() {
 
 void GUI_Label::draw(unsigned int clr_override, unsigned int background_clr_override) {
     if (background_enabled)
-        tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, background_clr_override);
+        gfx->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, background_clr_override);
 
     // draw touch area
-    // tft->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
+    // gfx->fillRect(touch_left_x, touch_top_y, touch_right_x - touch_left_x, touch_bottom_y - touch_top_y, DKRED);
 
-    tft->setTextSize(font_size);
-    tft->setTextDatum(datum);
-    tft->setTextColor(clr_override);
-    tft->drawString(text, x, y);
+    gfx->setTextSize(font_size);
+    gfx->setTextDatum(datum);
+    gfx->setTextColor(clr_override);
+    gfx->drawString(text, x, y);
     needs_redraw = false;
 }
 
@@ -59,10 +61,10 @@ void GUI_Label::undraw() {
     // paint over the label with the background colour
     // Serial.printf("Undrawing label '%s' at (%d, %d) with size (%d, %d)\n", text.c_str(), x, y, w, h);
     draw(background_colour, background_colour);
-    // tft->setTextSize(font_size);
-    // tft->setTextDatum(datum);
-    // tft->setTextColor(background_colour);
-    // tft->drawString(text, x, y);
+    // gfx->setTextSize(font_size);
+    // gfx->setTextDatum(datum);
+    // gfx->setTextColor(background_colour);
+    // gfx->drawString(text, x, y);
 }
 
 void GUI_Label::set_y(int y) { undraw(); GUI_Element::set_y(y); update_touch_area(); }
@@ -73,9 +75,9 @@ void GUI_Label::set_h(int h) { undraw(); GUI_Element::set_h(h); update_touch_are
 void GUI_Label::set_font_size(int font_size) {
     undraw();
     this->font_size = font_size;
-    tft->setTextSize(font_size);
-    w = tft->textWidth(text);
-    h = tft->fontHeight();
+    gfx->setTextSize(font_size);
+    w = gfx->textWidth(text);
+    h = gfx->fontHeight();
     update_touch_area();
     needs_redraw = true;
 }
@@ -83,9 +85,9 @@ void GUI_Label::set_font_size(int font_size) {
 void GUI_Label::set_text(String text) {
     undraw();
     this->text = text;
-    tft->setTextSize(font_size);
-    w = tft->textWidth(text);
-    h = tft->fontHeight();
+    gfx->setTextSize(font_size);
+    w = gfx->textWidth(text);
+    h = gfx->fontHeight();
     update_touch_area();
     needs_redraw = true;
 }

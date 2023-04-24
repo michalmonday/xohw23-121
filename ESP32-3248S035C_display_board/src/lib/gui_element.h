@@ -1,13 +1,14 @@
 #ifndef GUI_ELEMENT_ESP32_H
 #define GUI_ELEMENT_ESP32_H
 
-#include <TFT_eSPI.h>
 #include <colours.h>
 #include <vector>
 
+#include "graphics.h"
+
 class GUI_Element {
 public:
-    GUI_Element(TFT_eSPI *tft, int x, int y, int w, int h, unsigned int background_colour = BLACK, 
+    GUI_Element(Graphics *gfx, int x, int y, int w, int h, unsigned int background_colour = BLACK, 
         std::function<void()> on_press_callback = [](){},
         std::function<void()> on_release_callback = [](){}
         );
@@ -49,7 +50,7 @@ public:
     void set_highlight_colour(unsigned int highlight_colour) { this->highlight_colour = highlight_colour; }
 protected:
     int x,y,w,h;
-    TFT_eSPI *tft;
+    Graphics *gfx;
     unsigned int background_colour;
     unsigned int highlight_colour;
     bool background_enabled;

@@ -12,6 +12,8 @@
 #include <gui_state_select_number.h>
 #include <gui_cms_states.h>
 
+#include <graphics.h>
+
 #include <watchpoint.h>
 
 class GUI_CMS;
@@ -26,15 +28,15 @@ struct Attribute {
     const static int font_size = 2;
     GUI_CMS *gui;
 
-    Attribute(TFT_eSPI *tft, GUI_CMS* gui, String name, long long value, int x, int y, int h) : name(name), value(value), gui(gui) {
-        tft->setTextSize(font_size);
-        // int font_height = tft->fontHeight();
-        checkbox_is_active = new GUI_Checkbox(tft, false, x, y, h, h, font_size, GREEN, BLACK, [](){}, [](){});
+    Attribute(Graphics *gfx, GUI_CMS* gui, String name, long long value, int x, int y, int h) : name(name), value(value), gui(gui) {
+        gfx->setTextSize(font_size);
+        // int font_height = gfx->fontHeight();
+        checkbox_is_active = new GUI_Checkbox(gfx, false, x, y, h, h, font_size, GREEN, BLACK, [](){}, [](){});
         if (checkbox_is_active == nullptr) {
             Serial.println("Failed to allocate memory for checkbox_is_active");
         }
         // convert long to hex string using ltoa
-        label = new GUI_Label(tft, "-", x + h * 1.2, y+h/2, font_size, ML_DATUM, WHITE, BLACK);
+        label = new GUI_Label(gfx, "-", x + h * 1.2, y+h/2, font_size, ML_DATUM, WHITE, BLACK);
         if (label == nullptr) {
             Serial.println("Failed to allocate memory for label");
         }
@@ -82,7 +84,7 @@ struct Attribute {
 
 class GUI_State_Edit_Watchpoint : public GUI_State {
 public:
-    GUI_State_Edit_Watchpoint(TFT_eSPI *tft, GUI_CMS *gui, Touch *touch);
+    GUI_State_Edit_Watchpoint(Graphics *gfx, GUI_CMS *gui, Touch *touch);
     virtual void update() override;
     virtual void on_state_enter() override;
     virtual void on_state_exit() override;

@@ -4,8 +4,8 @@
 #include <line_plot.h>
 #include <gui_graph.h>
 
-LinePlot::LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
-tft(tft), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),
+LinePlot::LinePlot(Graphics *gfx, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items) : 
+gfx(gfx), xlo(xlo), xhi(xhi), ylo(ylo), yhi(yhi), color(color), current_number_of_items(0), max_number_of_items(max_number_of_items), graph(nullptr),
 max_value(INT_MIN), min_value(INT_MAX), dropped_value_screen_pos(-1), static_ylo(0), static_yhi(1), static_yhi_used(false), static_ylo_used(true), top_margin(0.0)
 {
     values = new double[max_number_of_items];
@@ -47,13 +47,13 @@ void LinePlot::draw_line(int i) {
     if (i < 0 || i >= current_number_of_items - 1)
         return;
     was_line_drawn[i] = true;
-    tft.drawLine(x_screen_pos[i], values_screen_pos[i], x_screen_pos[i+1], values_screen_pos[i+1], color);
+    gfx->drawLine(x_screen_pos[i], values_screen_pos[i], x_screen_pos[i+1], values_screen_pos[i+1], color);
 }
 
 void LinePlot::undraw_line(int i) {
     if (i < 0 || i >= current_number_of_items - 1 || !was_line_drawn[i])
         return;
-    tft.drawLine(x_screen_pos[i], last_painted_values_screen_pos[i], x_screen_pos[i+1], last_painted_values_screen_pos[i+1], graph->get_background_color());
+    gfx->drawLine(x_screen_pos[i], last_painted_values_screen_pos[i], x_screen_pos[i+1], last_painted_values_screen_pos[i+1], graph->get_background_color());
 }
 
 void LinePlot::update_min_max_values() {

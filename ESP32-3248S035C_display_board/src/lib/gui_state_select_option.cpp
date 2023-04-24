@@ -6,8 +6,8 @@
 
 #include <cJSON.h>
 
-GUI_State_Select_Option::GUI_State_Select_Option(TFT_eSPI *tft, GUI *gui, Touch *touch) : 
-    GUI_State(tft, gui, touch), selected_option(""), selected_category(""), categories(), columns_taken(0), on_option_selected_callback([](String category, String option){})
+GUI_State_Select_Option::GUI_State_Select_Option(Graphics *gfx, GUI *gui, Touch *touch) : 
+    GUI_State(gfx, gui, touch), selected_option(""), selected_category(""), categories(), columns_taken(0), on_option_selected_callback([](String category, String option){})
 {
 }
 
@@ -29,8 +29,8 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
     // ------------ Buttons  -----------
     const int button_y_start = RESOLUTION_Y*0.05;
     const int button_font_size = 2;
-    tft->setTextSize(button_font_size);
-    int font_height = tft->fontHeight();
+    gfx->setTextSize(button_font_size);
+    int font_height = gfx->fontHeight();
     const int button_height = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;// RESOLUTION_Y * 0.07;
     const int button_offset = button_height * 1.3;
     int button_y = button_y_start;
@@ -39,9 +39,9 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
     // longest option name width
     const int btn_width_padding = RESOLUTION_X * 0.01;
     int longest_option_name_width = 0;
-    tft->setTextSize(button_font_size);
+    gfx->setTextSize(button_font_size);
     for (String option : options) {
-        int option_name_width = tft->textWidth(option.c_str(), button_font_size);
+        int option_name_width = gfx->textWidth(option);
         if (option_name_width > longest_option_name_width) {
             longest_option_name_width = option_name_width;
         }
@@ -57,7 +57,7 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
             button_x += button_width + RESOLUTION_X*0.05;
             columns_taken += 1;
         }
-        GUI_Button *btn = new GUI_Button(tft, option, button_x, button_y, button_width, button_height, button_font_size,
+        GUI_Button *btn = new GUI_Button(gfx, option, button_x, button_y, button_width, button_height, button_font_size,
             WHITE,  // text colour
             BLACK,  // background colour
             [](){}, // function on press

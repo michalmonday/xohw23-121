@@ -1,10 +1,11 @@
 #include <gui_state_notification.h>
 #include <display_config.h>
 #include <gui.h>
+#include "graphics.h"
 
-GUI_State_Notification::GUI_State_Notification(TFT_eSPI *tft, GUI *gui, Touch *touch, int timeout) : 
-    GUI_State(tft, gui, touch), timeout(timeout) {
-    label = new GUI_Label(tft, "Notification", RESOLUTION_X/2, RESOLUTION_Y/2, 3, MC_DATUM, WHITE, BLACK);
+GUI_State_Notification::GUI_State_Notification(Graphics *gfx, GUI *gui, Touch *touch, int timeout) : 
+    GUI_State(gfx, gui, touch), timeout(timeout) {
+    label = new GUI_Label(gfx, "Notification", RESOLUTION_X/2, RESOLUTION_Y/2, 3, MC_DATUM, WHITE, BLACK);
     if (label == NULL) {
         Serial.println("Failed to allocate memory for label");
     }

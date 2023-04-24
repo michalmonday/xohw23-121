@@ -4,13 +4,15 @@
 
 #include <TFT_eSPI.h>
 
+#include "graphics.h"
+
 // forward declaration (to avoid circular dependency)
 class GUI_Graph;
 
 class LinePlot {
 public:
     // max number of items should probably be equal to the width of the graph in pixels or be half/quarter of it
-    LinePlot(TFT_eSPI &tft, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items);
+    LinePlot(Graphics *gfx, double xlo, double xhi, double ylo, double yhi, int color, int max_number_of_items);
     ~LinePlot();
     void draw();
     void draw(unsigned int color_override);
@@ -37,7 +39,7 @@ public:
 
     void record_last_painted_screen_positions();
 private:
-    TFT_eSPI &tft;
+    Graphics *gfx;
     int current_number_of_items, max_number_of_items;
     int max_value, min_value;
     int graph_x, graph_y, graph_w, graph_h;
