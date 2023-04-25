@@ -20,7 +20,9 @@ void setup() {
   Serial.println("TAMC_GT911 Example: Ready");
   tp = new TAMC_GT911(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT);
   tp->begin();
-  tp->setRotation(ROTATION_LEFT);
+  // tp->setRotation(ROTATION_LEFT);
+  // tp->setRotation(ROTATION_NORMAL);
+  tp->setRotation(ROTATION_INVERTED);
 }
 
 void loop() {

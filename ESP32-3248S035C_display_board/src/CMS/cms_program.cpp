@@ -49,9 +49,9 @@ HardwareSerial serial_riscv(2);  // UART2 (GPIO17=TX, GPIO16=RX)
 // Thread used for drawing will be on separate thread from receiving/parsing data from tcp server
 TaskHandle_t drawing_thread;
 
-const IPAddress server_ip(192, 168, 0, 107);
+const IPAddress server_ip(192, 168, 0, 110);
 const uint16_t server_port = 9093;
-const String server_ip_str = "192.168.0.107:" + String(server_port); // just for displaying status
+const String server_ip_str = "192.168.0.110:" + String(server_port); // just for displaying status
 WiFiClient client;
 
 
@@ -64,6 +64,7 @@ WiFiClient client;
     #define TOUCH_RST 38
     #define TOUCH_WIDTH  800
     #define TOUCH_HEIGHT 480
+    #define TOUCH_ROTATION ROTATION_INVERTED
     #include <graphics_arduino_gfx.h>
     Graphics *gfx = new Graphics_Arduino_GFX();
 #else 
@@ -73,6 +74,7 @@ WiFiClient client;
     #define TOUCH_RST 25
     #define TOUCH_WIDTH  480
     #define TOUCH_HEIGHT 320
+    #define TOUCH_ROTATION ROTATION_LEFT
     // display object
     #include <graphics_tft_espi.h>
     Graphics *gfx = new Graphics_TFT_ESPI();
@@ -105,15 +107,10 @@ int max_number_of_items = xhi - xlo;
 void parse_tcp_message(String line);
 
 void init_wifi() {
-    gfx->setTextColor(WHITE);
-    //gfx.setTextSize(2);
-    // status_display.set_status("ap_connection_status", "Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    // status_display.set_status("tcp_connection_status", "ZYNQ TCP server address is set to: " + server_ip_str);
+    // gfx->setTextColor(WHITE);
 
-    gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
-    // label_ap_conn_status->set_text("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    // label_tcp_conn_status->set_text("ZYNQ TCP server address is set to: " + server_ip_str);
+    // gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    // gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
 
     WiFi.mode(WIFI_STA);
     WiFi.setSleep(false);
@@ -123,14 +120,14 @@ void init_wifi() {
         Serial.print(".");
         // status_display.set_status("ap_connection_status", "Retrying connection...");
         // label_ap_conn_status->set_text("Retrying connection...");
-        gui_main_state->set_ap_conn_status("Retrying connection...");
+        // gui_main_state->set_ap_conn_status("Retrying connection...");
     }
 
     Serial.println("Connected");
     Serial.print("IP Address:");
     Serial.println(WiFi.localIP());
     // status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
-    gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+    // gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
     // label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
@@ -158,6 +155,7 @@ LinePlot* create_new_line_plot(int clr=-1) {
 
 
 void drawing_thread_func(void *parameter) {
+
     gui->schedule_redraw_current_state(); // TODO: investigate why it's needed (otherwise main state is not fully drawn at the beginning, only status labels at the bottom are drawn)
     while (true) {
         String* line;
@@ -183,26 +181,7 @@ void setup() {
 
     communication_queues_init();
 
-    gfx->init();
 
-    touch.init(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT, ROTATION_LEFT);
-    gui = new GUI_CMS(gfx, &touch);
-    if (gui == NULL) {
-        Serial.println("ERROR: could not allocate memory for GUI");
-        return;
-    }
-    gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
-    // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
-    // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
-    // gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
-
-    delay(100);
-
-    serial_riscv.begin(115200);
-    // init_display(gfx, DISPLAY_BRIGHTNESS);
-    init_wifi();
-
-    delay(1000);
 
     
     // ecg_graph.draw(
@@ -219,6 +198,31 @@ void setup() {
     //     WHITE,            // text color
     //     BLACK             // background color
     //     );
+
+    init_wifi();
+
+    gfx->init();
+
+    touch.init(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT, TOUCH_ROTATION);
+
+    gui = new GUI_CMS(gfx, &touch);
+    if (gui == NULL) {
+        Serial.println("ERROR: could not allocate memory for GUI");
+        return;
+    }
+
+    gui_main_state = static_cast<GUI_State_Main*>(gui->get_state(GUI_STATE_MAIN));
+    // gui->add_element(&ecg_graph, GUI_STATE_MAIN);
+    // gui->add_element(label_ap_conn_status, GUI_STATE_MAIN);
+    // gui->add_element(label_tcp_conn_status, GUI_STATE_MAIN);
+
+    delay(300);
+
+
+    // serial_riscv.begin(115200);
+    // init_display(gfx, DISPLAY_BRIGHTNESS);
+
+    delay(300);
 
 	xTaskCreatePinnedToCore(
 			drawing_thread_func, /* Function to implement the task */
@@ -239,6 +243,7 @@ void setup() {
 
     // GUI_Button *btn2 = new GUI_Button(&gfx, "Second", RESOLUTION_X*0.1, RESOLUTION_Y*0.1, RESOLUTION_X * 0.8, RESOLUTION_Y * 0.8);
     // gui->add_element(btn2, GUI_STATE_SECOND);
+    delay(1000);
 }
 
 void swap(char &a, char &b) {
@@ -746,7 +751,7 @@ void parse_tcp_message(String line) {
 
 void loop(void) {
     // handle_riscv_serial();
-    static bool redraw_on_first_call_only_trace4 = true;
+    // return;
 
     Serial.println("Attempt to access server...");
     // status_display.set_status("tcp_connection_status", "Connecting to ZC706 TCP server (" + server_ip_str + ")");

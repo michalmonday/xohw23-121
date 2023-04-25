@@ -21,37 +21,59 @@ void loop() {
 
 */
 
-// Pins corresponding to the ESP32-3248S035C board wiring (custom ones can be set in the "init" function)
-#define DEFAULT_TOUCH_SDA  33
-#define DEFAULT_TOUCH_SCL  32
-#define DEFAULT_TOUCH_INT 36
-#define DEFAULT_TOUCH_RST 25
-#define DEFAULT_TOUCH_WIDTH  480
-#define DEFAULT_TOUCH_HEIGHT 320
+// // Pins corresponding to the ESP32-3248S035C board wiring (custom ones can be set in the "init" function)
+// #define DEFAULT_TOUCH_SDA  33
+// #define DEFAULT_TOUCH_SCL  32
+// #define DEFAULT_TOUCH_INT 36
+// #define DEFAULT_TOUCH_RST 25
+// #define DEFAULT_TOUCH_WIDTH  480
+// #define DEFAULT_TOUCH_HEIGHT 320
 
-// #define DEFAULT_TOUCH_SDA  19
-// #define DEFAULT_TOUCH_SCL  20
-// #define DEFAULT_TOUCH_INT -1
-// #define DEFAULT_TOUCH_RST 38
-// #define DEFAULT_TOUCH_WIDTH  800
-// #define DEFAULT_TOUCH_HEIGHT 480
+#define DEFAULT_TOUCH_SDA  19
+#define DEFAULT_TOUCH_SCL  20
+#define DEFAULT_TOUCH_INT -1
+#define DEFAULT_TOUCH_RST 38
+#define DEFAULT_TOUCH_WIDTH  800
+#define DEFAULT_TOUCH_HEIGHT 480
 
 Touch::Touch() :
     touched(false), x(0), y(0), released(false), last_touch_time(0)
 {
 }
 
+// TAMC_GT911 *gt911_ = new TAMC_GT911(DEFAULT_TOUCH_SDA, DEFAULT_TOUCH_SCL, DEFAULT_TOUCH_INT, DEFAULT_TOUCH_RST, DEFAULT_TOUCH_WIDTH, DEFAULT_TOUCH_HEIGHT);
+
 void Touch::init() { init(DEFAULT_TOUCH_SDA, DEFAULT_TOUCH_SCL, DEFAULT_TOUCH_INT, DEFAULT_TOUCH_RST, DEFAULT_TOUCH_WIDTH, DEFAULT_TOUCH_HEIGHT, ROTATION_LEFT); }
 void Touch::init(int sda_pin, int scl_pin, int int_pin, int rst_pin, int width, int height, int rotation) {
+    Serial.println("Touch::init()");
+    // return;
+    // gt911 = new TAMC_GT911(DEFAULT_TOUCH_SDA, DEFAULT_TOUCH_SCL, DEFAULT_TOUCH_INT, DEFAULT_TOUCH_RST, DEFAULT_TOUCH_WIDTH, DEFAULT_TOUCH_HEIGHT);
     gt911 = new TAMC_GT911(sda_pin, scl_pin, int_pin, rst_pin, width, height);
     // gt911->reset();
     gt911->begin();
+
+    // gt911->begin(GT911_ADDR1);
+
+    // // Need to solve floating INT pin so on reset changes between the 2 addresses
+    // Wire.beginTransmission(GT911_ADDR1);
+    // Wire.write(highByte(GT911_PRODUCT_ID));
+    // Wire.write(lowByte(GT911_PRODUCT_ID));
+    // Wire.endTransmission();
+    // //returns rxLength - if 0 we have a problem
+    // uint8_t returnSize = Wire.requestFrom(GT911_ADDR1, (uint8_t)1); 
+    // if (returnSize == 0) {
+    //     Serial.println("Setting address to ADDR2");
+    //     // restart with other address
+    //     gt911->begin(GT911_ADDR2);
+    // }
+
     gt911->setRotation(rotation);
 }
 
 void Touch::update() {
-    gt911->read();
     Serial.println("Touch::update()");
+    // return;
+    gt911->read();
     if (gt911->isTouched){
         x = gt911->points[0].x;
         y = gt911->points[0].y;
