@@ -3,8 +3,11 @@
 
 #include <TFT_eSPI.h>
 
-#define RESOLUTION_X 480
-#define RESOLUTION_Y 320
+// #define RESOLUTION_X 480
+// #define RESOLUTION_Y 320
+
+#define RESOLUTION_X 800
+#define RESOLUTION_Y 480
 
 // #define ST7796_PIN_BL 27
 // #define ST7796_PWM_CHANNEL_BL 12

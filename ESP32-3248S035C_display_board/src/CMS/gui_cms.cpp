@@ -18,7 +18,6 @@ GUI_CMS::GUI_CMS(Graphics *gfx, Touch *touch) :
 {
     current_state_id = GUI_STATE_MAIN;
     current_state = nullptr;
-    touch->init();
     states[GUI_STATE_MAIN] = new GUI_State_Main(gfx, this, touch);
     states[GUI_STATE_NOTIFICATION] = new GUI_State_Notification(gfx, this, touch);
     states[GUI_STATE_SELECT_OPTION] = new GUI_State_Select_Option(gfx, this, touch);

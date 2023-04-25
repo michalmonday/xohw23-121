@@ -7,7 +7,6 @@
 GUI::GUI(Graphics *gfx, Touch *touch) : 
     gfx(gfx), touch(touch)
 {
-    touch->init();
     Serial.println("GUI initialized");
 }
 

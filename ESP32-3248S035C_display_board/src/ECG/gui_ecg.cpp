@@ -11,7 +11,6 @@ GUI_ECG::GUI_ECG(TFT_eSPI &tft, Touch *touch) :
 {
     current_state_id = GUI_STATE_MAIN;
     current_state = nullptr;
-    touch->init();
     states[GUI_STATE_MAIN] = new GUI_State_Main(&tft, this, touch);
     Serial.println("GUI_ECG initialized");
     push_state(GUI_STATE_MAIN);

@@ -27,8 +27,6 @@ Touch touch;
 
 #include <communication_queues.h>
 
-// #include <graphics_arduino_gfx.h>
-#include <graphics_tft_espi.h>
 
 // Wifi credentials file contains 2 lines:
 // #ifndef MICHAL_WIFI_CREDENTIALS_H
@@ -56,8 +54,31 @@ const uint16_t server_port = 9093;
 const String server_ip_str = "192.168.0.107:" + String(server_port); // just for displaying status
 WiFiClient client;
 
-// display object
-Graphics *gfx = new Graphics_TFT_ESPI();
+
+#define SEVEN_INCH_DISPLAY_BOARD
+
+#ifdef SEVEN_INCH_DISPLAY_BOARD
+    #define TOUCH_SDA  19
+    #define TOUCH_SCL  20
+    #define TOUCH_INT -1
+    #define TOUCH_RST 38
+    #define TOUCH_WIDTH  800
+    #define TOUCH_HEIGHT 480
+    #include <graphics_arduino_gfx.h>
+    Graphics *gfx = new Graphics_Arduino_GFX();
+#else 
+    #define TOUCH_SDA  33
+    #define TOUCH_SCL  32
+    #define TOUCH_INT 36
+    #define TOUCH_RST 25
+    #define TOUCH_WIDTH  480
+    #define TOUCH_HEIGHT 320
+    // display object
+    #include <graphics_tft_espi.h>
+    Graphics *gfx = new Graphics_TFT_ESPI();
+#endif
+
+
 
 // status display is a GUI component that covers bottom of the screen and can display status messages like "Connecting to WiFi"
 // StatusDisplay status_display(gfx, RESOLUTION_X, (int)(0.1 * RESOLUTION_Y), 0, (0.9*RESOLUTION_Y), WHITE, BLACK);
@@ -164,6 +185,7 @@ void setup() {
 
     gfx->init();
 
+    touch.init(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT, ROTATION_LEFT);
     gui = new GUI_CMS(gfx, &touch);
     if (gui == NULL) {
         Serial.println("ERROR: could not allocate memory for GUI");

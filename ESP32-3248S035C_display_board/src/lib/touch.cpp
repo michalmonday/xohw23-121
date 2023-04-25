@@ -29,6 +29,13 @@ void loop() {
 #define DEFAULT_TOUCH_WIDTH  480
 #define DEFAULT_TOUCH_HEIGHT 320
 
+// #define DEFAULT_TOUCH_SDA  19
+// #define DEFAULT_TOUCH_SCL  20
+// #define DEFAULT_TOUCH_INT -1
+// #define DEFAULT_TOUCH_RST 38
+// #define DEFAULT_TOUCH_WIDTH  800
+// #define DEFAULT_TOUCH_HEIGHT 480
+
 Touch::Touch() :
     touched(false), x(0), y(0), released(false), last_touch_time(0)
 {
@@ -44,10 +51,11 @@ void Touch::init(int sda_pin, int scl_pin, int int_pin, int rst_pin, int width, 
 
 void Touch::update() {
     gt911->read();
+    Serial.println("Touch::update()");
     if (gt911->isTouched){
         x = gt911->points[0].x;
         y = gt911->points[0].y;
-        // Serial.printf("gt911: x=%d, y=%d\n", gt911->points[0].x, gt911->points[0].y);
+        Serial.printf("gt911: x=%d, y=%d\n", gt911->points[0].x, gt911->points[0].y);
 
         // for (int i=0; i<gt911->gt911es; i++){
         //     Serial.print("gt911 ");Serial.print(i+1);Serial.print(": ");;
