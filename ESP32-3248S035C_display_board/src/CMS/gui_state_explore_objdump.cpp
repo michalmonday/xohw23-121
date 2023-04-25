@@ -9,7 +9,7 @@
 GUI_State_Explore_Objdump::GUI_State_Explore_Objdump(Graphics *gfx, GUI_CMS *gui, Touch *touch) 
     : GUI_State(gfx, gui, touch), selected_address(0) 
 {
-    label_current_function = new GUI_Label(gfx, "-", RESOLUTION_X/2, RESOLUTION_Y * 0.01, 2, TC_DATUM, WHITE, BLACK);
+    label_current_function = new GUI_Label(gfx, "-", RESOLUTION_X/2, RESOLUTION_Y * 0.01, 3, TC_DATUM, WHITE, BLACK);
     if (label_current_function == NULL) {
         Serial.println("label_current_function is NULL");
     }
@@ -166,7 +166,7 @@ void GUI_State_Explore_Objdump::set_current_function(String current_function) {
     }
     gfx->setTextSize(GUI_State_Explore_Objdump::font_size);
     const int y_offset = gfx->fontHeight() * 1.2;
-    const int y_start = RESOLUTION_Y * 0.05 + y_offset;
+    const int y_start = RESOLUTION_Y * 0.07 + y_offset;
     int y = y_start;
     const int x = RESOLUTION_X * 0.02;
     const int btn_w = gfx->textWidth("Select")*1.1;

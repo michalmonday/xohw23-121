@@ -7,11 +7,11 @@ Watchpoint::Watchpoint(Graphics *gfx, int index, int x, int y, int font_size, un
     : GUI_Element(gfx, x, y, 10, 10), colour(colour), index(index), font_size(font_size)
 {
     gfx->setTextSize(font_size);
-    h = gfx->fontHeight() * 1.3;
+    h = gfx->fontHeight() + gfx->fontHeight() * DEFAULT_BTN_PADDING_Y*2;
     
     int checkbox_w = h;
     int checkbox_h = h;
-    int x_space = h*0.5;
+    int x_space = h*0.35;
     Serial.printf("Watchpoint::Watchpoint() - h: %d, checkbox_w: %d, checkbox_h: %d, x_space: %d\n", h, checkbox_w, checkbox_h, x_space);
     w = gfx->textWidth("wp_0") + checkbox_w + x_space;
     checkbox_is_active = new GUI_Checkbox(gfx, false, x, y, checkbox_w, checkbox_h, font_size, GREEN, BLACK, on_checked, on_unchecked);

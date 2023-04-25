@@ -63,7 +63,7 @@ private:
 
     std::vector<Watchpoint*> watchpoints;
 
-    const int button_width = RESOLUTION_X * 0.16;
+    const int button_width = RESOLUTION_X * 0.12;
     // const int button_height = RESOLUTION_Y * 0.15;
     const int button_x = RESOLUTION_X * 0.32; // RESOLUTION_X*0.48;
     const int button_y_start = RESOLUTION_Y*0.02;
@@ -72,11 +72,12 @@ private:
     int button_offset;  //button_height * something // button_height*1.1; // button_height * 1.3;
 
     const int pynq_graph_x = RESOLUTION_X*0.02;
-    const int pynq_graph_w = RESOLUTION_X*0.45;
+    // const int pynq_graph_w = RESOLUTION_X*0.45; // good for 3.5" screen
+    const int pynq_graph_w = RESOLUTION_X*0.6;    // good for 7" screen
     // const int pynq_graph_y = RESOLUTION_Y*0.62;
     // const int pynq_graph_h = RESOLUTION_Y*0.2; 
     const int pynq_graph_y = RESOLUTION_Y*0.52;
-    const int pynq_graph_h = RESOLUTION_Y*0.3; 
+    const int pynq_graph_h = RESOLUTION_Y*0.33; 
 
 };
 

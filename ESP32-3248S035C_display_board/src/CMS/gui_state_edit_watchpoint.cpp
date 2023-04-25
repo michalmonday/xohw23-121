@@ -128,7 +128,7 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(Graphics *gfx, GUI_CMS *gui
     const int btn_ok_h = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;
     const int btn_ok_w = gfx->textWidth("OK") + font_height * DEFAULT_BTN_PADDING_X*2;
     const int btn_ok_y = RESOLUTION_Y - attribute_y_start - btn_ok_h; // RESOLUTION_Y - btn_ok_h;
-    const int btn_ok_x = RESOLUTION_X - btn_ok_w;
+    const int btn_ok_x = RESOLUTION_X*0.99 - btn_ok_w ;
     btn_ok = new GUI_Button(gfx, "OK", btn_ok_x, btn_ok_y, btn_ok_w, btn_ok_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},
         [gui, this]() { 
@@ -151,8 +151,8 @@ GUI_State_Edit_Watchpoint::GUI_State_Edit_Watchpoint(Graphics *gfx, GUI_CMS *gui
     // -----------------------------------------------
     // ------------- objdump button ------------------
     const int btn_objdump_h = btn_ok_h;
-    const int btn_objdump_w = gfx->textWidth("OBJDUMP") + font_height * DEFAULT_BTN_PADDING_X*2;
-    const int btn_objdump_x = RESOLUTION_X - btn_objdump_w;
+    const int btn_objdump_w = gfx->textWidth("OBJDUMP") + font_height * DEFAULT_BTN_PADDING_X*3;
+    const int btn_objdump_x = RESOLUTION_X*0.99 - btn_objdump_w;
     const int btn_objdump_y = attribute_y_start; //RESOLUTION_Y - btn_objdump_h - attribute_offset_y;
     btn_objdump = new GUI_Button(gfx, "OBJDUMP", btn_objdump_x, btn_objdump_y, btn_objdump_w, btn_objdump_h, btn_ok_font_size, WHITE, BLACK, 
         [](){},

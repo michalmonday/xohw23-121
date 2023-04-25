@@ -1,4 +1,5 @@
 #include <graphics_arduino_gfx.h>
+#include <TFT_eSPI.h>
 
 #define GFX_BL DF_GFX_BL // default backlight pin, you may replace DF_GFX_BL to actual backlight pin
 #define TFT_BL 2
@@ -29,7 +30,7 @@ static Arduino_RPi_DPI_RGBPanel *gfx = new Arduino_RPi_DPI_RGBPanel(
     1 /* pclk_active_neg */, 16000000 /* prefer_speed */, true /* auto_flush */);
 
 
-Graphics_Arduino_GFX::Graphics_Arduino_GFX() {
+Graphics_Arduino_GFX::Graphics_Arduino_GFX() : text_color(WHITE), text_datum(TL_DATUM) {
 }
 
 Graphics_Arduino_GFX::~Graphics_Arduino_GFX() {
@@ -42,37 +43,53 @@ Graphics_Arduino_GFX::~Graphics_Arduino_GFX() {
 void Graphics_Arduino_GFX::init() { 
     gfx->begin();
     gfx->fillScreen(BLACK);
-
+// 
 #ifdef TFT_BL
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
 #endif
-
+// 
     gfx->setCursor(10, 10);
     gfx->setTextColor(RED);
     gfx->println("Hello World!");
-
-    delay(2000); 
-
-    // brightness is a value between 0 and 1
-    // tft = new TFT_eSPI();
-    // tft->begin();
-    // tft->fillScreen(TFT_BLACK);
-    // // tft.setRotation(1); // landscape
-    // tft->setRotation(3); // landscape, upside downh
+// 
+//     delay(2000); 
+// 
+//     // brightness is a value between 0 and 1
+//     // tft = new TFT_eSPI();
+//     // tft->begin();
+//     // tft->fillScreen(TFT_BLACK);
+//     // // tft.setRotation(1); // landscape
+//     // tft->setRotation(3); // landscape, upside downh
 }
 
 void Graphics_Arduino_GFX::fillScreen(int color) { gfx->fillScreen(color); }
 void Graphics_Arduino_GFX::drawString(String text, int x, int y) {
     // Serial.printf("drawString: %s, %d, %d\n", text.c_str(), x, y);
     // tft->drawString(text, x, y); 
-    Serial.printf("(NOT IMPLEMENTED) drawString: %s, %d, %d\n", text.c_str(), x, y);
+    // Serial.printf("(NOT IMPLEMENTED) drawString: %s, %d, %d\n", text.c_str(), x, y);
     // gfx->drawString(text, x, y);
+
+    int16_t x1, y1; uint16_t w, h;
+    gfx->getTextBounds(text, (int16_t)x, (int16_t)y, &x1, &y1, &w, &h);
+
+    const int td = text_datum;
+    if (td == ML_DATUM || td == MC_DATUM || td == MR_DATUM) {
+        y -= fontHeight() / 2;
+    } else if (td == BL_DATUM || td == BC_DATUM || td == BR_DATUM) {
+        y -= fontHeight();
+    }
+    if (td == TC_DATUM || td == MC_DATUM || td == BC_DATUM) {
+        x -= textWidth(text) / 2;
+    } else if (td == TR_DATUM || td == MR_DATUM || td == BR_DATUM) {
+        x -= textWidth(text);
+    }
+
     gfx->setCursor(x, y);
     gfx->print(text);
 }
 void Graphics_Arduino_GFX::drawLine(int x0, int y0, int x1, int y1, int color) { 
-    Serial.printf("drawLine: %d, %d, %d, %d, %d\n", x0, y0, x1, y1, color);
+    // Serial.printf("drawLine: %d, %d, %d, %d, %d\n", x0, y0, x1, y1, color);
     gfx->drawLine(x0, y0, x1, y1, color); 
 }
 void Graphics_Arduino_GFX::fillRect(int x, int y, int w, int h, int color) { gfx->fillRect(x, y, w, h, color); }
@@ -92,13 +109,16 @@ int Graphics_Arduino_GFX::fontHeight() {
 }
 int Graphics_Arduino_GFX::textWidth(String text) { 
     int16_t x1, y1; uint16_t w, h;
+    if (text == "") return 1;
     gfx->getTextBounds(text, (int16_t)0, (int16_t)0, &x1, &y1, &w, &h);
     return w; 
 }
 void Graphics_Arduino_GFX::setTextSize(int size) { gfx->setTextSize(size); }
 void Graphics_Arduino_GFX::setTextDatum(int datum) {
-    Serial.printf("(NOT IMPLEMENTED) setTextDatum: %d\n", datum);
+    text_datum = datum;
+    // Serial.printf("(NOT IMPLEMENTED) setTextDatum: %d\n", datum);
     // gfx->setTextDatum(datum); 
+
 }
 void Graphics_Arduino_GFX::setTextColor(int color, int background_colour) { 
     text_color = color;

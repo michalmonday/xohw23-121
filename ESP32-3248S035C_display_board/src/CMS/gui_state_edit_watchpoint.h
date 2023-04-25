@@ -25,7 +25,7 @@ struct Attribute {
     long long value;
     GUI_Label *label;
     GUI_Checkbox *checkbox_is_active;
-    const static int font_size = 2;
+    const static int font_size = 3;
     GUI_CMS *gui;
 
     Attribute(Graphics *gfx, GUI_CMS* gui, String name, long long value, int x, int y, int h) : name(name), value(value), gui(gui) {

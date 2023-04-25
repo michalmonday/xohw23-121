@@ -28,7 +28,7 @@ void GUI_State_Select_Option::add_options(String category, std::vector<String> o
     // ---------------------------------
     // ------------ Buttons  -----------
     const int button_y_start = RESOLUTION_Y*0.05;
-    const int button_font_size = 2;
+    const int button_font_size = 3;
     gfx->setTextSize(button_font_size);
     int font_height = gfx->fontHeight();
     const int button_height = font_height + font_height * DEFAULT_BTN_PADDING_Y*2;// RESOLUTION_Y * 0.07;

@@ -72,8 +72,8 @@ GUI_State_Main::GUI_State_Main(Graphics *gfx, GUI_CMS *gui, Touch *touch) :
     pynq_graph->set_title_font_size(2);
 
 
-    label_ap_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.9, 1, TL_DATUM, WHITE, BLACK);
-    label_tcp_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.9 + 15, 1, TL_DATUM, WHITE, BLACK);
+    label_ap_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.93, 1, TL_DATUM, WHITE, BLACK);
+    label_tcp_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.93 + 15, 1, TL_DATUM, WHITE, BLACK);
     if (label_ap_conn_status == NULL) {
         Serial.println("label_ap_conn_status is NULL");
     }

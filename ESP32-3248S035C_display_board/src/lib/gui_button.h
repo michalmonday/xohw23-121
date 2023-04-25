@@ -8,8 +8,10 @@
 #include "graphics.h"
 
 // 0.4 of height
-#define DEFAULT_BTN_PADDING_X 0.6 
-#define DEFAULT_BTN_PADDING_Y 0.2
+// #define DEFAULT_BTN_PADDING_X 0.6 
+// #define DEFAULT_BTN_PADDING_Y 0.2
+#define DEFAULT_BTN_PADDING_X 1.1
+#define DEFAULT_BTN_PADDING_Y 0.6
 
 class GUI_Button : public GUI_Element {
 public:

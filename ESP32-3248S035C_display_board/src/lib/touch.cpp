@@ -71,7 +71,7 @@ void Touch::init(int sda_pin, int scl_pin, int int_pin, int rst_pin, int width, 
 }
 
 void Touch::update() {
-    Serial.println("Touch::update()");
+    // Serial.println("Touch::update()");
     // return;
     gt911->read();
     if (gt911->isTouched){

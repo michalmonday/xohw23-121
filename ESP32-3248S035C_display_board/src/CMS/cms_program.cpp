@@ -107,28 +107,33 @@ int max_number_of_items = xhi - xlo;
 void parse_tcp_message(String line);
 
 void init_wifi() {
-    // gfx->setTextColor(WHITE);
+    gfx->setTextColor(WHITE);
+    gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
+    gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
+    gui->update();
+    gui->draw();
 
-    // gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    // gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
+    Serial.println("Connecting to WiFi access point... "); 
 
     WiFi.mode(WIFI_STA);
+
+    Serial.println("Set sleep..."); 
     WiFi.setSleep(false);
-    WiFi.begin(ACCESS_POINT_SSID, ACCESS_POINT_PASSWORD);
+    Serial.println("Wifi.begin"); 
+    WiFi.begin(ACCESS_POINT_SSID, ACCESS_POINT_PASSWORD); 
+    Serial.println("Wifi.status"); 
+    Serial.println("WTF"); 
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
-        // status_display.set_status("ap_connection_status", "Retrying connection...");
-        // label_ap_conn_status->set_text("Retrying connection...");
-        // gui_main_state->set_ap_conn_status("Retrying connection...");
+        gui_main_state->set_ap_conn_status("Retrying connection...");
     }
 
     Serial.println("Connected");
     Serial.print("IP Address:");
     Serial.println(WiFi.localIP());
-    // status_display.set_status("ap_connection_status", "Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
-    // gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
-    // label_ap_conn_status->set_text("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
+
+    gui_main_state->set_ap_conn_status("Connected to '" + String(ACCESS_POINT_SSID) + "' WiFi access point (assigned IP: " + WiFi.localIP().toString() + ")");
 }
 
 void handle_gui() {
@@ -199,11 +204,12 @@ void setup() {
     //     BLACK             // background color
     //     );
 
-    init_wifi();
 
     gfx->init();
 
+
     touch.init(TOUCH_SDA, TOUCH_SCL, TOUCH_INT, TOUCH_RST, TOUCH_WIDTH, TOUCH_HEIGHT, TOUCH_ROTATION);
+
 
     gui = new GUI_CMS(gfx, &touch);
     if (gui == NULL) {
@@ -218,6 +224,8 @@ void setup() {
 
     delay(300);
 
+
+    init_wifi();
 
     // serial_riscv.begin(115200);
     // init_display(gfx, DISPLAY_BRIGHTNESS);

@@ -6,7 +6,7 @@
 // -------------------------------
 // ---------- GUI_Label ----------
 GUI_Label::GUI_Label(Graphics *gfx, String text, int x, int y, int font_size, int datum, unsigned int text_colour, unsigned int background_colour, std::function<void()> on_press_callback, std::function<void()> on_release_callback, double padding_x, double padding_y) :
-    GUI_Element(gfx, x, y, gfx->textWidth(text), gfx->fontHeight(), background_colour, on_press_callback, on_release_callback), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
+    GUI_Element(gfx, x, y, gfx->textWidth(text), gfx->fontHeight(), background_colour, on_press_callback, on_release_callback), text(text), datum(datum), text_color(text_colour), font_size(font_size), padding_x(padding_x), padding_y(padding_y)
 {
     update_touch_area();
     set_text(text);

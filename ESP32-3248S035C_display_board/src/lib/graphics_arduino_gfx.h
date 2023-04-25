@@ -41,6 +41,7 @@ public:
 
 private:
     unsigned int text_color;
+    int text_datum;
 }; 
 
 #endif
