@@ -11,6 +11,8 @@
 
 #include <graphics.h>
 
+#include <globals.h>
+
 // const int default_graph_x = (int)(RESOLUTION_X * 0.1);
 // const int default_graph_y = (int)(RESOLUTION_Y * 0.1); 
 // const int default_graph_w = (int)(RESOLUTION_X * 0.2); 
@@ -71,9 +73,35 @@ GUI_State_Main::GUI_State_Main(Graphics *gfx, GUI_CMS *gui, Touch *touch) :
     pynq_graph->hide_axis_labels();
     pynq_graph->set_title_font_size(2);
 
+    const int label_ap_conn_status_y = RESOLUTION_Y*0.93;
+    label_ap_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, label_ap_conn_status_y, 1, TL_DATUM, WHITE, BLACK);
+    label_tcp_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, label_ap_conn_status_y + 15, 1, TL_DATUM, WHITE, BLACK);
+    label_tcp_conn_status->set_on_release_callback(
+        [this, gui](){   // function on release
+            Serial.println("label_tcp_conn_status released");
+            // TODO: enter server IP address state
+            // set
 
-    label_ap_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.93, 1, TL_DATUM, WHITE, BLACK);
-    label_tcp_conn_status = new GUI_Label(gfx, "-", RESOLUTION_X*0.02, RESOLUTION_Y*0.93 + 15, 1, TL_DATUM, WHITE, BLACK);
+            Serial.println("getting GUI_State_Select_IP"); delay(50);
+            GUI_State_Select_IP *gui_state_select_ip = gui->get_state_select_ip();
+            Serial.println("pushing GUI_STATE_SELECT_IP"); delay(50);
+            gui_state_select_ip->set_ip(tcp_server_ip);
+            gui->push_state(GUI_STATE_SELECT_IP);
+            Serial.println("set on_ip_selected_callback"); delay(50);
+            gui_state_select_ip->set_on_ip_selected_callback([this, gui](IPAddress selected_ip){
+
+                if (tcp_server_ip.toString().equals(selected_ip.toString())) {
+                    Serial.println("selected_ip is the same as tcp_server_ip");
+                } else {
+                    Serial.printf("tcp_server_ip set to %s\n", selected_ip.toString().c_str());
+                    tcp_server_ip = selected_ip; 
+                    gui->get_state_main()->set_tcp_conn_status("ZYNQ TCP server address is set to: " + tcp_server_ip.toString() + ":" + String(tcp_server_port));
+                }
+                gui->pop_state();
+            });
+            Serial.println("done setting on_ip_selected_callback"); delay(50);
+        }
+    );
     if (label_ap_conn_status == NULL) {
         Serial.println("label_ap_conn_status is NULL");
     }
@@ -85,6 +113,19 @@ GUI_State_Main::GUI_State_Main(Graphics *gfx, GUI_CMS *gui, Touch *touch) :
     add_element(pynq_graph);
     add_element(label_ap_conn_status);
     add_element(label_tcp_conn_status);
+
+    //const int btn_server_ip_x = RESOLUTION_X*0.99 - button_width;
+    //const int btn_server_ip_y = label_ap_conn_status_y + 8 - button_height/2;
+    //const int btn_server_ip_font_size = 2;
+    //btn_server_ip = new GUI_Button(gfx, "Reset", btn_server_ip_x, btn_server_ip_y, button_width, button_height, btn_server_ip_font_size, WHITE, BLACK);  
+    //if (btn_server_ip == NULL) {
+    //    Serial.println("btn_server_ip is NULL");
+    //}
+    //btn_server_ip->set_on_release_callback(
+    //    [](){   // function on release
+    //    }
+    //);
+    //add_element(btn_server_ip);
 
     // ---------------------------------
     // ------------ Buttons  -----------

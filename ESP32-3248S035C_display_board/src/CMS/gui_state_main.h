@@ -56,6 +56,7 @@ private:
     GUI_Button *btn_train;
     GUI_Button *btn_test;
     GUI_Button *btn_reset_dataset;
+    // GUI_Button *btn_server_ip;
 
     // watchpoints section
     // GUI_Label *label_watchpoints;

@@ -7,6 +7,7 @@
 #include "gui_state_edit_watchpoint.h"
 #include <gui_state_select_number.h>
 #include <gui_state_explore_objdump.h>
+#include <gui_state_select_ip.h>
 
 #include "graphics.h"
 
@@ -24,6 +25,7 @@ GUI_CMS::GUI_CMS(Graphics *gfx, Touch *touch) :
     states[GUI_STATE_EDIT_WATCHPOINT] = new GUI_State_Edit_Watchpoint(gfx, this, touch);
     states[GUI_STATE_SELECT_NUMBER] = new GUI_State_Select_Number(gfx, this, touch);
     states[GUI_STATE_EXPLORE_OBJDUMP] = new GUI_State_Explore_Objdump(gfx, this, touch);
+    states[GUI_STATE_SELECT_IP] = new GUI_State_Select_IP(gfx, this, touch);
 
     if (states[GUI_STATE_MAIN] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_MAIN] is null");
     if (states[GUI_STATE_NOTIFICATION] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_NOTIFICATION] is null");
@@ -31,6 +33,7 @@ GUI_CMS::GUI_CMS(Graphics *gfx, Touch *touch) :
     if (states[GUI_STATE_EDIT_WATCHPOINT] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_EDIT_WATCHPOINT] is null");
     if (states[GUI_STATE_SELECT_NUMBER] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_SELECT_NUMBER] is null");
     if (states[GUI_STATE_EXPLORE_OBJDUMP] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_EXPLORE_OBJDUMP] is null");
+    if (states[GUI_STATE_SELECT_IP] == nullptr) Serial.println("GUI_CMS: states[GUI_STATE_SELECT_IP] is null");
 
     Serial.println("GUI_CMS initialized");
     push_state(GUI_STATE_MAIN);
@@ -55,3 +58,4 @@ GUI_State_Select_Option* GUI_CMS::get_state_select_option() { return static_cast
 GUI_State_Edit_Watchpoint* GUI_CMS::get_state_edit_watchpoint() { return static_cast<GUI_State_Edit_Watchpoint*>(states[GUI_STATE_EDIT_WATCHPOINT]); }
 GUI_State_Select_Number* GUI_CMS::get_state_select_number() { return static_cast<GUI_State_Select_Number*>(states[GUI_STATE_SELECT_NUMBER]); }
 GUI_State_Explore_Objdump* GUI_CMS::get_state_explore_objdump() { return static_cast<GUI_State_Explore_Objdump*>(states[GUI_STATE_EXPLORE_OBJDUMP]); }
+GUI_State_Select_IP* GUI_CMS::get_state_select_ip() { return static_cast<GUI_State_Select_IP*>(states[GUI_STATE_SELECT_IP]); }

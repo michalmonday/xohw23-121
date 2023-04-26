@@ -1,4 +1,5 @@
 
+#include "globals.h"
 #include <TFT_eSPI.h> // Hardware-specific library (requires "User_Setup.h" to be replaced with the one for specific display)
 #include <SPI.h>
 #include <WiFi.h>
@@ -49,9 +50,6 @@ HardwareSerial serial_riscv(2);  // UART2 (GPIO17=TX, GPIO16=RX)
 // Thread used for drawing will be on separate thread from receiving/parsing data from tcp server
 TaskHandle_t drawing_thread;
 
-const IPAddress server_ip(192, 168, 0, 110);
-const uint16_t server_port = 9093;
-const String server_ip_str = "192.168.0.110:" + String(server_port); // just for displaying status
 WiFiClient client;
 
 
@@ -109,7 +107,7 @@ void parse_tcp_message(String line);
 void init_wifi() {
     gfx->setTextColor(WHITE);
     gui_main_state->set_ap_conn_status("Connecting to '" + String(ACCESS_POINT_SSID) + "' WiFi access point...");
-    gui_main_state->set_tcp_conn_status("ZYNQ TCP server address is set to: " + server_ip_str);
+    gui_main_state->set_tcp_conn_status("ZC706 TCP server address is set to: " + tcp_server_ip.toString() + ":" + String(tcp_server_port));
     gui->update();
     gui->draw();
 
@@ -376,6 +374,16 @@ void parse_tcp_message(String line) {
         Serial.println("Failed to parse json. Line:");
         Serial.println(line);
         return;
+    }
+    // String *msg_json = new String( "{ \"local_status_update\":{\"tcp_connection_status\" : \"" + msg + "\"}}");
+    // parse the msg_json
+    if (cJSON_HasObjectItem(root, "local_status_update")) {
+        cJSON *local_status_update_obj = cJSON_GetObjectItem(root, "local_status_update");
+        if (cJSON_HasObjectItem(local_status_update_obj, "tcp_connection_status")) {
+            cJSON *tcp_connection_status_obj = cJSON_GetObjectItem(local_status_update_obj, "tcp_connection_status");
+            String tcp_connection_status = tcp_connection_status_obj->valuestring;
+            gui->get_state_main()->set_tcp_conn_status(tcp_connection_status);
+        }
     }
 
     // // Parse string with the following json:
@@ -756,6 +764,11 @@ void parse_tcp_message(String line) {
     cJSON_Delete(root);
 }
 
+void send_tcp_conn_update(String msg) {
+    // { "local_status_update":{"tcp_connection_status" : msg}}
+    String *msg_json = new String( "{ \"local_status_update\":{\"tcp_connection_status\" : \"" + msg + "\"}}");
+    add_string_to_queue(queue_received, msg_json, true);
+}
 
 void loop(void) {
     // handle_riscv_serial();
@@ -763,8 +776,11 @@ void loop(void) {
 
     Serial.println("Attempt to access server...");
     // status_display.set_status("tcp_connection_status", "Connecting to ZC706 TCP server (" + server_ip_str + ")");
-    if (!client.connect(server_ip, server_port)) {
-        Serial.println("Access failed.");
+    if (!client.connect(tcp_server_ip, tcp_server_port)) {
+        String msg = "ERROR: Failed to connect to ZC706 TCP server at: " + tcp_server_ip.toString() + ":" + String(tcp_server_port);
+        Serial.println(msg);
+        send_tcp_conn_update(msg);
+        
         client.stop();
         for (int i=5; i>0; i--) {
             // handle_riscv_serial();
@@ -772,6 +788,10 @@ void loop(void) {
             delay(1000);
         }
         return;
+    } else {
+        String msg = "Connected to ZC706 TCP server at: " + tcp_server_ip.toString() + ":" + String(tcp_server_port);
+        Serial.println(msg);
+        send_tcp_conn_update(msg);
     }
     // status_display.set_status("tcp_connection_status", "Connected to ZC706 TCP server ("+  server_ip_str + ")");
 
@@ -834,6 +854,10 @@ void loop(void) {
             add_string_to_queue(queue_received, line, true);
         }
     }
-    Serial.println("Closing connection.");
+
+    String msg = "Closed connection to ZC706 at: " + tcp_server_ip.toString() + ":" + String(tcp_server_port);
+    Serial.println(msg);
+    send_tcp_conn_update(msg);
+
     client.stop();
 }

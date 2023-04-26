@@ -10,6 +10,7 @@
 #include <gui_state_select_number.h>
 #include <gui_state_explore_objdump.h>
 #include <gui_state_edit_watchpoint.h>
+#include <gui_state_select_ip.h>
 #include <gui_element.h>
 #include <touch.h>
 #include <gui.h>
@@ -28,6 +29,7 @@ public:
     GUI_State_Edit_Watchpoint *get_state_edit_watchpoint();
     GUI_State_Select_Number *get_state_select_number();
     GUI_State_Explore_Objdump* get_state_explore_objdump();
+    GUI_State_Select_IP *get_state_select_ip();
 };
 
 #endif
