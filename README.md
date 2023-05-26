@@ -42,15 +42,15 @@ Such metrics could be used to create a robust application-specific detection sys
 | docs | Documentation files. |
 | images | Documentation images. |
 | jupyter_notebooks | Files to be placed on the PYNQ system (/home/xilinx/jupyter_notebooks). [pynq_wrapper.ipynb](./jupyter_notebooks/pynq_wrapper.ipynb) is the top-level script. |
-| programs | Binary files to be placed on the PYNQ system (/home/xilinx/programs). These files can be first loaded (dynamically) into the CHERI-RISC-V Flute processor, and then executed. |
+| programs | Binary files to be placed on the PYNQ system (/home/xilinx/programs). These files can be first loaded (from the control display) into the CHERI-RISC-V Flute processor, and then executed. |
 | design_files | Files to be placed on the PYNQ system (/home/xilinx/design_files). These include the biststream (".bit") and hardware handoff (".hwh") files.  |
 | vivado_files | Verilog, constraints and other files relating to the Vivado project. |
 | output_files | Data collected for an experiment used in the NEWCAS 2023 publication. |
 | setup_files | Files used during setup (e.g. to generate PYNQ SD card image for the ZC706 board). |
-|  |  |
 
 # Documentation
 Documentation files are in the [docs](./docs) directory and include:
+* [vivado_block_design.md](./docs/vivado_block_design.md) - description of the Vivado block design with screenshots using top-down approach
 * [setup_guide.md](./docs/setup_guide.md) - step by step guide to get the design up and running
 * [data_extraction.md](./docs/data_extraction.md) - what is traced and how
 * [console_io.md](./docs/console_io.md) - how PYNQ can send and receive console I/O data to/from the RISC-V processor 
@@ -61,6 +61,8 @@ Documentation files are in the [docs](./docs) directory and include:
 * [display.md](./docs/display.md) - information about ESP32-3248S035C and ESP32-8048S070 display boards
 * [tcp_server_protocol.md](./docs/tcp_server_protocol.md) - protocol for controlling and getting updates from PYNQ, it is used by the display board
 * [use_case.md](./docs/use_case.md) - example use case of the CMS module, monitoring ECG program that displays heart activity
+* [watchpoint_based_tracing.md](./docs/watchpoint_based_tracing.md) - description, pros, cons and implementation details of watchpoint based tracing implemented in CMS
+
 
 # Example use case
 In [this video](https://www.youtube.com/watch?v=mMTVhH6iV2M) PYNQ wrapper is used to detect anomalous behaviour of a CHERI-RISC-V processor. The test involved training a detection model using a baseline "ecg" program and then replacing it with a malicious equivalent "ecg_info_leak" which leaks information through 2nd UART. Decreased similarity of the current processor state to the previously collected dataset ("Avg sim") indicates anomalous behaviour. More information about the test can be found in the [use_case.md](./docs/use_case.md) file.
