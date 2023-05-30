@@ -22,13 +22,13 @@ Hierarchical blocks are heavily used in the design, this way it's easier to mana
 At top level the Vivado design consists of 3 main components:  
 * **CHERI_RISCV_Flute_mkSoC_Top** - top-level module of a RISC-V processor with CHERI security extension, modified by us to propagate signals relevant from behaviour profiling perspective (e.g. program counter, instruction, hardware performance counters, general purpose registers)  
 * **ZYNQ_ARM_processing_system** - block that allows to configure and interface with the Zynq ARM processing system
-* **PYNQ_wrapper_blocks hierarchy** - it encapsulates all the blocks that are responsible for trace collection, interfacing console I/O between RISC-V processor and the PYNQ script, loading BRAM with baremetal programs, providing the RISC-V access to analog and digital sensors readings, and other peripherals (e.g. timer, random number generator)
+* **PYNQ_wrapper_blocks hierarchy** - it encapsulates all the blocks that are responsible for trace collection, interfacing console I/O between RISC-V processor and the PYNQ script, loading BRAM with baremetal programs, providing the RISC-V access to analog and digital sensors readings, and other peripherals (e.g. timer, random number generator, memory)
   
 ![ERROR: IMAGE DIDNT SHOW](../images/block_design.png)
 
 # PYNQ_wrapper_blocks
 PYNQ_wrapper_blocks hierarchy contains the following main components:  
-* **continuous_monitoring_system_blocks hierarchy** - it encapsulates the continuous monitoring system (CMS) module as well as the internal trace storage (AXI4-Stream Data FIFO) wired to AXI DMA (allowing to retrieve the trace in the PYNQ script). It also contains "axi_lite_tap" component which recognizes that PYNQ script requested transfer from the DMA receive channel.  
+* **continuous_monitoring_system_blocks hierarchy** - it encapsulates the continuous monitoring system (CMS) module as well as the internal trace storage (AXI4-Stream Data FIFO) wired to AXI DMA (allowing to retrieve the trace in the PYNQ script). It also contains "[axi_lite_tap](../vivado_files/src_verilog/custom_hdl/axi_dma_receive_transfer_tap.v)" component which recognizes that PYNQ script requested transfer from the DMA receive channel.  
 * **console_io hierarchy** - it contains interface between the RISC-V processor console related signals and the AXI DMA dedicated for console I/O, allowing the PYNQ script to read program output and write program input. It also contains the "axi_lite_tap" component which recognizes that PYNQ script requested transfer from the DMA receive channel.
 * **riscv_other_peripherals hierarchy** - it uses XADC wizard with external multiplexer mode enabled to provide analog sensor readings, it also controls 2 cascaded shift registers to provide digital sensor readings, it also contains a timer (for GetTickCount function) and a random number generator for the RISC-V processor.
 * **bram_loader and bram_logic hierarchies** - these blocks allow the PYNQ script to load baremetal programs into BRAM (using AXI GPIO and a shift register to overcome maximum 32 bits AXI GPIO limit) and also let the RISC-V processor to read it. 

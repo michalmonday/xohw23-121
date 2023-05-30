@@ -46,13 +46,19 @@ def setup_cms(cms_ctrl):
     # Allow further trace collection if last traced program used "wfi"
     # (wait for interrupt) instruction which stops the trace.
     cms_ctrl.reset_wfi_wait()
-    
     cms_ctrl.set_tlast_interval(TLAST_INTERVAL)
-
-    # halting is enabled by default anyway
+    
     cms_ctrl.enable_halting_cpu()
-    # cms_ctrl.disable_halting_cpu()
-
+    
+    # Advanced trace filter (ATF) configuration
+    cms_ctrl.reset_atf()
+    
+    # DIRECT MATCH ATF WATCHPOINTS (determining when data is collected):
+    #cms_ctrl.set_atf_match_watchpoint(0, {'pc':0x8000076c})
+    #cms_ctrl.set_atf_match_watchpoint(0, {'pc':0x80000760}) # ecg_baseline wait_ms
+    #cms_ctrl.set_atf_match_watchpoint(0, {'pc':0x800008B0}) # ecg_baseline wait_ms_2
+    cms_ctrl.set_atf_mode(ATF_MODE.ANOMALY_DETECTION) # alternative: ATF_MODE.PATTERN_COLLECTION
+    cms_ctrl.enable_atf()
 
 # the long name is because of using hierarchy in Vivado block design
 cms_ctrl_axi_gpio = base.PYNQ_wrapper_blocks.continuous_monitoring_system_blocks.axi_gpio_to_cms_ctrl_interface.axi_gpio_cms_ctrl.channel1    

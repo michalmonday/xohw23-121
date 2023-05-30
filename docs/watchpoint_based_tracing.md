@@ -30,3 +30,5 @@ Initially, lower/upper boundaries were used in attempt to find an automatic way 
 
 
 ![ERROR: IMAGE DIDNT SHOW](../images/watchpoint_implementation.png)
+
+Related code can be found [advanced_trace_filter.sv](../vivado_files/src_verilog/continuous_monitoring_system_src/advanced_trace_filter.sv) file. The python script responsible for controlling the hardware can be found in [advanced_trace_filter.py](../jupyter_notebooks/advanced_trace_filter.py) and [continuous_monitoring_system_controller.py](../jupyter_notebooks/continuous_monitoring_system_controller.py) files.

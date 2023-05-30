@@ -7,7 +7,9 @@
     - [Example collected data (performance counters)](#example-collected-data-performance-counters)
 - [How much data can be collected](#how-much-data-can-be-collected)
     - [Possible way to handle low speed/low memory](#possible-way-to-handle-low-speedlow-memory)
-- [Data filtering](#data-filtering)
+- [Data filtering modes](#data-filtering-modes)
+  - [Basic filtering](#basic-filtering)
+  - [Watchpoing based filtering](#watchpoing-based-filtering)
 - [Performance counters selection](#performance-counters-selection)
 - [Note about performance counters extraction](#note-about-performance-counters-extraction)
 
@@ -29,6 +31,7 @@ The processor (implemented in Bluespec Verilog language) is modified to propagat
 - program counter
 - instruction
 - 39 performance event indicating bits (each indicating different performance event currently taking place)
+- general purpose register (GPR) file write port signals
 
 Image below presents ContinousMonitoringSystem_IFC declaration in the [ContinuousMonitoringSystem_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/ContinuousMonitoring_IFC.bsv):  
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/ContinuousMonitoringSystem_IFC_declaration.bsv.png" />
@@ -37,7 +40,7 @@ Image below presents how that interface is defined in the [CPU.bsv](https://gith
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/ContinuousMonitoringSystem_IFC_definition.bsv.png" />
 
-Continuous monitoring system module (`cms_ip_wrapper` on image below) receives these signals as inputs, it then decides whether or not to collect them (that is elaborated in [Data filtering](#data-filtering) section). The continuous monitoring module is responsible for counting each performance event, and counting clock cycles since last collected item. If the data item is to be collected, it turns all values into a single 512 bit vector and transfers it to AXI4-Stream Data FIFO using AXI protocol. Contents of that 512 bit vector are described in the [What data is collected](#what-data-is-collected) section.
+Continuous monitoring system module (`cms_ip_wrapper` on image below) receives these signals as inputs, it then decides whether or not to collect them (that is elaborated in [Data filtering modes](#data-filtering-modes) section). The continuous monitoring module is responsible for counting each performance event, and counting clock cycles since last collected item. If the data item is to be collected, it turns all values into a single 1024 bit vector and transfers it to AXI4-Stream Data FIFO using AXI protocol. Contents of that 1024 bit vector are described in the [What data is collected](#what-data-is-collected) section.
 <!-- <img src="../images/cms_ifc.png" width=300/> -->
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/data_transfer_path_block_design.png" width=500/>
 
@@ -46,10 +49,10 @@ After delivering the data to FIFO, the AXI DMA may be requested to transfer the 
 ```python
 from pynq import Overlay
 from pynq import allocate
-AXI_DATA_WIDTH = 512
+AXI_DATA_WIDTH = 1024
 
 def get_dma_transfer(input_buffer, dma_rec, dont_wait=False):
-    ''' Returns the number of transferred items, each having 512 bits. '''
+    ''' Returns the number of transferred items, each having 1024 bits. '''
     dma_rec.transfer(input_buffer)
     if not dont_wait:
         dma_rec.wait() 
@@ -67,12 +70,14 @@ items_transferred = get_dma_transfer(input_buffer, dma_rec)
 
 
 # What data is collected
-Each collected data item received by the python script contains:
+Each collected data item (`data_pkt` variable in [continuous_monitoring_system.sv](../vivado_files/src_verilog/continuous_monitoring_system_src/continuous_monitoring_system.sv)) received by the python script contains:
 * program counter (64 bits), collected as it is passed from stage 1 to stage 2 of the CPU pipeline
 * instruction (32 bits), collected as it is passed from stage 1 to stage 2 of the CPU pipeline
 * clock ticks count since last extracted item (64 bits)
+* clock ticks since processor was halted since last extracted item (64 bits) 
 * 39 performance counters (7 bits each) indicating how many of each events occured since last extracted item
 * performance counters overflow map (39 bits), indicating which counters have to be treated as modulo of 128 values (due to going over their maximum value limited by 7 bits)
+* 4 selected general purpose registers (A0 - A3)
 
 ### Example collected data (performance counters not shown)
 
@@ -100,10 +105,15 @@ Disabling the halting mechanism can be useful when testing features of design ot
 ### Possible way to handle low speed/low memory
 Inability to collect/process the data fast enough is a major shortcoming of this design, especially that python is relatively slow. One way to tackle that issue would be to change granularity of data collection (e.g. collect data every function call/return instead of every branch/jump/return, possibly this could involve collecting frequency distribution of certain events, similarly to performance counters collection). 
 
-# Data filtering
-Data items are only collected when program counter changes value and the current instruction is either a branch, jump, return or any instruction immediately following these.
+# Data filtering modes
 
 The `continuous_monitoring_system` module is configurable and may be set to only collect data when program counter is within range. Or to start/stop collection when it reaches specific value. See [continuous_monitoring_system_configuration.md](./continuous_monitoring_system_configuration.md) for more details.
+
+## Basic filtering
+Before introducing the watchpoint based filtering, data items were only collected when program counter changes value and the current instruction is either a branch, jump, return or any instruction immediately following these.
+
+## Watchpoing based filtering
+This is the currently used filtering, it is described in the [watchpoint_based_tracing.md](./watchpoint_based_tracing.md) file. It was introduced to reduce the amount of collected data and allow software (python script) to process data in real time (to detect anomalies).
 
 # Performance counters selection
 The Flute processor has 115 performance counters. In our test we ran a baremetal short program and repeatedly collected all 115 counter values, we observed that 78 of them always had all values equal to 0. We decided to extract only the remaining 37 + 2 additional ones: `Core__TRAP` and `Core__INTERRUPT`.
