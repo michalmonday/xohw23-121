@@ -14,10 +14,10 @@
 
 
 # Overview
-The Flute processor was modified in the following ways:
+Flute processor is written in Bluespec Verilog language, it was modified by us in the following ways:
 * signals relevant for tracing were propagated from the CPU to the outside of the SoC
 * a new port was added to the internal fabric (interconnect) of the Soc_Top module (allowing RISC-V to interact with custom peripherals we wish to use, like the [sensors extension board](./sensors_extension.md))
-* write port of general purpose registers (GPR) file is monitored
+* write port of general purpose registers (GPR) file is monitored (for the sake of creating a shadow copy of GPRs in our Continuous Monitoring System)
 
 In the following sections these modifications are described in more detail.
 
@@ -246,6 +246,17 @@ It can be noticed that the route_vector entry of `other_peripherals` is set to a
    };
 ```
 
+The address range length is set to 0x4000, but only the begining of it is used:  
+* 16 locations for analog sensors
+* 16 locations for digital sensors
+* 1 location for timer since last CPU reset (get_ticks_count function) 
+* 1 location for timer since loading Overlay (get_overlay_ticks_count function)
+* 1 location for random number generator (unused in this project yet)
+
+The implementation of the latter 3 is in the [utils_rom.v](../vivado_files/src_verilog/custom_hdl/utils_rom.v) file.
+
+To see how to interact with these components in C/C++ language see `utils_flute.h/.c` and `sensors.h/.c` from [this directory](https://github.com/michalmonday/riscv-baremetal-minimal-example-c/tree/flute_design/include).
+
 This address range corresponds to the one specified for the AXI BRAM Controller (connected to smarconnect on the image above) in the PYNQ wrapper block design. 
 
 <img alt="ERROR: IMAGE DIDNT SHOW" src="../images/axi_bram_ctrl_sensors_address_editor.png" />
@@ -296,7 +307,7 @@ By default, the Flute seems to have a single write port and 3 read ports for the
 
 This can be seen in the [GPR_RegFile.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/RegFiles/GPR_RegFile.bsv) file.
 
-Wanting to read some register values in real time, initially we added more read ports to the RegFile module. As described in the [old_way_of_accessing_general_purpose_registers.md](old/old_way_of_accessing_general_purpose_registers.md), this introduced a lot of inefficiency (and increased Vivado compilation time by over 2 times). Instead we decided to monitor the write port of the GPR file and created a "shadow" version of it in the CMS module, meaning that each write to the original GPR file would do the same change to the "shadow" copy in the CMS, resulting in 2 identical files.
+Wanting to read some register values in real time, initially we added more read ports to the RegFile module. As described in the [old_way_of_accessing_general_purpose_registers.md](old/old_way_of_accessing_general_purpose_registers.md), this introduced a lot of inefficiency (and increased Vivado compilation time by over 2 times). Instead we decided to monitor the write port of the GPR file and created a "shadow" version of it in the Continuous Monitoring System (CMS) module, meaning that each write to the original GPR file would do the same change to the "shadow" copy in the CMS, resulting in 2 identical files.
 
 Modifications involved making the following changes to the [mkGPR_RegFile](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/RegFiles/GPR_RegFile.bsv) module.
 
