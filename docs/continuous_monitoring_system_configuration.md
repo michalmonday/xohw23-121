@@ -14,6 +14,9 @@
 The [continuous_monitoring_system](https://github.com/michalmonday/continuous_monitoring_system) (cms) module can be configured to:  
 * Supply trace start/end addresses (and enable both optionally)
 * Supply monitored address range (lower bound + higher bound + enable both optionally)
+* Halting CPU (when trace storage is full) can be enabled or disabled
+* Watchpoint based tracing can be enabled or disabled
+* Conditions for watchpoint based tracing can be set (e.g. collect data only when PC is equal to 0x80000000)
 
 # Hardware interface used for configuration
 Configuration is done by interacting with the AXI GPIO module connected to the `continuous_monitoring_module` control inputs:

@@ -37,7 +37,7 @@ The server (PYNQ) should be able to:
 * notify client of tcp server being reseted
 
 
-# Client to server - eample RPCs
+# Client to server - example RPCs
 
 ### Client gets list of available programs from the server:
 ```json
