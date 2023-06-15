@@ -1,5 +1,7 @@
 # Table of contents
 - [Overview](#overview)
+    - [Initial extension board (analog only)](#initial-extension-board-analog-only)
+    - [Latest extension board (analog and digital)](#latest-extension-board-analog-and-digital)
 - [Components used](#components-used)
 - [Wiring](#wiring)
 - [Flute modification](#flute-modification)
@@ -14,7 +16,13 @@
 # Overview
 Embedded systems often interact with the outside world through sensors and actuators. By default, the Flute processor does not seem to have support for interacting with such peripherals. We created a custom board with support for up to 16 analog inputs and 16 digital inputs, we modified the processor to allow reading their values. This way we can run programs on the Flute RISC-V that use sensor data, making it easy to disrupt their baseline behaviour, or emulate sensor failure for presentation purposes.
 
+### Initial extension board (analog only)
+
 ![ERROR: IMAGE WASNT DISPLAYED](../images/sensors_input_extension.png)
+
+### Latest extension board (analog and digital)
+
+![ERROR: IMAGE WASNT DISPLAYED](../images/extension_board.png)
 
 # Components used
 * 7 sensors we selected from the [KEYESTUDIO 37 in 1](https://www.amazon.co.uk/keyestudio-Projects-Receiver-Tracking-Ultrasonic/dp/B07H7GRSD7/ref=sr_1_5) bundle:

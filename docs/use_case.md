@@ -1,8 +1,9 @@
+# Table of contents
 - [Video demonstration of the use case](#video-demonstration-of-the-use-case)
 - [Hardware setup](#hardware-setup)
 - [What is displayed on the CMS screen](#what-is-displayed-on-the-cms-screen)
     - [Regarding the ECG screen](#regarding-the-ecg-screen)
-- [Dataset](#dataset)
+- [Dataset and detection method](#dataset-and-detection-method)
 - [ECG Program behaviour](#ecg-program-behaviour)
 
 
@@ -16,6 +17,7 @@ In the video, PYNQ wrapper is used to detect anomalous behaviour of a CHERI-RISC
 
 Section [ECG Program behaviour](#ecg-program-behaviour) describes the behaviour of these programs.
 
+
 During the video, the following steps were performed:
 * The **ecg** program was loaded into the processor and the training stage was started.
 * Training was ended and testing was started using the same program.
@@ -23,8 +25,12 @@ During the video, the following steps were performed:
 * The **ecg_info_leak** program was loaded and the detection model was tested. Resulting in constant decrease in average similarity (Avg sim) metric (0.81) indicating anomalous behaviour.
 * The **ecg_zigzag** program was loaded but the CMS did not recognize that it is anomalous.
 
+![ERROR: IMAGE WASNT DISPLAYED](../images/test_flow.png)
+
 # Hardware setup
 This use case included hardware that pretend to be a real medical application (ECG monitor), for that purpose an AD8232 ECG sensor was used together with an ESP32-3248S035C board that displayed the heart activity wave. These were connected to the ZC706 board via the [custom extension board](sensors_extension.md) for digital and analog I/O.
+
+![ERROR: IMAGE WASNT DISPLAYED](../images/ECG_program_setup.png)
 
 Additional display was used to control the continuous monitoring system (CMS) and display metrics in real-time, this display received data from the TCP server running on PYNQ system (communicating through a router), unlike the ECG display which received data directly from the RISC-V program through UART.
 
@@ -44,7 +50,7 @@ Metrics shown on the graph are:
 ### Regarding the ECG screen
 Electrodes were connected while running all 3 programs ("ecg", "ecg_leak_info", "ecg_zigzag"), the zigzag-like pattern (square wave) was the result of "ecg_zigzag" modifying the sensor values, however this didn't cause significant changes in performance counters readings and wasn't detected by the CMS.
 
-# Dataset
+# Dataset and detection method
 The dataset consisted of hardware performance counters vectors collected during training stage. In the video the dataset size is shown to be 18, this means the dataset had 18 rows, each containing 38 performance counters values.
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/dataset.png" height="400" />
@@ -54,6 +60,8 @@ The Flute processor was modified to collect 39 performance event indicators, onl
 ![ERROR: IMAGE WASNT DISPLAYED](../images/core__1_busy_no_consume.png)
 
 While testing, cosine similarity of currently collected performance counters values was computed for all rows and the maximum one became a final confidence score in terms of program behaving normally (and got included into the "Avg sim" value). 
+
+![ERROR: IMAGE WASNT DISPLAYED](../images/dataset_and_ui.png)
 
 # ECG Program behaviour
 The programs ran on CHERI-RISC-V Flute processor (implemented on FPGA of ZC706 board). All 3 programs were very simple, first they check if electrodes are connected (by reading 2 digital outputs of the ECG sensor), the check is repeated every second until electrodes are connected. If they are, then the program reads analog ECG sensor value and prints it through UART, which is received by the Esp32 microcontroller board with a display (which plots the data). Source code of programs can be found in the links below: 

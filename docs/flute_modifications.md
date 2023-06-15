@@ -25,6 +25,9 @@ In the following sections these modifications are described in more detail.
 
 
 # Propagation of relevant signals outside and into the SoC
+
+![ERROR: IMAGE WASNT DISPLAYED](../images/flute_modifications_diagram.png)
+
 ### ContinuousMonitoring interface declaration
 [ContinuousMonitoring_IFC.bsv](https://github.com/michalmonday/Flute/blob/continuous_monitoring/src_Core/CPU/ContinuousMonitoring_IFC.bsv) file was created and it contains the declaration of the ContinousMonitoring_IFC (IFC standing for interface). In Bluespec Verilog language, interfaces are grouping input and output ports of modules. Interfaces can include other interfaces, allowing to easily group and manage large number of ports (in standard Verilog each port needs to be declared separately). The ContinuousMonitoring_IFC groups ports that had to be propagated from the CPU itself, all the way outside the Soc_Top module, as well as the halt_cpu input signal. Below is the declaration of that interface:
 ```verilog
