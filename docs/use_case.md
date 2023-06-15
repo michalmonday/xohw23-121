@@ -25,12 +25,12 @@ During the video, the following steps were performed:
 * The **ecg_info_leak** program was loaded and the detection model was tested. Resulting in constant decrease in average similarity (Avg sim) metric (0.81) indicating anomalous behaviour.
 * The **ecg_zigzag** program was loaded but the CMS did not recognize that it is anomalous.
 
-![ERROR: IMAGE WASNT DISPLAYED](../images/test_flow.png)
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/test_flow.png" width="500" />
 
 # Hardware setup
 This use case included hardware that pretend to be a real medical application (ECG monitor), for that purpose an AD8232 ECG sensor was used together with an ESP32-3248S035C board that displayed the heart activity wave. These were connected to the ZC706 board via the [custom extension board](sensors_extension.md) for digital and analog I/O.
 
-![ERROR: IMAGE WASNT DISPLAYED](../images/ECG_program_setup.png)
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/ECG_program_setup.png" width="500" />
 
 Additional display was used to control the continuous monitoring system (CMS) and display metrics in real-time, this display received data from the TCP server running on PYNQ system (communicating through a router), unlike the ECG display which received data directly from the RISC-V program through UART.
 
@@ -61,7 +61,7 @@ The Flute processor was modified to collect 39 performance event indicators, onl
 
 While testing, cosine similarity of currently collected performance counters values was computed for all rows and the maximum one became a final confidence score in terms of program behaving normally (and got included into the "Avg sim" value). 
 
-![ERROR: IMAGE WASNT DISPLAYED](../images/dataset_and_ui.png)
+<img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/dataset_and_ui.png" width="500" />
 
 # ECG Program behaviour
 The programs ran on CHERI-RISC-V Flute processor (implemented on FPGA of ZC706 board). All 3 programs were very simple, first they check if electrodes are connected (by reading 2 digital outputs of the ECG sensor), the check is repeated every second until electrodes are connected. If they are, then the program reads analog ECG sensor value and prints it through UART, which is received by the Esp32 microcontroller board with a display (which plots the data). Source code of programs can be found in the links below: 
