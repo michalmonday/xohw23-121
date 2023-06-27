@@ -21,7 +21,7 @@ cms_ctrl.set_monitored_address_range_upper_bound_enabled(True)
 '''
 
 # from advanced_trace_filter import create_seed_mask_and_range_for_values, calculate_atf_pkt_deterministic_offset, ATF_Mode, atf_pkt_deterministic_structure, bits_in_int
-import advanced_trace_filter3 as atf
+import advanced_trace_filter as atf
 
 # print( create_seed_mask_and_range_for_values({'A0': 0x80000000, 'A1': 0x80000000, 'A2': 0x80000000, 'A3': 0x80000000}) )
 # exit()
