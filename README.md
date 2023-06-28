@@ -21,19 +21,6 @@ So far we only used hardware performance counters (HPC) for anomaly detection pu
 
 Such metrics could be used to create a robust application-specific detection system.
 
-# File structure of this repository
-
-| Directory      | Description |
-| ----------- | ----------- |
-| docs | Documentation files. |
-| images | Documentation images. |
-| jupyter_notebooks | Files to be placed on the PYNQ system (/home/xilinx/jupyter_notebooks). [pynq_wrapper.ipynb](./jupyter_notebooks/pynq_wrapper.ipynb) is the top-level script ([pynq_api_script.md](./docs/pynq_api_script.md) describes it). |
-| programs | Binary files to be placed on the PYNQ system (/home/xilinx/programs). These files can be first loaded (from the control display) into the CHERI-RISC-V Flute processor, and then executed. |
-| design_files | Files to be placed on the PYNQ system (/home/xilinx/design_files). These include the biststream (".bit") and hardware handoff (".hwh") files.  |
-| vivado_files | Verilog, constraints and other files relating to the Vivado project. |
-| output_files | Data collected for an experiment used in the NEWCAS 2023 publication. |
-| setup_files | Files used during setup (e.g. to generate PYNQ SD card image for the ZC706 board). |
-
 # Documentation
 Documentation files are in the [docs](./docs) directory and include:
 * [vivado_block_design.md](./docs/vivado_block_design.md) - description of the Vivado block design with screenshots using top-down approach
@@ -78,9 +65,61 @@ The main purpose of this wrapper is to help with development and testing of a [c
 
 Furthermore, the documentation may serve as a reference for anyone who would like to create similar custom interface/modifications to an open source processor.
 
+# File structure of this repository
 
-# Block design
-[<img alt="ERROR: IMAGE WASNT DISPLAYED" src="./images/block_design.png" />](./images/block_design.pdf)
+### Directories to be placed in the `/home/xilinx directory` on the PYNQ system:
+|  |  |
+| ----------- | ----------- |
+| jupyter_notebooks | Jupyter Notebook files and Python scripts. [pynq_wrapper.ipynb](./jupyter_notebooks/pynq_wrapper.ipynb) is the top-level script ([pynq_api_script.md](./docs/pynq_api_script.md) describes it). |
+| programs | These binary files can be first loaded (from the control display) into the
+CHERI-RISC-V Flute processor, and then executed.
+| design_files | The bitstream (".bit"), hardware handoff (".hwh") and other files. |
+
+### Setup, hardware source and experiment output directories:
+|  |  |
+| ----------- | ----------- |
+| vivado_files | Verilog, constraints and other files relating to the Vivado project. |
+| output_files | Data collected for an experiment used in the NEWCAS 2023 publication. |
+| setup_files | Files used during setup (e.g. to generate PYNQ SD card image for the ZC706 board). |
+
+### Documentation directories:
+|  |  |
+| ----------- | ----------- |
+| docs | Documentation files. |
+| images | Documentation images. |
+
+### Contents of the `vivado_files/src_verilog` directory:
+|  |  |
+| ----------- | ----------- |
+| continuous_monitoring_system_src | Source code of the continuous monitoring system module. |
+| custom_hdl | Other hadrware modules source code. |
+| RV64ACDFIMSUxCHERI | Source code of the RISC-V processor in it's compiled form (original source code is written in Bluespec Verilog). |
+| src_bsc_lib_RTL | Source code provided from the Bluespec compiler (used by the RISC-V processor). |
+
+### Key source files from the `vivado_files/src_verilog/custom_hdl` directory:
+|  |  |
+| ----------- | ----------- |
+| axi_dma_receive_transfer_tap.v | Module acting like a proxy between AXI Lite source/destination, recognizing the "dma_receive_channel.transfer()" request and the requested size. |
+| console_io_dma.v | This module is responsible for intermediate storage and interfacing between RISC-V console input/output and the Python script (using AXI DMA). |
+| console_io.v | This module is currently unused, it did the same as console_io_dma.v but uses AXI GPIO instead which was much slower. |
+| digital_input_sequencer.v | Module responsible for driving external shift register to get 16 digital sensors inputs. |
+| extension_bram.v | Module responsible for intermediate storage of analog and digital sensor values. The values it holds are updated periodically and can be read from RISC-V programs at any time (in other words this module is memory mapped). |
+| utils_rom.v | Module that implements counters and random number generator, accessible from RISC-V programs. |
+
+### Key source files from the `vivado_files/src_verilog/continuous_monitoring_system_src` directory:
+
+|  |  |
+| ----------- | ----------- |
+| advanced_trace_filter.sv | Watchpoint-based trace filtering implementation. |
+| cms_ip_wrapper.v | Verilog wrapper for the continuous_monitoring_system.sv SystemVerilog module (because Vivado doesn't allow SystemVerilog modules to be included directly into block design). |
+| continuous_monitoring_system.sv | The top-level module (aside of the cms_ip_wrapper.v). |
+| continuous_monitoring_system_pkg.sv | Commonly used declarations. |
+| data_to_axi_stream.v | This module reads the tready signal and outputs tdata, tlast and tvalid signals used by the AXI protocol (it is useful when for sending data to AXI DMA module). |
+| performance_event_counters.sv | Module that counts how many times performance events occured. |
+| pos_bit_count.sv | Module that counts how many positive bits there are in a binary value (it was useful for the implementation of the watchpoint-based trace filtering).  |
+| shadow_general_purpose_registers_file.sv | Storage of general purpose registers (GPR) given the write port of original GPR write port signals (data, address, write enable). |
+| trace_filter.sv | Basic trace filter (collecting data on jumps, branches and returns). |
+
 
 # Notes for the Xilinx Open Hardware competition
 Multiple components were used for this project, we'd like to highlight what was produced by us and what wasn't.
