@@ -1,4 +1,19 @@
 # PYNQ wrapper for Flute processor
+
+- [Overview](#overview)
+- [File structure of this repository](#file-structure-of-this-repository)
+    - [Directories to be placed in the `/home/xilinx directory` on the PYNQ system:](#directories-to-be-placed-in-the-homexilinx-directory-on-the-pynq-system)
+    - [Setup, hardware source and experiment output directories:](#setup-hardware-source-and-experiment-output-directories)
+    - [Documentation directories:](#documentation-directories)
+- [Documentation](#documentation)
+- [Example use case](#example-use-case)
+- [Purpose](#purpose)
+- [Notes for the Xilinx Open Hardware competition](#notes-for-the-xilinx-open-hardware-competition)
+  - [What work was done](#what-work-was-done)
+  - [What was not created by us](#what-was-not-created-by-us)
+
+# Overview
+
 This repository contains source files and documentation for a PYNQ design that implements an anomaly-detection oriented tracing system. The main purpose of the design is to detect anomalous program behaviour. The design is implemented in programmable logic (PL) of the ZC706 board where a modified version of CHERI-RISC-V (Flute) processor is placed.
 
 Next to the RISC-V processor, there is a continuous monitoring system (CMS) hardware module responsible for filtering and preprocessing data collected from it. Traced program metrics are sent to the Python script where it is used to train an anomaly detection model. The model is then used to detect anomalous behaviour of the processor, which is then displayed on a wireless Esp32-based [display board](./docs/display.md). The display board is also used to control the CMS and view its state. It allows the user to:  
@@ -67,7 +82,7 @@ In [this video](https://www.youtube.com/watch?v=mMTVhH6iV2M) PYNQ wrapper is use
 ![ERROR: GIF WASNT DISPLAYED](./images/cms_gif_small_size.gif)
 
 # Purpose
-The main purpose of this wrapper is to help with development and testing of a [continuous monitoring system](https://github.com/michalmonday/continuous_monitoring_system) that will compare program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors). In similar way to previously published work like:  
+The main purpose of this wrapper is to help with development and testing of the continuous monitoring system that compares program behaviour with its previously recorded profile. Aiming to detect any deviation from original behaviour (e.g. due to malicious interference, or accidental failure due to faulty sensor or other factors). In similar way to previously published work like:  
 
 | Year | Title |  
 | ---- | ----- |
