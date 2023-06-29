@@ -1,8 +1,9 @@
-`timescale 1ns/10ps
-
 /*
     Module that counts positive bits in a bit vector.
 */
+
+`timescale 1ns/10ps
+
 
 import continuous_monitoring_system_pkg::*;
 

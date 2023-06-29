@@ -1,6 +1,8 @@
-// This module checks if instruction is not a branch/jump/return.
-// If that's the case, then "drop_instr" is set to 1.
-// Optional functionality of sending a second instruction proceeding a branch/jump/return.
+/*
+   This module checks if instruction is not a branch/jump/return.
+   If that's the case, then "drop_instr" is set to 1.
+   Optional functionality of sending a second instruction proceeding a branch/jump/return.
+*/
 
 `timescale 1ns/10ps
 

@@ -1,3 +1,6 @@
+/*
+This module implements intermediate storage between the physical sensors and the RISC-V processor.
+*/
 `timescale 1ns/10ps
 
 module extension_bram #(

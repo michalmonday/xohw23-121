@@ -1,3 +1,6 @@
+/*
+This module is responsible for intermediate storage and interfacing between RISC-V console input/output and the Python script (using AXI DMA).
+*/
 `timescale 1ns/10ps
 
 module console_io_dma #(

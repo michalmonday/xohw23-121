@@ -1,3 +1,7 @@
+/*
+This module was created solely for the purpose of simplifying the block design.
+(to avoid using 4 "slice" IP blocks)
+*/
 `timescale 1ns / 1ps
 
 module mux_select_to_gpio #(

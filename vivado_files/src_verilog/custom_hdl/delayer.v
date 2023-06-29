@@ -1,24 +1,7 @@
+/* 
+This module delays the input signal by one clock cycle.
+*/
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 25.08.2022 00:50:03
-// Design Name: 
-// Module Name: delayer
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module delayer(clk, rst_n, sig, delayed_sig);
     input clk;

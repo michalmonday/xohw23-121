@@ -1,6 +1,10 @@
-// This file is a modified version of a "pc_stream.v" file from:
-// https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/component/pc_stream.v
-// Originally created by Jiacheng Zhu
+/* This file is a modified version of a "pc_stream.v" file from:
+   https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/component/pc_stream.v
+   Originally created by Jiacheng Zhu
+
+   It takes data as an input, reads the "tready" signal and outputs "tdata", "tvalid" and "tlast" signals 
+   that are part of the AXI Stream protocol. 
+*/
 
 `timescale 1ns/10ps
 

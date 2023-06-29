@@ -1,3 +1,9 @@
+/*
+This module reads signals of the AXI Lite interface (e.g. used by PYNQ to control AXI DMA transfers).
+It recognizes when a receive channel requests a transfer, and outputs HIGH when that's the case,
+it also keeps reference of the requested data size.
+*/
+
 `timescale 1ns/10ps
 
 module axi_dma_receive_transfer_tap (

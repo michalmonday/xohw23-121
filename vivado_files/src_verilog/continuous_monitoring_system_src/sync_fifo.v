@@ -1,10 +1,11 @@
-// This file is based on:
-// https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/fifo.v
+/* This file is based on:
+   https://github.com/Byteahalf/riscv_online_debug/blob/master/RISCV/fifo.v
 
-// It was modified to enable writing and reading from empty fifo. 
-// Doing the same with full fifo is not supported (at least for now).
+   It was modified to enable writing and reading from empty fifo. 
+   Doing the same with full fifo is not supported (at least for now).
 
-// IMPORTANT: DATA_DEPTH must be a power of 2, otherwise wr_ptr and rd_ptr will overflow and begin overwriting other items (unless I'm mistaken).
+   IMPORTANT: DATA_DEPTH must be a power of 2, otherwise wr_ptr and rd_ptr will overflow and begin overwriting other items (unless I'm mistaken).
+*/
 
 `timescale 1ns/10ps
 

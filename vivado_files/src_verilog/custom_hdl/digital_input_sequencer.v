@@ -1,7 +1,9 @@
-`timescale 1ns/10ps
+/* 
+   This module controls the 2 chained SN74HC165 shift registers, these 
+   can be used to read 16 digital inputs from the extension board.
+*/
 
-// This module controls the 2 chained SN74HC165 shift registers, these 
-// can be used to read 16 digital inputs from the extension board.
+`timescale 1ns/10ps
 
 module digital_input_sequencer #(
     parameter SR_CLK_DIVIDER = 1000,

@@ -1,3 +1,7 @@
+/*
+This module is responsible for intermediate storage and interfacing between RISC-V console input/output and the Python script (using AXI GPIO).
+As of 29/06/2023, this module is not used in the project (it was replaced by console_io_dma.v which is must faster thanks to using AXI DMA instead of AXI GPIO)
+*/
 `timescale 1ns/10ps
 
 module console_io(

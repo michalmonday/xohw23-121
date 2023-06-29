@@ -1,5 +1,3 @@
-`timescale 1ns/10ps
-
 /*
     To avoid unnecessary modifications of the RegFile module in Flute processor (that is used not only 
     for the general purpose registers), we create a "shadow" register file that will keep track of registers
@@ -8,6 +6,8 @@
     - write data
     - write enable
 */
+
+`timescale 1ns/10ps
 
 module shadow_general_purpose_registers_file #(
     parameter REGISTER_WIDTH = 128

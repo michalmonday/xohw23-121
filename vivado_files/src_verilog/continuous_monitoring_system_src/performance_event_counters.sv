@@ -1,3 +1,6 @@
+/* 
+This module counts how many times each CPU perfrormance event has occurred.
+*/
 
 `timescale 1ns/10ps
 

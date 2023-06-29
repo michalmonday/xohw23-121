@@ -1,7 +1,6 @@
-// continuous monitoring system module will allow the user to do the following:
-// 1. Supply information like program counter, instruction, etc. to the module (which will be stored in a FIFO)
-// 2. Supply trace start/end addresses (and enable both optionally).
-// 3. Supply monitored address range (lower bound + higher bound + enable both optionally).
+/*
+This is the top-level module of the continuous monitoring system (CMS).
+*/
 
 `timescale 1ns/10ps
 
@@ -497,6 +496,11 @@ module continuous_monitoring_system #(
             last_pc[0] <= pc;
             last_instr[0] <= instr;
 
+
+            // --------------------------------------------------------------------
+            //   Code below implements defines address space of control interface.
+            //   (allowing to configure the CMS during its operation)
+            // --------------------------------------------------------------------
 
             // if write enable is active (posedge/level triggered mode can be selected by CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED)
             if ((CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable_pos_edge) || (~CTRL_WRITE_ENABLE_POSEDGE_TRIGGERED & ctrl_write_enable)) begin

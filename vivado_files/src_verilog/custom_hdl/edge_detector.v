@@ -1,24 +1,8 @@
+/*
+This module outputs "neg_edge" and "pos_edge" signals that are set to 1 for
+one clock cycle when the input signal changes from 0 to 1 and from 1 to 0 respectively.
+*/
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 29.08.2022 01:26:15
-// Design Name: 
-// Module Name: edge_detector
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module edge_detector(
     input clk,

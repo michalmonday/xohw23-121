@@ -1,3 +1,6 @@
+/*
+As of 29/06/2023 this file is not used in the project.
+*/
 `timescale 1ns/10ps
 
 module dram #(

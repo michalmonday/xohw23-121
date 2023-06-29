@@ -1,5 +1,10 @@
 package continuous_monitoring_system_pkg;
 
+
+/*
+This file contains common declarations to be used in the whole project.
+*/
+
 // NOTE: KEEP IN MIND TO UPDATE cms_ip_wrapper.v DEFINITIONS AS WELL (WHEN CHANGING PARAMETERS HERE)
 //       it has duplicate definitions because Vivado can't use SystemVerilog as top level file
 
