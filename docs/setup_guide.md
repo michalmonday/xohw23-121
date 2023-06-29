@@ -29,8 +29,6 @@ This guide describes how to prepare and/or compile most components involved in t
 
 Since February 2023, the PYNQ wrapper uses a custom extension board (connected to XADC port) to collect up to 16 analog inputs and read them in RISC-V programs. The extension board is not required to run the PYNQ wrapper, lack of it will not result in any errors. To build the extension board see the list part and the wiring diagram from [sensors_extension.md](sensors_extension.md) file.
 
-Please note that this project is constantly under development, so files and documentation may not be fully updated at all times. If you are planning to follow this guide, please contact me and I will update it with the most recent files (email: mb19424@essex.ac.uk, discord:michalmonday#3687).
-
 # Prerequisites
 * PYNQ board (e.g. ZC706) with at least 100k logic cells in programmable logic (e.g. Ultra96-V2 is not suitable)
 * SD card to hold PYNQ image
@@ -40,16 +38,16 @@ Please note that this project is constantly under development, so files and docu
 
 ## Download precompiled 2.7.0 PYNQ image for ZC706 board or build one
 
-We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. I suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this guide. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
+We used 2.7.0 version of PYNQ, however as of 11/01/2023 a new version (3.0.0) is available. Notice that the 3.0.0 version requires different versions of Vivado, Vitis and petalinux (2022.1, as shown in [this updated guide](https://pynq.readthedocs.io/en/v3.0.0/pynq_sd_card.html#use-existing-ubuntu-os)) as opposed to 2.7.0 version that requires 2020.2 versions. We suggest to use v2.7.0 PYNQ and 2020.2 Xilinx versions when following this guide. Prebuilt image for ZC706 board is not available on the PYNQ website, so it has to be compiled.
 
 ### Precompiled image
-I compiled the 2.7.0 version for the ZC706 board and uploaded it to Google Drive. It is available at the link below:
+We compiled the 2.7.0 version for the ZC706 board and uploaded it to Google Drive. It is available at the link below:
 https://drive.google.com/file/d/1ieKwj0o5VDYzU0CycIzul4IUF5pB3oO5/view?usp=share_link
 
-It takes a lot of space, there is no guarantee it will be available in the future, below I describe how to build it.
+It takes a lot of space, there is no guarantee it will be available in the future, below we describe how to build it.
 
 ### Steps to build PYNQ image for ZC706
-I found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and I encountered many issues trying to compile the image, so below I describe the steps that worked for me. The steps are as follows:  
+We found steps listed in the [PYNQ SD Card image guide](https://pynq.readthedocs.io/en/v2.7.0/pynq_sd_card.html#use-existing-ubuntu-os) to be not very straightforward and we encountered some issues trying to compile the image, so below we describe the steps that worked for me. The steps are as follows:  
 
 Download v2.7.0 tag of the PYNQ repository, install packages and prepare the boards directory (to avoid compiling all default ones).
 ```bash
@@ -81,7 +79,7 @@ git commit -m "Removed all boards + added ZC706"
 Prepare environment (requires Vivado, Vitis and petalinux to be installed, all being 2020.2 versions):
 ```bash
 cd sdbuild
-# I have them installed in home/michal/ directory so "~" is used in my case
+# We have them installed in home/michal/ directory so "~" is used in our case
 source ~/Xilinx/Vitis/2020.2/settings64.sh
 source ~/petalinux/settings.sh
 ```
@@ -99,7 +97,7 @@ make BOARDDIR=/home/michal/PYNQ/boards BOARDS=ZC706 PREBUILT=/home/michal/Downlo
 The compilation takes some time, but eventually it should output the image file into `PYNQ/sdbuild/output/ZC706/` directory (the image file is quite large, around 7GB size). Then we can flash the SD card with the image file using a program like [Etcher](https://www.balena.io/etcher/) or [Rufus](https://rufus.ie).
 
 ### Potential issues with compilation
-It probably shouldn't happen if you follow steps above, but while trying to figure out how to compile the sd card image (using slightly different commands) I encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multilib-vs-gcc-arm-linux-gnueabihf/2791/2) and [this issue](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112). What helped was removing all files/folders from `PYNQ/sdbuild/build/gcc-mb` except `.build` directory (hidden because it starts with a dot), note that these folders/files may only exist after the error happens (so don't try to delete them before encountering the same error). Then download [expat.2.4.1.tar.bz2](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112) and [isl-0.20.tar.gz](http://mirror.sobukus.de/files/src/isl/) and place them in `PYNQ/sdbuild/build/gcc-mb/.build/tarballs/` directory. After that running `make` should fix these problems.
+It probably shouldn't happen if you follow steps above, but while trying to figure out how to compile the sd card image (using slightly different commands) we encountered [this issue](https://discuss.pynq.io/t/gordian-knot-make-gcc-multilib-vs-gcc-arm-linux-gnueabihf/2791/2) and [this issue](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112). What helped was removing all files/folders from `PYNQ/sdbuild/build/gcc-mb` except `.build` directory (hidden because it starts with a dot), note that these folders/files may only exist after the error happens (so don't try to delete them before encountering the same error). Then download [expat.2.4.1.tar.bz2](https://discuss.pynq.io/t/error-during-creation-of-pynq-sd-related-to-gcc-mb-build/3112) and [isl-0.20.tar.gz](http://mirror.sobukus.de/files/src/isl/) and place them in `PYNQ/sdbuild/build/gcc-mb/.build/tarballs/` directory. After that running `make` should fix these problems.
 
 
 ## Insert SD card into ZC706 board and adjust switches
@@ -128,7 +126,7 @@ The [pynq_wrapper.ipynb]() uses only 1 additional python library called `riscv-m
 python3 -m pip install riscv-model
 ``` -->
 
-Simply using pip didn't work, I had to install some packages through apt:
+Simply using pip didn't work, we had to install some packages through apt:
 ```bash
 # (not sure if ninja-build, python-sklearn-doc and python3-sklearn-pandas are needed)
 sudo apt install ninja-build python3-scipy python3-sklearn python3-sklearn-lib python-sklearn-doc python3-sklearn-pandas
@@ -158,7 +156,7 @@ python3 -m pip install <file>.whl -f ./ --no-index
 
 ### Accessing console port (using putty)
 
-We can check in device manager the com port number (in my case it was COM5), and use it in putty to access the serial port (baud rate is set to 115200).
+We can check in device manager the com port number (in our case it was COM5), and use it in putty to access the serial port (baud rate is set to 115200).
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/com_port.png" />  
 
@@ -182,9 +180,9 @@ Where `imported_design` stands for the name of the block design.
 ## Modifying and recompiling the Flute processor
 We used [CTSRD-CHERI](https://github.com/CTSRD-CHERI/Flute) version of Flute which we forked and modified (to propagate signals using ContinuousMonitoringSystem_IFC). The forked version is available a [this link](https://github.com/michalmonday/Flute/tree/continuous_monitoring/), modifications were done in the `continous_monitoring` branch (`git checkout continuous_monitoring`).
 
-The [README.adoc](https://github.com/bluespec/Flute/blob/master/README.adoc) of the Flute repository (including CHERI fork and my fork) contains most instructions on how to build the processor (however the PYNQ wrapper requires slightly modified version of bsc compiler as described below). The main steps are as follows:
+The [README.adoc](https://github.com/bluespec/Flute/blob/master/README.adoc) of the Flute repository (including CHERI fork and our fork) contains most instructions on how to build the processor (however the PYNQ wrapper requires slightly modified version of bsc compiler as described below). The main steps are as follows:
 * Compile bsc compiler from [this fork](https://github.com/michalmonday/bsc), [this page](https://github.com/michalmonday/bsc/blob/main/INSTALL.md) explains how to do it. After compilation add the newly created `bsc/inst/bin` directory to the PATH environment variable. Compiling from source is required because the default RegFile module (used to implement general purpose registers in the Flute processor) does not allow simultaneous read access to sufficient number of registers (in other words, modifying and recompiling bsc allows to continuously monitor A0-A4 registers that are traced by PYNQ wrapper as of 28/02/2023).
-* Install libraries for bsc compiler from [bsc-contrib](https://github.com/B-Lang-org/bsc-contrib) as described in bsc-contrib README.md file. Make sure to use PREFIX that will lead to bsc compiler. In my case, after installing libraries, the `bsc/lib/Libraries/` directory contains all folders from [bsc-contrib/Libraries/](https://github.com/B-Lang-org/bsc-contrib/tree/main/Libraries) (e.g. Bus, COBS, FPGA).
+* Install libraries for bsc compiler from [bsc-contrib](https://github.com/B-Lang-org/bsc-contrib) as described in bsc-contrib README.md file. Make sure to use PREFIX that will lead to bsc compiler. In our case, after installing libraries, the `bsc/lib/Libraries/` directory contains all folders from [bsc-contrib/Libraries/](https://github.com/B-Lang-org/bsc-contrib/tree/main/Libraries) (e.g. Bus, COBS, FPGA).
 * Navigate to `Flute/builds/RV64ACDFIMSUxCHERI_Flute_verilator` directory and run `make compile` to produce Verilog files (stored in `Verilog_RTL` directory) from Bluespec files.
 
 
@@ -204,7 +202,7 @@ cd builds/RV64ACDFIMSUxCHERI_Flute_verilator
 make compile simulator && ./run_example.sh && gtkwave vcd/vlt_dump.vcd
 ```
 
-We may then click `File -> Read Save File` and select signals.gtkw (which will populate waveform window with signals I checked while testing CPU modifications and trying to understand how it works in general). It should then display something like this:  
+We may then click `File -> Read Save File` and select signals.gtkw (which will populate waveform window with signals we checked while testing CPU modifications and trying to understand how it works in general). It should then display something like this:  
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/gtkwave_waveform.png" />
 
@@ -220,17 +218,17 @@ Instead of hardcoding program path as `EXAMPLE` value in the `Resources/Include_
 To run and control the python script we may (but don't have to) use a separate "host" PC that can access the Jupyter Notebook server created by the PYNQ system running on the PS of the ZC706 board.
 
 ### Connecting through router (allows ZC706 PS to use internet)
-We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on my network it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103:9090` on my network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
+We can connect the ZC706 board to the router using Ethernet cable. It should be assigned an IP by the router, which we can check by going into router configuration page and checking connected clients (e.g. on the network we use it's `192.168.0.1`). Then we should be able to access the jupyter server by going into browser and navigating to: `<router_ip>:9090/` (e.g. `192.168.0.103:9090` on our network). The default password to Jupyter Notebook is `xilinx`. After login, it should look like this:  
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/jupyter_notebook.png" width="600"/>
 
-Initially I had problems accessing ZC706 board that is connected to the router, for that reason there's a separate section for this case ([Direct connection](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)), but using it won't allow to install required python libraries. Recently I tried connecting through router again and it just worked well (allowing to mitigate the problematic offline package installation).
+Initially we had problems accessing ZC706 board that is connected to the router, for that reason there's a separate section for this case ([Direct connection](#direct-connection-wont-allow-zc706-ps-to-use-internet-so-its-not-recommended)), but using it won't allow to install required python libraries. Recently we tried connecting through router again and it just worked well (allowing to mitigate the problematic offline package installation).
 
 
 ### Direct connection (won't allow ZC706 PS to use internet, so it's not recommended)
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/pynq_overview.png">
 
-For direct connection we can connect the Ethernet cable to both ends (host PC, ZC706 board) and assign a static IP on the host PC. I used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings I used:
+For direct connection we can connect the Ethernet cable to both ends (host PC, ZC706 board) and assign a static IP on the host PC. We used Windows to do this, and followed the [PYNQ - Assign a static IP guide](https://pynq.readthedocs.io/en/v2.7.0/appendix/assign_a_static_ip.html). These are settings we used:
 
 <img alt="ERROR: IMAGE WASNT DISPLAYED" src="../images/static_ip.png" width="600"/>
 
