@@ -1,4 +1,4 @@
-As shown in the [vivado_block_design.md](./vivado_block_design.md) document, Xilinx IP modules contitute a large part of the project. This document lists the modules written by us to facilitate the project, and the modules that were provided by Xilinx.
+As shown in the [vivado_block_design.md](./vivado_block_design.md) document, Xilinx IP modules constitute a large part of the project. This document lists the modules written by us to facilitate the project, and the modules that were provided by Xilinx.
 
 ### Contents of the `vivado_files/src_verilog` directory:
 |  |  |
